@@ -6,7 +6,7 @@ metadata:
 services:
   backend:
     project: ./app/backend
-    language: py
+    language: java
     host: appservice
     hooks:
       prepackage:

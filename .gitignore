@@ -2,6 +2,10 @@
 .azure
 *_env
 
+# Java IDE
+.idea
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

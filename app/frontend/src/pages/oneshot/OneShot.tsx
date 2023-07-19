@@ -121,11 +121,13 @@ const OneShot = () => {
         },
         {
             key: Approaches.ReadRetrieveRead,
-            text: "Read-Retrieve-Read"
+            text: "Read-Retrieve-Read",
+            disabled: true
         },
         {
             key: Approaches.ReadDecomposeAsk,
-            text: "Read-Decompose-Ask"
+            text: "Read-Decompose-Ask",
+            disabled: true
         }
     ];
 

@@ -58,6 +58,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
+
 resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(openAiResourceGroupName)) {
   name: !empty(openAiResourceGroupName) ? openAiResourceGroupName : resourceGroup.name
 }
@@ -73,6 +74,12 @@ resource searchServiceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-
 resource storageResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(storageResourceGroupName)) {
   name: !empty(storageResourceGroupName) ? storageResourceGroupName : resourceGroup.name
 }
+
+/*
+resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = if (!empty(openAiServiceName)) {
+  name: openAiServiceName
+}
+*/
 
 // Create an App Service Plan to group applications under the same payment plan and SKU
 module appServicePlan 'core/host/appserviceplan.bicep' = {
@@ -99,10 +106,11 @@ module backend 'core/host/appservice.bicep' = {
     location: location
     tags: union(tags, { 'azd-service-name': 'backend' })
     appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'python'
-    runtimeVersion: '3.10'
+    runtimeName: 'java'
+    runtimeVersion: '17-java17'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
+
     appSettings: {
       AZURE_STORAGE_ACCOUNT: storage.outputs.name
       AZURE_STORAGE_CONTAINER: storageContainerName
@@ -112,8 +120,10 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_GPT_DEPLOYMENT: gptDeploymentName
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
     }
+
   }
 }
+
 
 module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
@@ -126,6 +136,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
       name: openAiSkuName
     }
     deployments: [
+      /** text-davinci-003 is not available anymore. need to wait for gpt-35-turbo-instruct to become available and update the below deployment
       {
         name: gptDeploymentName
         model: {
@@ -138,6 +149,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
           capacity: gptDeploymentCapacity
         }
       }
+     */
       {
         name: chatGptDeploymentName
         model: {
@@ -153,6 +165,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
     ]
   }
 }
+
 
 module formRecognizer 'core/ai/cognitiveservices.bicep' = {
   name: 'formrecognizer'
@@ -313,9 +326,14 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
+
+
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
+
+output BACKEND_URI string = backend.outputs.uri
+
 
 output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
@@ -333,4 +351,4 @@ output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
-output BACKEND_URI string = backend.outputs.uri
+
