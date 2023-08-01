@@ -66,28 +66,6 @@
 			<groupId>com.azure</groupId>
 			<artifactId>azure-storage-blob</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-api</artifactId>
-			<version>${semantic-kernel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-core</artifactId>
-			<scope>runtime</scope>
-			<version>${semantic-kernel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-connectors-ai-openai</artifactId>
-			<version>${semantic-kernel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-planners</artifactId>
-			<version>${semantic-kernel.version}</version>
-		</dependency>
 	</dependencies>
 
 	<build>
