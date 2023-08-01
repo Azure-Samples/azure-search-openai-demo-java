@@ -121,8 +121,8 @@ const OneShot = () => {
         },
         {
             key: Approaches.ReadRetrieveRead,
-            text: "Read-Retrieve-Read",
-            disabled: true
+            text: "Read-Retrieve-Read"
+
         },
         {
             key: Approaches.ReadDecomposeAsk,

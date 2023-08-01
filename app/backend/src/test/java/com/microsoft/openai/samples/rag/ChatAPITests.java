@@ -29,7 +29,7 @@ public class ChatAPITests {
 
 	@Test
 	public void testExample() throws Exception {
-		//TODO This test is failing due to external services depedencies.
+		//TODO This test is failing due to external services dependencies.
 		// Explore springmockserver to mock the external services response based on specific requests. Sevices to mock are: Azure token, Cognitive Search, OpenAI chat apis
 /** ChatTurn chatTurn = new ChatTurn();
 		chatTurn.setUserText("What does a Product Manager do?");

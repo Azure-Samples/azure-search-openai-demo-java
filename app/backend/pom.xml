@@ -18,6 +18,7 @@
 		<spring-cloud-azure.version>4.9.0</spring-cloud-azure.version>
 		<azure-search.version>11.6.0-beta.6</azure-search.version>
 		<azure-openai.version>1.0.0-beta.2</azure-openai.version>
+		<semantic-kernel.version>0.2.8-alpha-SNAPSHOT</semantic-kernel.version>
 	</properties>
 
 	<dependencyManagement>
@@ -67,9 +68,25 @@
 		</dependency>
 
 		<dependency>
-		<groupId>com.microsoft.semantic-kernel</groupId>
-		<artifactId>semantickernel-core</artifactId>
-		<version>0.2.6-alpha</version>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-api</artifactId>
+			<version>${semantic-kernel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-core</artifactId>
+			<scope>runtime</scope>
+			<version>${semantic-kernel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-connectors-ai-openai</artifactId>
+			<version>${semantic-kernel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-planners</artifactId>
+			<version>${semantic-kernel.version}</version>
 		</dependency>
 	</dependencies>
 

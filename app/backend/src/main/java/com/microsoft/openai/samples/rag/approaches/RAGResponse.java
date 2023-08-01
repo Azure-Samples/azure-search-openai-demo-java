@@ -6,6 +6,7 @@ public class RAGResponse {
 
     private String question;
     private List<ContentSource> sources;
+    private String sourcesAsText;
     private String answer;
     private String prompt;
 
@@ -14,12 +15,33 @@ public class RAGResponse {
         this.sources = builder.sources;
         this.answer = builder.answer;
         this.prompt = builder.prompt;
+        this.sourcesAsText =builder.sourcesAsText;
     }
 
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public List<ContentSource> getSources() {
+        return sources;
+    }
+
+    public String getSourcesAsText() { return sourcesAsText;}
+
+    public String getAnswer() {
+        return answer;
+    }
+
+
+    public String getPrompt() {
+        return prompt;
+    }
 
     public static class Builder {
         private String question;
         private List<ContentSource> sources;
+        private String sourcesAsText;
         private String answer;
         private String prompt;
 
@@ -31,6 +53,11 @@ public class RAGResponse {
 
         public Builder sources(List<ContentSource> sources) {
             this.sources = sources;
+            return this;
+        }
+
+        public Builder sourcesAsText(String sourcesAsText) {
+            this.sourcesAsText = sourcesAsText;
             return this;
         }
 
@@ -50,23 +77,6 @@ public class RAGResponse {
     }
 
 
-    public String getQuestion() {
-        return question;
-    }
-
-    public List<ContentSource> getSources() {
-        return sources;
-    }
-
-
-    public String getAnswer() {
-        return answer;
-    }
-
-
-    public String getPrompt() {
-        return prompt;
-    }
 
 
 }

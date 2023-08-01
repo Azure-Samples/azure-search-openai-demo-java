@@ -27,9 +27,6 @@ import java.util.*;
 @Component
 public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse> {
     private static final Logger logger = LoggerFactory.getLogger(RetrieveThenReadApproach.class);
-    private String indexContentFieldName = "content";
-    private String indexSourcePageFieldName = "sourcepage";
-    private String indexCategoryFieldName = "category";
 
     private CognitiveSearchProxy cognitiveSearchProxy;
     private OpenAIProxy openAIProxy;
@@ -45,7 +42,7 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
      */
     @Override
     public RAGResponse run(String question, RAGOptions options) {
-    //TODO exception handling and logging
+    //TODO exception handling
         SearchPagedIterable searchResults = getCognitiveSearchResults(question, options);
 
         List<ContentSource> sources = buildSourcesFromSearchResults(options, searchResults);
@@ -80,7 +77,7 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
         // Due to a potential bug when using JVM 17 and java openai SDK 1.0.0-beta.2, we need to provide default for all properties to avoid 404 bad Request on the server
         completionsOptions.setMaxTokens(1024);
         completionsOptions.setTemperature(0.3);
-        completionsOptions.setStop(new ArrayList<>( Arrays.asList("\n")));
+        completionsOptions.setStop(Arrays.asList("\n"));
         completionsOptions.setLogitBias(new HashMap<>());
         completionsOptions.setEcho(false);
         completionsOptions.setN(1);
@@ -147,15 +144,4 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
         return sources;
     }
 
-    public void setIndexContentFieldName(String indexContentFieldName) {
-        this.indexContentFieldName = indexContentFieldName;
-    }
-
-    public void setIndexSourcePageFieldName(String indexSourcePageFieldName) {
-        this.indexSourcePageFieldName = indexSourcePageFieldName;
-    }
-
-    public void setIndexCategoryFieldName(String indexCategoryFieldName) {
-        this.indexCategoryFieldName = indexCategoryFieldName;
-    }
 }

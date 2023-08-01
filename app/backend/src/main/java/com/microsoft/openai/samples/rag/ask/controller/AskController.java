@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,12 +62,14 @@ public class AskController {
 		var askResponse = new AskResponse();
 
 		askResponse.setAnswer(ragResponse.getAnswer());
-
-		List<String> dataPoints = ragResponse.getSources().stream()
+		List<String> dataPoints;
+		if(ragResponse.getSourcesAsText() != null && !ragResponse.getSourcesAsText().isEmpty())
+			dataPoints = Arrays.asList(ragResponse.getSourcesAsText().split("\n"));
+		else
+		dataPoints = ragResponse.getSources().stream()
 				.map(source ->source.getSourceName()+": "+source.getSourceContent())
 				.collect(Collectors.toList());
 
-		//ragResponse.getSources().iterator().forEachRemaining(source -> dataPoints.add(source.getSourceName()+": "+source.getSourceContent()));
 		askResponse.setDataPoints(dataPoints);
 
 		askResponse.setThoughts("Question:<br>"+ragResponse.getQuestion()+"<br><br>Prompt:<br>"+ragResponse.getPrompt().replace("\n","<br>"));
