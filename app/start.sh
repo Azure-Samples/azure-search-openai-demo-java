@@ -43,7 +43,7 @@ echo ""
 
 cd ../backend
 xdg-open http://localhost:8080
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 if [ $? -ne 0 ]; then
     echo "Failed to start backend"
     exit $?

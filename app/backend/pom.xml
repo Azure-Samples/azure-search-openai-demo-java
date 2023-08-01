@@ -66,11 +66,6 @@
 			<artifactId>azure-storage-blob</artifactId>
 		</dependency>
 
-		<dependency>
-		<groupId>com.microsoft.semantic-kernel</groupId>
-		<artifactId>semantickernel-core</artifactId>
-		<version>0.2.6-alpha</version>
-		</dependency>
 	</dependencies>
 
 	<build>

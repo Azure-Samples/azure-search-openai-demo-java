@@ -57,7 +57,7 @@ public class ChatReadRetrieveReadApproach implements RAGApproach<ChatGPTConversa
         // STEP 3: Generate a contextual and content specific answer using the search results and chat history
         ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
 
-        logger.debug("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+        logger.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
                 chatCompletions.getUsage().getPromptTokens(),
                 chatCompletions.getUsage().getCompletionTokens(),
                 chatCompletions.getUsage().getTotalTokens());

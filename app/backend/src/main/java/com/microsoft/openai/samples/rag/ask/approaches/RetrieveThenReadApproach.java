@@ -59,7 +59,7 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
 
         Completions completionsResults = openAIProxy.getCompletions(completionsOptions);
 
-        logger.debug("Completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+        logger.info("Completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
                 completionsResults.getUsage().getPromptTokens(),
                 completionsResults.getUsage().getCompletionTokens(),
                 completionsResults.getUsage().getTotalTokens());
