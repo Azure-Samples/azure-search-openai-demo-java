@@ -1,20 +1,21 @@
 #!/bin/sh
 
-#echo ""
-#echo "Loading azd .env file from current environment"
-#echo ""
+echo ""
+echo "Loading azd .env file from current environment"
+echo ""
 
-#while IFS='=' read -r key value; do
-#    value=$(echo "$value" | sed 's/^"//' | sed 's/"$//')
-#    export "$key=$value"
-#done <<EOF
-#$(azd env get-values)
-#EOF
+while IFS='=' read -r key value; do
+    value=$(echo "$value" | sed 's/^"//' | sed 's/"$//')
+    export "$key=$value"
+    echo "export $key=$value"
+done <<EOF
+$(azd env get-values)
+EOF
 
-#if [ $? -ne 0 ]; then
-#    echo "Failed to load environment variables from azd environment"
-#    exit $?
-#fi
+if [ $? -ne 0 ]; then
+    echo "Failed to load environment variables from azd environment"
+    exit $?
+fi
 
 echo ""
 echo "Restoring frontend npm packages"
@@ -39,6 +40,7 @@ fi
 
 echo ""
 echo "Starting spring boot api backend and react spa from backend/public static content"
+echo "Spring-boot application.properties use values from azd .env file which have been exported as environment variables"
 echo ""
 
 cd ../backend

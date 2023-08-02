@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 /**
  * This class tests the Ask API showcasing how you can mock azure services using mockito.
  * CognitiveSearch and OpenAI models are immutable from the client usage perspective, so in order to create when/then condition with mockito
- * we used a reflection hack to make some model constructor public. @see CognitiveSearchUnitTestUtils and @see OpenAIUnitTestUtils for more info.
+ * we used a reflection hack to make some model private constructor public. @see CognitiveSearchUnitTestUtils and @see OpenAIUnitTestUtils for more info.
  */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
