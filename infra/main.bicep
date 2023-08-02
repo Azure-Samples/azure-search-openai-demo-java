@@ -81,6 +81,7 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = if 
 }
 */
 
+
 // Create an App Service Plan to group applications under the same payment plan and SKU
 module appServicePlan 'core/host/appserviceplan.bicep' = {
   name: 'appserviceplan'
@@ -125,6 +126,7 @@ module backend 'core/host/appservice.bicep' = {
 }
 
 
+
 module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
   scope: openAiResourceGroup
@@ -136,7 +138,6 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
       name: openAiSkuName
     }
     deployments: [
-      /** text-davinci-003 is not available anymore. need to wait for gpt-35-turbo-instruct to become available and update the below deployment
       {
         name: gptDeploymentName
         model: {
@@ -149,7 +150,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
           capacity: gptDeploymentCapacity
         }
       }
-     */
+
       {
         name: chatGptDeploymentName
         model: {

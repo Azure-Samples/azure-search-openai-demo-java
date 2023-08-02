@@ -24,7 +24,7 @@ public class OpenAIConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "true")
-    public OpenAIClient tracingEnabledClient() {
+    public OpenAIClient openAItracingEnabledClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
 
         var httpLogOptions = new HttpLogOptions();
@@ -42,7 +42,7 @@ public class OpenAIConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "false")
-    public OpenAIClient defaultClient() {
+    public OpenAIClient openAIDefaultClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
         return new OpenAIClientBuilder()
                 .endpoint(endpoint)
