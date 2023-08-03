@@ -44,7 +44,7 @@ echo "Spring-boot application.properties use values from azd .env file which hav
 echo ""
 
 cd ../backend
-xdg-open http://localhost:8080
+#xdg-open http://localhost:8080
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 if [ $? -ne 0 ]; then
     echo "Failed to start backend"

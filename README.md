@@ -133,3 +133,7 @@ Here are the most common failure scenarios and solutions:
 
 1. After running `azd up` and visiting the website, you see a '404 Not Found' in the browser. Wait 10 minutes and try again, as it might be still starting up. Then try running `azd deploy` and wait again. If you still encounter errors with the deployed app, consult these [tips for debugging Flask app deployments](http://blog.pamelafox.org/2023/06/tips-for-debugging-flask-deployments-to.html)
 and file an issue if the error logs don't help you resolve the issue.
+
+1. After running `./app/start.ps1` on windows power shell you get `The file C:\path\to\azure-search-openai-demo-java\app\start.ps1 is not digitally signed. You cannot run this script on the current system`. Try to run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and try to re-run `./app/start.ps1`
+
+1. After running `./app/start.ps1` or `./app/start.sh` you get `Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17` it means you are not using JDK 17 but a previous versions. Be sure to set `JAVA_HOME` env variable to your java 17 installation directory and update your 'PATH' env variable to have java 17 bin folder as first occurence in the executables directories. more info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
