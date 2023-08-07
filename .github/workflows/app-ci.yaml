@@ -54,6 +54,7 @@ jobs:
           jarversion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           originaljarname="$artifactid-$jarversion.jar"
           echo "Renaming $originaljarname to app.jar"
+          # Renaming jas so it is auto detected by app service
           mv ./target/$originaljarname ./target/app.jar
 
       - name: Upload artifacts for backend deployment jobs

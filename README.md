@@ -104,6 +104,24 @@ Once in the web app:
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
 
+## App Continuous Integration
+if you don't want to use azd to build and deploy the app, a GitHub automated CI pipeline is provided in `.github/workflows/app-ci.yml`. Some notes about the CI pipeline design:
+- It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
+- GitHub environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in github repository settings:
+    - `AZUREAPPSERVICE_PUBLISHPROFILE` is used to store the azure app service publish profile configuration securely.
+    - `AZUREAPPSERVICE_APP_NAME` is used to store the azure web app resource name generated during infra arm deployment.
+
+To properly configure automated build and deploy for both backend and frontend components follow below steps:
+ 
+ 1. Go to your forked repository in GitHub and create an [environment]((https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)) called 'Development' (yes this is the exact name; don't change it). If you want to change the environment name (also adding new branches and environments, change the current branch/env mapping) you can do that, but make sure to change the pipeline code accordingly in `.github/workflows/app-ci.yml` (starting line 29)
+ 2. Create 'Development' environment [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the azure web app hosting both frontend and backend [publish profiles]((https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service?view=vs-2022)). You'll need to copy paste the xml content from the .PublishSettings file into the secret value:
+     - Create a secret with name `AZUREAPPSERVICE_PUBLISHPROFILE` and set the Value field to publish profile of the azure web app
+3. Create 'Development' environment [variables](https://docs.github.com/en/actions/learn-github-actions/variables#creating-configuration-variables-for-an-environment) for azure web app resource name:
+    - Create a variable with name `AZUREAPPSERVICE_APP_NAME` and set the Value field to the azure web app resource name 
+4. For each commit you push check the status of the triggered pipeline in the GitHub Actions tab, you should see a pipeline has been triggered for the specific commit. If everything is ok you should see green checkmark on both build and deploy jobs in the pipeline detail like below:
+
+![pipeline success](./docs/github-actions-pipeline-success.png)
+
 ## Resources
 
 * [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and Cognitive Search](https://aka.ms/entgptsearchblog)
