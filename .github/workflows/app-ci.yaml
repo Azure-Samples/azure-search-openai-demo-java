@@ -22,7 +22,9 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v2
         with:
+          distribution: 'temurin'
           java-version: '17'
+          cache: 'maven'
 
       - name: Set environment for branch
         id: set-deploy-env
