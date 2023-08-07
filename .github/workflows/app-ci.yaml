@@ -52,7 +52,7 @@ jobs:
           mvn package
           artifactid = $(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
           jarversion = $(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          originaljarname = $artifactid-$jarversion.jar
+          originaljarname = "$artifactid-$jarversion.jar"
           echo "Renaming $originaljarname to app.jar"
           mv ./target/$originaljarname ./target/app.jar
 
