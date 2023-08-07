@@ -36,7 +36,7 @@ jobs:
           else
               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
           fi
-      - name: Build Frontend
+      - name: Build React Frontend
         run: |
           echo "Building frontend and merge into spring boot static folder. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
           cd ./app/frontend
@@ -47,7 +47,7 @@ jobs:
         run: |
           echo "Building spring boot app. Enviroment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
           cd ./app/backend
-          ./mvnw package
+          mvn package
 
       - name: Upload artifacts for backend deployment jobs
         uses: actions/upload-artifact@v2
