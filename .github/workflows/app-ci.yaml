@@ -47,16 +47,21 @@ jobs:
 
       - name: Build Spring Boot App
         run: |
-          echo "Building spring boot app. Enviroment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
+          echo "Building spring boot app. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
           cd ./app/backend
           mvn package
+          artifactid = $(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+          jarversion = $(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          originaljarname = $artifactid-$jarversion.jar
+          echo "Renaming $originaljarname to app.jar"
+          mv ./target/$originaljarname ./target/app.jar
 
       - name: Upload artifacts for backend deployment jobs
         uses: actions/upload-artifact@v2
         with:
           name: spring-boot-app
           path: |
-            ./app/backend/target/*.jar
+            ./app/backend/target/app.jar
 
 
   deploy:
