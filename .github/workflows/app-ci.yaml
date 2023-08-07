@@ -1,0 +1,80 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+
+name: App Continuous Integration pipeline
+
+on:
+  push:
+    branches:
+      - app-ci-github-actions
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      env-name: ${{steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT}}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Java version
+        uses: actions/setup-python@v1
+        with:
+          java-version: '17'
+
+      - name: Set environment for branch
+        id: set-deploy-env
+        run: |
+          if [[ $GITHUB_REF_NAME == 'refs/heads/main' ]]; then
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF_NAME == 'refs/heads/develop' ]]; then
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF_NAME == 'refs/heads/release' ]]; then
+               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          else
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build Frontend
+        run: |
+          echo "Building frontend and merge into spring boot static folder. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
+          cd ./app/frontend
+          npm install
+          npm run build
+
+      - name: Build Spring Boot App
+        run: |
+          echo "Building spring boot app. Enviroment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
+          cd ./app/backend
+          ./mvnw package
+
+      - name: Upload artifacts for backend deployment jobs
+        uses: actions/upload-artifact@v2
+        with:
+          name: spring-boot-app
+          path: |
+            ./app/backend/target/*.jar
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: ${{ needs.build.outputs.env-name}}
+      url: ${{ steps.deploy-app.outputs.webapp-url }}
+
+    steps:
+      - name: Download backend artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: spring-boot-app
+          path: ./backend
+
+      - name: 'Deploy backend to Azure Web App'
+        uses: azure/webapps-deploy@v2
+        id: deploy-app
+        with:
+          app-name: ${{ vars.AZUREAPPSERVICE_APP_NAME }}
+          package: ./backend
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE}}
