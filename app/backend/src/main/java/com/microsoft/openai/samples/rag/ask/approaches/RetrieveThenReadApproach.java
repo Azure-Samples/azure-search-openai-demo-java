@@ -27,10 +27,6 @@ import java.util.*;
 @Component
 public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse> {
     private static final Logger logger = LoggerFactory.getLogger(RetrieveThenReadApproach.class);
-    private String indexContentFieldName = "content";
-    private String indexSourcePageFieldName = "sourcepage";
-    private String indexCategoryFieldName = "category";
-
     private CognitiveSearchProxy cognitiveSearchProxy;
     private OpenAIProxy openAIProxy;
     public RetrieveThenReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIProxy openAIProxy) {
@@ -147,15 +143,4 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
         return sources;
     }
 
-    public void setIndexContentFieldName(String indexContentFieldName) {
-        this.indexContentFieldName = indexContentFieldName;
-    }
-
-    public void setIndexSourcePageFieldName(String indexSourcePageFieldName) {
-        this.indexSourcePageFieldName = indexSourcePageFieldName;
-    }
-
-    public void setIndexCategoryFieldName(String indexCategoryFieldName) {
-        this.indexCategoryFieldName = indexCategoryFieldName;
-    }
 }
