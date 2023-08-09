@@ -122,6 +122,17 @@ To properly configure automated build and deploy for both backend and frontend c
 
 ![pipeline success](./docs/github-actions-pipeline-success.png)
 
+## Custom Data Ingestion and Indexing
+The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
+
+If you want to chat with your custom documents you can:
+1. Add your pdf documents in the [data folder](./data/).
+2. Open a terminal and cd to repo root folder. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java` 
+3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
+4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead on each run all documents in data folder will be ingested.Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, cognitive search index have been updated and stored (until you want to manually delete it from your azure cognitive search instance)
+5. if ingestion and indexing is completed successfully you should see a message like this
+![prepdocs success](./docs/prepdocs-success.png)
+
 ## Resources
 
 * [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and Cognitive Search](https://aka.ms/entgptsearchblog)
