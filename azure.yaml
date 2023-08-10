@@ -1,34 +1,80 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+trigger:
+- main
 
-name: azure-search-openai-demo
-metadata:
-  template: azure-search-openai-demo@0.0.2-beta
-services:
-  backend:
-    project: ./app/backend
-    language: java
-    host: appservice
-    hooks:
-      prepackage:
-        windows:
-          shell: pwsh
-          run:  cd ../frontend;npm install;npm run build
-          interactive: true
-          continueOnError: false
-        posix:
-          shell: sh
-          run:  cd ../frontend;npm install;npm run build
-          interactive: true
-          continueOnError: false
-hooks:
-    postprovision:
-      windows:
-        shell: pwsh
-        run: ./scripts/prepdocs.ps1
-        interactive: true
-        continueOnError: false
-      posix:
-        shell: sh
-        run: ./scripts/prepdocs.sh
-        interactive: true
-        continueOnError: false
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: Build
+  steps:
+  - task: Npm@1
+    displayName: 'Npm Install'
+    inputs:
+      command: 'install'
+      workingDir: 'app/frontend/'
+  - task: Npm@1
+    displayName: 'Npm run build'
+    inputs:
+      command: 'custom'
+      workingDir: 'app/frontend/'
+      customCommand: 'run build'
+    
+    # build springboot app with Maven
+  - task: Maven@4
+    displayName: 'Build Springboot App' 
+    inputs:
+      mavenPomFile: 'app/backend/pom.xml'
+      goals: 'package'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.17'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      mavenVersionOption: 'Default'
+      mavenAuthenticateFeed: false
+      effectivePomSkip: false
+      sonarQubeRunAnalysis: false
+
+    # get jar name from pom.xml and set it as output variable so Deploy job and use it
+  - powershell: |
+        [xml]$pomXml = Get-Content .\app\backend\pom.xml
+        $version=$pomXml.project.version
+        $artifactId=$pomXml.project.artifactId
+        Write-Host "##vso[task.setvariable variable=jarfilename;isOutput=true]$artifactId-$version"
+    name: pomvariable
+
+    # copy final jar file to target folder
+  - task: CopyFiles@2
+    displayName: 'Copy Content'
+    inputs:
+      Contents: 'app/backend/target/$(pomvariable.jarfilename).jar'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    # upload the artifact to spring-boot-app container  
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Springboot App'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'spring-boot-app'
+      publishLocation: 'Container'
+
+- job: Deploy
+  dependsOn: Build
+  variables:
+    buildjarfilename: $[ dependencies.Build.outputs['pomvariable.jarfilename'] ]
+  steps:
+    # download the artifact spring-boot-app from the previous job
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      source: 'current'
+      artifact: 'spring-boot-app'
+      path: '$(Pipeline.Workspace)'
+  
+    # deploy to web app
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: '##Use your own subscription via Service connections##'
+      appType: 'webAppLinux'
+      appName: '##Use your own web app name##'
+      package: '$(Pipeline.Workspace)/**/$(buildjarfilename).jar'
+      runtimeStack: 'JAVA|17-java17'
+      startUpCommand: 'java -jar /home/site/wwwroot/$(buildjarfilename).jar'
