@@ -24,7 +24,7 @@ public class CognitiveSearchConfiguration {
     TokenCredential tokenCredential;
 
     @Bean
-    @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "true")
+    @ConditionalOnProperty(name = "cognitive.tracing.enabled", havingValue = "true")
     public SearchClient searchTracingEnabledClient() {
         String endpoint = "https://%s.search.windows.net".formatted(searchServiceName);
 
@@ -43,7 +43,7 @@ public class CognitiveSearchConfiguration {
 
 
     @Bean
-    @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "false")
+    @ConditionalOnProperty(name = "cognitive.tracing.enabled", havingValue = "false")
     public SearchClient searchDefaultClient() {
         String endpoint = "https://%s.search.windows.net".formatted(searchServiceName);
         return new SearchClientBuilder()

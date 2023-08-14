@@ -1,5 +1,6 @@
 package com.microsoft.openai.samples.rag.test.config;
 
+import com.azure.ai.openai.OpenAIAsyncClient;
 import com.microsoft.openai.samples.rag.proxy.BlobStorageProxy;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
@@ -14,11 +15,9 @@ import org.springframework.context.annotation.Profile;
 public class ProxyMockConfiguration {
 
 
-        @Bean
-        @Primary
-        public CognitiveSearchProxy mockedCognitiveSearchProxy() {
-            return Mockito.mock(CognitiveSearchProxy.class);
-        }
+    @Bean
+    @Primary
+    public CognitiveSearchProxy mockedCognitiveSearchProxy() { return Mockito.mock(CognitiveSearchProxy.class); }
 
     @Bean
     @Primary
@@ -30,6 +29,11 @@ public class ProxyMockConfiguration {
     @Primary
     public BlobStorageProxy mockedBlobStorageProxy() {
         return Mockito.mock(BlobStorageProxy.class);
+    }
+
+    @Bean
+    @Primary
+    public OpenAIAsyncClient mockedOpenAIAsynchClient() { return Mockito.mock(OpenAIAsyncClient.class);
     }
 
 }

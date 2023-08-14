@@ -1,9 +1,6 @@
 package com.microsoft.openai.samples.rag.ask.controller;
 
-import com.microsoft.openai.samples.rag.approaches.RAGApproach;
-import com.microsoft.openai.samples.rag.approaches.RAGApproachFactory;
-import com.microsoft.openai.samples.rag.approaches.RAGOptions;
-import com.microsoft.openai.samples.rag.approaches.RAGResponse;
+import com.microsoft.openai.samples.rag.approaches.*;
 import com.microsoft.openai.samples.rag.controller.Overrides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +39,7 @@ public class AskController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 		}
 
-		RAGApproach<String,RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach());
+		RAGApproach<String,RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach(), RAGType.ASK);
 
 		//set empty overrides if not provided
 		if(askRequest.getOverrides() == null) { askRequest.setOverrides(new Overrides());}

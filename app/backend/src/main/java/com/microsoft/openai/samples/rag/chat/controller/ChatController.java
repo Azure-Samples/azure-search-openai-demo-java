@@ -1,10 +1,7 @@
 package com.microsoft.openai.samples.rag.chat.controller;
 
 import com.azure.ai.openai.models.ChatMessage;
-import com.microsoft.openai.samples.rag.approaches.RAGApproach;
-import com.microsoft.openai.samples.rag.approaches.RAGApproachFactory;
-import com.microsoft.openai.samples.rag.approaches.RAGOptions;
-import com.microsoft.openai.samples.rag.approaches.RAGResponse;
+import com.microsoft.openai.samples.rag.approaches.*;
 import com.microsoft.openai.samples.rag.chat.approaches.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.chat.approaches.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.controller.Overrides;
@@ -46,7 +43,7 @@ public class ChatController {
 		}
 
 
-		RAGApproach<ChatGPTConversation,RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.getApproach());
+		RAGApproach<ChatGPTConversation,RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.getApproach(), RAGType.CHAT);
 
 		//set empty overrides if not provided
 		if(chatRequest.getOverrides() == null) { chatRequest.setOverrides(new Overrides());}

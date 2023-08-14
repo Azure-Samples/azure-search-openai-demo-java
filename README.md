@@ -1,4 +1,7 @@
 # ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
+[![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=599293758&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
+[![Open in VS Code Dev - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/dantelmomsft/azure-search-openai-demo-java/)
+
 This repo is the java conversion of the well known [chatGPT + Enterprise data code sample](https://github.com/Azure-Samples/azure-search-openai-demo) originally written in python.
 It demonstrates a few approaches for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model (gpt-35-turbo), and Azure Cognitive Search for data indexing and retrieval.
 
@@ -55,6 +58,7 @@ ReadDecomposeAsk | :x: | :soon:
 
 Execute the following command, if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
+1. Run `azd auth login`
 1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
     * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.  
@@ -82,6 +86,13 @@ It will look like the following:
 3. Run `./start.ps1` or `./start.sh` or run the "VS Code Task: Start App" to start the project locally.
 4. Wait for the spring boot server to start and refresh your browser to localhost:8080
 
+### To Run in GitHub Codespaces or VS Code Remote Containers
+
+You can run this repo virtually by using GitHub Codespaces or VS Code Remote Containers.  Click on one of the buttons below to open this repo in one of those options.
+
+[![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=599293758&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
+[![Open in VS Code Dev - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/dantelmomsft/azure-search-openai-demo-java/)
+
 ### UI Navigation
 
 * In Azure: navigate to the Azure WebApp deployed by azd. The URL is printed out when azd completes (as "Endpoint"), or you can find it in the Azure portal.
@@ -92,6 +103,35 @@ Once in the web app:
 * Try different topics in chat or Q&A context. For chat, try follow up questions, clarifications, ask to simplify or elaborate on answer, etc.
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
+
+## App Continuous Integration
+if you don't want to use azd to build and deploy the app, a GitHub automated CI pipeline is provided in `.github/workflows/app-ci.yml`. Some notes about the CI pipeline design:
+- It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
+- GitHub environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in github repository settings:
+    - `AZUREAPPSERVICE_PUBLISHPROFILE` is used to store the azure app service publish profile configuration securely.
+    - `AZUREAPPSERVICE_APP_NAME` is used to store the azure web app resource name generated during infra arm deployment.
+
+To properly configure automated build and deploy for both backend and frontend components follow below steps:
+ 
+ 1. Go to your forked repository in GitHub and create an [environment]((https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)) called 'Development' (yes this is the exact name; don't change it). If you want to change the environment name (also adding new branches and environments, change the current branch/env mapping) you can do that, but make sure to change the pipeline code accordingly in `.github/workflows/app-ci.yml` (starting line 29)
+ 2. Create 'Development' environment [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the azure web app hosting both frontend and backend [publish profiles]((https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service?view=vs-2022)). You'll need to copy paste the xml content from the .PublishSettings file into the secret value:
+     - Create a secret with name `AZUREAPPSERVICE_PUBLISHPROFILE` and set the Value field to publish profile of the azure web app
+3. Create 'Development' environment [variables](https://docs.github.com/en/actions/learn-github-actions/variables#creating-configuration-variables-for-an-environment) for azure web app resource name:
+    - Create a variable with name `AZUREAPPSERVICE_APP_NAME` and set the Value field to the azure web app resource name 
+4. For each commit you push check the status of the triggered pipeline in the GitHub Actions tab, you should see a pipeline has been triggered for the specific commit. If everything is ok you should see green checkmark on both build and deploy jobs in the pipeline detail like below:
+
+![pipeline success](./docs/github-actions-pipeline-success.png)
+
+## Custom Data Ingestion and Indexing
+The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
+
+If you want to chat with your custom documents you can:
+1. Add your pdf documents in the [data folder](./data/).
+2. Open a terminal and cd to repo root folder. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java` 
+3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
+4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead on each run all documents in data folder will be ingested.Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, cognitive search index have been updated and stored (until you want to manually delete it from your azure cognitive search instance)
+5. if ingestion and indexing is completed successfully you should see a message like this
+![prepdocs success](./docs/prepdocs-success.png)
 
 ## Resources
 

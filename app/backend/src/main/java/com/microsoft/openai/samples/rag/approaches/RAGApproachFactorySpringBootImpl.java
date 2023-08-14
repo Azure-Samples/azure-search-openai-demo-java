@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, ApplicationContextAware {
     private ApplicationContext applicationContext;
-    private static String CHAT_READ_RETRIEVE_READ = "crrr";
+
     private static String READ_RETRIEVE_READ = "rrr";
     private static String RETRIEVE_THEN_READ = "rtr";
 
@@ -23,16 +23,18 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
      * @return
      */
     @Override
-    public RAGApproach createApproach(String approachName) {
+    public RAGApproach createApproach(String approachName, RAGType ragType) {
 
-        if(RETRIEVE_THEN_READ.equals(approachName)) {
-            return applicationContext.getBean(RetrieveThenReadApproach.class);
-        } else if(CHAT_READ_RETRIEVE_READ.equals(approachName)) {
+        if (ragType.equals(RAGType.CHAT) && READ_RETRIEVE_READ.equals(approachName)) {
             return applicationContext.getBean(ChatReadRetrieveReadApproach.class);
-        } else if(READ_RETRIEVE_READ.equals(approachName)) {
-            return applicationContext.getBean(ReadRetrieveReadApproach.class);}
-        else {
-            throw new IllegalArgumentException("Invalid approach name: " + approachName);
+
+        } else if (ragType.equals(RAGType.ASK)) {
+            if (RETRIEVE_THEN_READ.equals(approachName))
+                return applicationContext.getBean(RetrieveThenReadApproach.class);
+            else if (READ_RETRIEVE_READ.equals(approachName))
+                return applicationContext.getBean(ReadRetrieveReadApproach.class);
         }
+        //if this point is reached then the combination of approach and rag type is not supported
+        throw new IllegalArgumentException("Invalid combination for approach[%s] and rag type[%s]: ".formatted(approachName, ragType));
     }
 }

@@ -60,6 +60,22 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
     httpsOnly: true
   }
 
+  resource ftpsPublishingCredentials 'basicPublishingCredentialsPolicies' = {
+    name: 'ftp'
+    kind: 'ftp'
+    properties: {
+      allow: true
+    }
+  }
+
+  resource scmPublishingCredentials 'basicPublishingCredentialsPolicies' = {
+    name: 'scm'
+    kind: 'scm'
+    properties: {
+      allow: true
+    }
+  }
+
   identity: { type: managedIdentity ? 'SystemAssigned' : 'None' }
 
   resource configAppSettings 'config' = {

@@ -2,15 +2,14 @@ package com.microsoft.openai.samples.rag.ask.approaches;
 
 import com.azure.ai.openai.models.Completions;
 import com.azure.ai.openai.models.CompletionsOptions;
+import com.azure.core.util.Context;
 import com.azure.search.documents.SearchDocument;
 import com.azure.search.documents.models.*;
-import com.azure.core.util.Context;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.chat.approaches.ChatReadRetrieveReadApproach;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import org.slf4j.Logger;
@@ -27,7 +26,6 @@ import java.util.*;
 @Component
 public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse> {
     private static final Logger logger = LoggerFactory.getLogger(RetrieveThenReadApproach.class);
-
     private CognitiveSearchProxy cognitiveSearchProxy;
     private OpenAIProxy openAIProxy;
     public RetrieveThenReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIProxy openAIProxy) {

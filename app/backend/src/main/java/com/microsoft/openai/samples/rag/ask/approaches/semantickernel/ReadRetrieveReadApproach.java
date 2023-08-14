@@ -8,7 +8,7 @@ import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.KernelConfig;
-import com.microsoft.semantickernel.builders.SKBuilders;
+import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlanner;
 import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlannerRequestSettings;
@@ -90,13 +90,11 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
 
 
     private Kernel buildSemanticKernel( RAGOptions options) {
-        KernelConfig config = SKBuilders.kernelConfig()
-                .addTextCompletionService("davinci",
-                        kernel -> SKBuilders.textCompletionService().build(this.openAIAsyncClient, gptDeploymentModelId))
-                .build();
-
         Kernel kernel = SKBuilders.kernel()
-                .withKernelConfig(config)
+                .withDefaultAIService(SKBuilders.textCompletionService()
+                        .setModelId(gptDeploymentModelId)
+                        .withOpenAIClient(this.openAIAsyncClient)
+                        .build())
                 .build();
 
         kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, buildSearchOptions(options),options), "CognitiveSearchPlugin");
