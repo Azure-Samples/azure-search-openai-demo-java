@@ -71,7 +71,9 @@ stages:
   - deployment: DeploySpringbootApp
     displayName: 'Azure Web App' 
     variables:
-      buildjarfilename: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+    - group: azureSearchOpenAiDemoJavaDev
+    - name: buildjarfilename
+      value: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
     environment: 'dev'
     strategy:
      runOnce:
@@ -82,7 +84,7 @@ stages:
             inputs:
               azureSubscription: '<azureSubscriptionServiceConnection>'
               appType: 'webAppLinux'
-              appName: '<appServiceName>
+              appName: '$(azureAppServiceName)'
               package: '$(Pipeline.Workspace)/**/$(buildjarfilename).jar'
               runtimeStack: 'JAVA|17-java17'
               startUpCommand: 'java -jar /home/site/wwwroot/$(buildjarfilename).jar'
@@ -91,7 +93,10 @@ stages:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   dependsOn: Build
   variables:
-    buildjarfilename: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+  - group: azureSearchOpenAiDemoJavaProd
+  - name: buildjarfilename
+    value: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+
   jobs:
   - deployment: DeploySpringbootApp
     displayName: 'Azure Web App' 
@@ -105,7 +110,7 @@ stages:
             inputs:
               azureSubscription: '<azureSubscriptionServiceConnection>'
               appType: 'webAppLinux'
-              appName: '<appServiceName>'
+              appName: '$(azureAppServiceName)'
               package: '$(Pipeline.Workspace)/**/$(buildjarfilename).jar'
               runtimeStack: 'JAVA|17-java17'
               startUpCommand: 'java -jar /home/site/wwwroot/$(buildjarfilename).jar'
