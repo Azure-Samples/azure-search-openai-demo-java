@@ -18,7 +18,7 @@ The repo includes sample data so it's ready to try end to end. In this sample ap
 
 ![Chat screen](docs/chatscreen.png)
 
-## Python Convertion Status
+## Python Conversion Status
 This repo is focused to showcase different options to implement semantic search using RAG patterns with java, azure open AI and semantic kernel.
 It is still under active development. Below you can find the status of the python original repo convertion and the planned features.
 
