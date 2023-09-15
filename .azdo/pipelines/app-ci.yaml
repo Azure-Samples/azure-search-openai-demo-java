@@ -1,0 +1,116 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  jobs:
+  - job: WebApp
+    steps:
+    - task: Npm@1
+      displayName: 'Npm Install'
+      inputs:
+        command: 'install'
+        workingDir: 'app/frontend/'
+    - task: Npm@1
+      displayName: 'Npm run build'
+      inputs:
+        command: 'custom'
+        workingDir: 'app/frontend/'
+        customCommand: 'run build'
+      
+    - task: Maven@4
+      displayName: 'Build springboot app' 
+      inputs:
+        mavenPomFile: 'app/backend/pom.xml'
+        goals: 'package'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: true
+        mavenVersionOption: 'Default'
+        mavenAuthenticateFeed: false
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
+
+      # get jar name from pom.xml and set it as output variable so Deploy job and use it
+    - task: Bash@3
+      displayName: 'Get jar file name from pom.xml'
+      inputs:
+        targetType: 'inline'
+        script: |
+          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          artifactId=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+          echo "##vso[task.setvariable variable=jarfilename;isOutput=true]$artifactId-$version"
+        workingDirectory: 'app/backend/'
+      name: pomvariable
+
+      # copy final jar file to target folder
+    - task: CopyFiles@2
+      displayName: 'Copy jar file'
+      inputs:
+        Contents: 'app/backend/target/$(pomvariable.jarfilename).jar'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+      # upload the artifact to spring-boot-app container  
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload springboot app artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'spring-boot-app'
+        publishLocation: 'Container'
+
+- stage: DeployDev
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+  dependsOn: Build
+  variables:
+    buildjarfilename: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+  jobs:
+  - deployment: DeploySpringbootApp
+    displayName: 'Azure Web App' 
+    variables:
+    - group: azureSearchOpenAiDemoJavaDev
+    - name: buildjarfilename
+      value: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+    environment: 'dev'
+    strategy:
+     runOnce:
+       deploy:
+         steps:
+          - task: AzureWebApp@1
+            displayName: 'Azure Web App'
+            inputs:
+              azureSubscription: '<azureSubscriptionServiceConnection>'
+              appType: 'webAppLinux'
+              appName: '$(azureAppServiceName)'
+              package: '$(Pipeline.Workspace)/**/$(buildjarfilename).jar'
+              runtimeStack: 'JAVA|17-java17'
+              startUpCommand: 'java -jar /home/site/wwwroot/$(buildjarfilename).jar'
+
+- stage: DeployProd
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  dependsOn: Build
+  variables:
+  - group: azureSearchOpenAiDemoJavaProd
+  - name: buildjarfilename
+    value: $[ stageDependencies.Build.WebApp.outputs['pomvariable.jarfilename'] ]
+
+  jobs:
+  - deployment: DeploySpringbootApp
+    displayName: 'Azure Web App' 
+    environment: 'prod'
+    strategy:
+     runOnce:
+       deploy:
+         steps:
+          - task: AzureWebApp@1
+            displayName: 'Azure Web App'
+            inputs:
+              azureSubscription: '<azureSubscriptionServiceConnection>'
+              appType: 'webAppLinux'
+              appName: '$(azureAppServiceName)'
+              package: '$(Pipeline.Workspace)/**/$(buildjarfilename).jar'
+              runtimeStack: 'JAVA|17-java17'
+              startUpCommand: 'java -jar /home/site/wwwroot/$(buildjarfilename).jar'

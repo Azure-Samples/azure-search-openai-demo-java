@@ -106,6 +106,8 @@ Once in the web app:
 * Click on "settings" to try different options, tweak prompts, etc.
 
 ## App Continuous Integration
+
+### GitHub
 if you don't want to use azd to build and deploy the app, a GitHub automated CI pipeline is provided in `.github/workflows/app-ci.yml`. Some notes about the CI pipeline design:
 - It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
 - GitHub environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in github repository settings:
@@ -122,6 +124,29 @@ To properly configure automated build and deploy for both backend and frontend c
 4. For each commit you push check the status of the triggered pipeline in the GitHub Actions tab, you should see a pipeline has been triggered for the specific commit. If everything is ok you should see green checkmark on both build and deploy jobs in the pipeline detail like below:
 
 ![pipeline success](./docs/github-actions-pipeline-success.png)
+
+### Azure DevOps
+Azure Devops can also be used to build and deploy the app.  Azure Devops automated CICD pipeline is provided in `.azdo/pipelines/app-ci.yaml`.  Some notes about the CICD pipeline design:
+- Similar to Github action above, this pipeline uses branch per environment approach as well.
+- Azure Devops library variable groups and variables are used to configure environment specific configuration.  They need to be configured manually in Azure Devops Pipeline Library.
+1. Navigate to Pipeline / Library
+2. Add new variable group `azureSearchOpenAiDemoJavaDev` and variable `azureAppServiceName`.  Put the name of the Azure App Service for development as the value.
+3. Add new variable group `azureSearchOpenAiDemoJavaProd` and variable `azureAppServiceName`.  Put the name of the Azure App Service for production as the value.
+
+Connect Azure Devops to the Github Repo:
+1. Create a new pipeline.
+2. For 'Where is your code?' Select Github.
+3. Go through the Github App authentication process [Github App](https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#github-app-authentication).
+4. Select Existing Azure Pipeline YAML file.
+5. Point dropdown values to the path `.azdo/pipelines/app-ci.yaml`.
+6. Do not Run but Save the pipeline.
+Once saved, you will see dev and prod enviornment got automatically created under Pipeline / Enviornments.  You can setup Approvals and Checks within enviornments if necessary.
+
+Connect Azure Devops to Azure:
+1. Add a Service Connection following this [guide](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops) to allow Azure Devops pipeline to connect to your Azure resources /App Service.
+2. Modify `.azdo/pipelines/app-ci.yaml` '<azureSubscriptionServiceConnection>' and replace it with the name of the Service Connection.
+
+You can now either run the pipeline manually or commit to a branch to trigger the pipeline.
 
 ## Custom Data Ingestion and Indexing
 The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
