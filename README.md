@@ -19,14 +19,14 @@ The repo includes sample data so it's ready to try end to end. In this sample ap
 ![Chat screen](docs/chatscreen.png)
 
 ## Python Conversion Status
-This repo is focused to showcase different options to implement semantic search using RAG patterns with java, azure open AI and semantic kernel.
+This repo is focused to showcase different options to implement semantic search using RAG patterns with Java, Azure OpenAI and Semantic Kernel.
 It is still under active development. Below you can find the status of the python original repo convertion and the planned features.
 
  RAG Approach | Description                                                                                                                                                                                                                  | Java Open AI SDK   | Java Semantic Kernel | 
 :------------ |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------| :-------------|
 RetrieveThenRead | Use Cognitive Search and OpenAI APIs directly. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer (completion) for the user question                    | :white_check_mark: | :x:                           
-ChatReadRetrieveRead| Use Cognitive Search and OpenAI APIs directly. It first uses Open AI to generate a search keyword for the chat history and then answer to the last chat question replicating RetrieveThenRead same steps.                    | :white_check_mark: | :x:                
-ReadRetrieveRead | Use java Semantic Kernel framework to orchestrate Cognitive Search and Open AI as native and semantic functions respectively. A sequential planner is used to generate steps orchestation for answering the user question.   | :x:                | :white_check_mark: 
+ChatReadRetrieveRead| Use Cognitive Search and OpenAI APIs directly. It first uses OpenAI to generate a search keyword for the chat history and then answer to the last chat question replicating RetrieveThenRead same steps.                    | :white_check_mark: | :x:                
+ReadRetrieveRead | Use java Semantic Kernel framework to orchestrate Cognitive Search and OpenAI as native and semantic functions respectively. A sequential planner is used to generate steps orchestation for answering the user question.   | :x:                | :white_check_mark: 
 ReadDecomposeAsk | Like ReadRetrieveRead but use Java Semantic Kernel built-in vector storage and search capabilities to simplify RAG implementation when vector similarity search is used to retrieve relevant documents to answer a question. | :x:                | :soon:             
 
 
