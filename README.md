@@ -145,8 +145,11 @@ Once saved, you will see dev and prod enviornment got automatically created unde
 Connect Azure Devops to Azure:
 1. Add a Service Connection following this [guide](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops) to allow Azure Devops pipeline to connect to your Azure resources /App Service.
 2. Modify `.azdo/pipelines/app-ci.yaml` '<azureSubscriptionServiceConnection>' and replace it with the name of the Service Connection.
+![location1](./docs/pipeline-azure-service-connection1.png)
+![location2](./docs/pipeline-azure-service-connection2.png)
 
 You can now either run the pipeline manually or commit to a branch to trigger the pipeline.
+![azDoPipeline success](./docs/azDo-pipeline-success.png)
 
 ## Custom Data Ingestion and Indexing
 The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
