@@ -14,10 +14,11 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class ProxyMockConfiguration {
 
-
     @Bean
     @Primary
-    public CognitiveSearchProxy mockedCognitiveSearchProxy() { return Mockito.mock(CognitiveSearchProxy.class); }
+    public CognitiveSearchProxy mockedCognitiveSearchProxy() {
+        return Mockito.mock(CognitiveSearchProxy.class);
+    }
 
     @Bean
     @Primary
@@ -33,7 +34,8 @@ public class ProxyMockConfiguration {
 
     @Bean
     @Primary
-    public OpenAIAsyncClient mockedOpenAIAsynchClient() { return Mockito.mock(OpenAIAsyncClient.class);
+    public OpenAIAsyncClient mockedOpenAIAsynchClient() {
+        return Mockito.mock(OpenAIAsyncClient.class);
     }
 
 }

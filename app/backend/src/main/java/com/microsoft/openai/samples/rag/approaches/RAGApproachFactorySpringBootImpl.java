@@ -9,16 +9,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, ApplicationContextAware {
+
+    private static final String READ_RETRIEVE_READ = "rrr";
+    private static final String RETRIEVE_THEN_READ = "rtr";
     private ApplicationContext applicationContext;
 
-    private static String READ_RETRIEVE_READ = "rrr";
-    private static String RETRIEVE_THEN_READ = "rtr";
-
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
     /**
      * Retrieve a specific approach bean definition based on approachName
+     *
      * @param approachName
      * @return
      */
@@ -37,4 +35,9 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
         //if this point is reached then the combination of approach and rag type is not supported
         throw new IllegalArgumentException("Invalid combination for approach[%s] and rag type[%s]: ".formatted(approachName, ragType));
     }
+
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
 }

@@ -23,6 +23,7 @@ public class ChatRequest {
     public void setApproach(String approach) {
         this.approach = approach;
     }
+
     public String getApproach() {
         return approach;
     }
@@ -30,10 +31,10 @@ public class ChatRequest {
     public void setOverrides(Overrides overrides) {
         this.overrides = overrides;
     }
+
     public Overrides getOverrides() {
         return overrides;
     }
-
 
 }
 

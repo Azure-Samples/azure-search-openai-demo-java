@@ -23,4 +23,5 @@ public class ChatTurn {
     public void setBotText(String botText) {
         this.botText = botText;
     }
+
 }

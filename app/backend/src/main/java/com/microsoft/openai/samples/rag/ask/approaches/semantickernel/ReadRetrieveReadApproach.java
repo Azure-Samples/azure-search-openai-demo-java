@@ -7,7 +7,6 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.semantickernel.Kernel;
-import com.microsoft.semantickernel.KernelConfig;
 import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlanner;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -28,12 +28,12 @@ import java.util.Set;
  */
 @Component
 public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse> {
-    private static final Logger logger = LoggerFactory.getLogger(ReadRetrieveReadApproach.class);
-    private final String planPrompt = """
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadRetrieveReadApproach.class);
+    private static final String PLAN_PROMPT = """
             Take the input as a question and answer it finding any information needed
             """;
-
-    private CognitiveSearchProxy cognitiveSearchProxy;
+    private final CognitiveSearchProxy cognitiveSearchProxy;
     // This will be injected as prototype bean
     @Value("${openai.gpt.deployment}")
     private String gptDeploymentModelId;
@@ -43,23 +43,21 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
     public ReadRetrieveReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIAsyncClient openAIAsyncClient) {
         this.cognitiveSearchProxy = cognitiveSearchProxy;
         this.openAIAsyncClient = openAIAsyncClient;
-
-
     }
 
     /**
-     * @param question
+     * @param questionOrConversation
      * @param options
      * @return
      */
     @Override
-    public RAGResponse run(String question, RAGOptions options) {
+    public RAGResponse run(String questionOrConversation, RAGOptions options) {
 
         Kernel semanticKernel = buildSemanticKernel(options);
 
         String customPlannerPrompt;
-        try (InputStream altprompt = getClass().getClassLoader().getResourceAsStream("semantickernel/require_context_variable_planner_prompt.txt")) {
-            customPlannerPrompt = new String(altprompt.readAllBytes(), StandardCharsets.UTF_8);
+        try (InputStream altPrompt = getClass().getClassLoader().getResourceAsStream("semantickernel/require_context_variable_planner_prompt.txt")) {
+            customPlannerPrompt = new String(Objects.requireNonNull(altPrompt).readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException("Cannot create custom Sequential Planner. Cannot found [semantickernel/require_context_variable_planner_prompt.txt] in the classpath ",e);
         }
@@ -73,21 +71,20 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
                 1024
         ), customPlannerPrompt);
 
-        var plan = sequentialPlanner.createPlanAsync(this.planPrompt).block();
+        var plan = Objects.requireNonNull(sequentialPlanner.createPlanAsync(PLAN_PROMPT).block());
 
-        logger.debug("Semantic kernel plan calculated is [{}]",plan.toPlanString());
+        LOGGER.debug("Semantic kernel plan calculated is [{}]", plan.toPlanString());
 
-        SKContext planContext = plan.invokeAsync(question).block();
+        SKContext planContext = Objects.requireNonNull(plan.invokeAsync(questionOrConversation).block());
 
        return new RAGResponse.Builder()
                                 .prompt(plan.toPlanString())
                                 .answer(planContext.getResult())
                                 .sourcesAsText(planContext.getVariables().get("sources"))
-                                .question(question)
+                                .question(questionOrConversation)
                                 .build();
 
     }
-
 
     private Kernel buildSemanticKernel( RAGOptions options) {
         Kernel kernel = SKBuilders.kernel()
@@ -99,7 +96,6 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
 
         kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, buildSearchOptions(options),options), "CognitiveSearchPlugin");
 
-
         kernel.importSkillFromResources(
                 "semantickernel/Plugins",
                 "RAG",
@@ -110,12 +106,11 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
         return kernel;
     }
 
-
     private SearchOptions buildSearchOptions(RAGOptions options){
         var searchOptions = new SearchOptions();
 
         Optional.ofNullable(options.getTop()).ifPresentOrElse(
-                value -> searchOptions.setTop(value),
+                searchOptions::setTop,
                 () -> searchOptions.setTop(3));
         Optional.ofNullable(options.getExcludeCategory())
                 .ifPresentOrElse(

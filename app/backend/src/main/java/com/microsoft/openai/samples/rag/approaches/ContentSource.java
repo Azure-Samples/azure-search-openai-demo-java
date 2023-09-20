@@ -1,18 +1,19 @@
 package com.microsoft.openai.samples.rag.approaches;
 
 public class ContentSource {
+
     private String sourceName;
     private String sourceContent;
-    private boolean noNewLine = true;
+    private final boolean noNewLine;
 
-    public ContentSource(String sourceName, String sourceContent, Boolean noNewLine){
+    public ContentSource(String sourceName, String sourceContent, Boolean noNewLine) {
         this.noNewLine = noNewLine;
         this.sourceName = sourceName;
         buildContent(sourceContent);
     }
+
     public ContentSource(String sourceName, String sourceContent) {
         this(sourceName, sourceContent, true);
-
     }
 
     public String getSourceName() {
@@ -35,9 +36,10 @@ public class ContentSource {
         return noNewLine;
     }
 
-    private void buildContent(String sourceContent){
-        if(this.noNewLine){
-            this.sourceContent = sourceContent.replaceAll("\n", "");
+    private void buildContent(String sourceContent) {
+        if (this.noNewLine) {
+            this.sourceContent = sourceContent.replace("\n", "");
         }
     }
+
 }

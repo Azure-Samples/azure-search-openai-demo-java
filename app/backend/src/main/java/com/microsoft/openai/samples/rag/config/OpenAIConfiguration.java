@@ -6,7 +6,6 @@ import com.azure.ai.openai.OpenAIClientBuilder;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.http.policy.HttpLogOptions;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenAIConfiguration {
 
-    @Value("${openai.service}") String openAIServiceName;
+    @Value("${openai.service}")
+    String openAIServiceName;
+    final TokenCredential tokenCredential;
 
-    @Autowired
-    TokenCredential tokenCredential;
+    public OpenAIConfiguration(TokenCredential tokenCredential) {
+        this.tokenCredential = tokenCredential;
+    }
 
     @Bean
     @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "true")
@@ -30,22 +32,21 @@ public class OpenAIConfiguration {
         httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
 
         return new OpenAIClientBuilder()
-                .endpoint(endpoint)
-                .credential(tokenCredential)
-                .httpLogOptions(httpLogOptions)
-                .buildClient();
+            .endpoint(endpoint)
+            .credential(tokenCredential)
+            .httpLogOptions(httpLogOptions)
+            .buildClient();
 
     }
-
 
     @Bean
     @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "false")
     public OpenAIClient openAIDefaultClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
         return new OpenAIClientBuilder()
-                .endpoint(endpoint)
-                .credential(tokenCredential)
-                .buildClient();
+            .endpoint(endpoint)
+            .credential(tokenCredential)
+            .buildClient();
     }
 
     @Bean
@@ -58,23 +59,21 @@ public class OpenAIConfiguration {
         httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
 
         return new OpenAIClientBuilder()
-                .endpoint(endpoint)
-                .credential(tokenCredential)
-                .httpLogOptions(httpLogOptions)
-                .buildAsyncClient();
+            .endpoint(endpoint)
+            .credential(tokenCredential)
+            .httpLogOptions(httpLogOptions)
+            .buildAsyncClient();
 
     }
-
 
     @Bean
     @ConditionalOnProperty(name = "openai.tracing.enabled", havingValue = "false")
     public OpenAIAsyncClient defaultAsyncClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
         return new OpenAIClientBuilder()
-                .endpoint(endpoint)
-                .credential(tokenCredential)
-                .buildAsyncClient();
+            .endpoint(endpoint)
+            .credential(tokenCredential)
+            .buildAsyncClient();
     }
-
 
 }

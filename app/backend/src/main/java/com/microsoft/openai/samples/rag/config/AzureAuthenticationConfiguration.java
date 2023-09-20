@@ -9,18 +9,17 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class AzureAuthenticationConfiguration {
+
     @Profile("dev")
     @Bean
     public TokenCredential localTokenCredential() {
         return new AzureCliCredentialBuilder().build();
     }
 
-
     @Bean
     @Profile("default")
     public TokenCredential managedIdentityTokenCredential() {
         return new ManagedIdentityCredentialBuilder().build();
     }
-
 
 }

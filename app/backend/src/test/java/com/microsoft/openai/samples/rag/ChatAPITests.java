@@ -47,7 +47,6 @@ public class ChatAPITests {
 **/
 	}
 
-
 	private URI uri(String path) {
 		return restTemplate.getRestTemplate().getUriTemplateHandler().expand(path);
 	}

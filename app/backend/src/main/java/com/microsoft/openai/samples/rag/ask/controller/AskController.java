@@ -11,66 +11,69 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class AskController {
-	private static final Logger logger = LoggerFactory.getLogger(AskController.class);
-	private RAGApproachFactory ragApproachFactory;
 
-	AskController(RAGApproachFactory ragApproachFactory) {
-		this.ragApproachFactory = ragApproachFactory;
-	}
+    private static final Logger LOGGER = LoggerFactory.getLogger(AskController.class);
+    private final RAGApproachFactory<String, RAGResponse> ragApproachFactory;
 
-	@PostMapping("/api/ask")
-	public ResponseEntity<AskResponse> openAIAsk(@RequestBody AskRequest askRequest) {
-		logger.info("Received request for ask api with question [{}] and approach[{}]", askRequest.getQuestion(),askRequest.getApproach());
+    AskController(RAGApproachFactory<String, RAGResponse> ragApproachFactory) {
+        this.ragApproachFactory = ragApproachFactory;
+    }
 
-		if (!StringUtils.hasText(askRequest.getApproach())) {
-			logger.warn("approach cannot be null in ASK request");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+    @PostMapping("/api/ask")
+    public ResponseEntity<AskResponse> openAIAsk(@RequestBody AskRequest askRequest) {
+        LOGGER.info("Received request for ask api with question [{}] and approach[{}]", askRequest.getQuestion(), askRequest.getApproach());
 
-		if (!StringUtils.hasText(askRequest.getQuestion())) {
-			logger.warn("question cannot be null in ASK request");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+        if (!StringUtils.hasText(askRequest.getApproach())) {
+            LOGGER.warn("approach cannot be null in ASK request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
-		RAGApproach<String,RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach(), RAGType.ASK);
+        if (!StringUtils.hasText(askRequest.getQuestion())) {
+            LOGGER.warn("question cannot be null in ASK request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
-		//set empty overrides if not provided
-		if(askRequest.getOverrides() == null) { askRequest.setOverrides(new Overrides());}
+        RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach(), RAGType.ASK);
 
-		var ragOptions = new RAGOptions.Builder()
-				.semanticRanker(askRequest.getOverrides().isSemanticRanker())
-				.semanticCaptions(askRequest.getOverrides().isSemanticCaptions())
-				.excludeCategory(askRequest.getOverrides().getExcludeCategory())
-				.promptTemplate(askRequest.getOverrides().getPromptTemplate())
-				.top(askRequest.getOverrides().getTop())
-				.build();
+        //set empty overrides if not provided
+        if (askRequest.getOverrides() == null) {
+            askRequest.setOverrides(new Overrides());
+        }
 
-		return ResponseEntity.ok(buildAskResponse(ragApproach.run(askRequest.getQuestion(),ragOptions)));
-	}
+        var ragOptions = new RAGOptions.Builder()
+            .semanticRanker(askRequest.getOverrides().isSemanticRanker())
+            .semanticCaptions(askRequest.getOverrides().isSemanticCaptions())
+            .excludeCategory(askRequest.getOverrides().getExcludeCategory())
+            .promptTemplate(askRequest.getOverrides().getPromptTemplate())
+            .top(askRequest.getOverrides().getTop())
+            .build();
 
-	private AskResponse buildAskResponse(RAGResponse ragResponse) {
-		var askResponse = new AskResponse();
+        return ResponseEntity.ok(buildAskResponse(ragApproach.run(askRequest.getQuestion(), ragOptions)));
+    }
 
-		askResponse.setAnswer(ragResponse.getAnswer());
-		List<String> dataPoints;
-		if(ragResponse.getSourcesAsText() != null && !ragResponse.getSourcesAsText().isEmpty())
-			dataPoints = Arrays.asList(ragResponse.getSourcesAsText().split("\n"));
-		else
-		dataPoints = ragResponse.getSources().stream()
-				.map(source ->source.getSourceName()+": "+source.getSourceContent())
-				.collect(Collectors.toList());
+    private AskResponse buildAskResponse(RAGResponse ragResponse) {
+        var askResponse = new AskResponse();
 
-		askResponse.setDataPoints(dataPoints);
+        askResponse.setAnswer(ragResponse.getAnswer());
+        List<String> dataPoints;
+        if (ragResponse.getSourcesAsText() != null && !ragResponse.getSourcesAsText().isEmpty()) {
+            dataPoints = Arrays.asList(ragResponse.getSourcesAsText().split("\n"));
+        } else {
+            dataPoints = ragResponse.getSources().stream()
+                .map(source -> source.getSourceName() + ": " + source.getSourceContent())
+                .toList();
+        }
 
-		askResponse.setThoughts("Question:<br>"+ragResponse.getQuestion()+"<br><br>Prompt:<br>"+ragResponse.getPrompt().replace("\n","<br>"));
+        askResponse.setDataPoints(dataPoints);
 
-		return askResponse;
-	}
+        askResponse.setThoughts("Question:<br>" + ragResponse.getQuestion() + "<br><br>Prompt:<br>" + ragResponse.getPrompt().replace("\n", "<br>"));
+
+        return askResponse;
+    }
+
 }

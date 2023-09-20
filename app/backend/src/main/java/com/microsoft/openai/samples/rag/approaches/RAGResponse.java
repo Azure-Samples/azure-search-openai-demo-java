@@ -4,20 +4,19 @@ import java.util.List;
 
 public class RAGResponse {
 
-    private String question;
-    private List<ContentSource> sources;
-    private String sourcesAsText;
-    private String answer;
-    private String prompt;
+    private final String question;
+    private final List<ContentSource> sources;
+    private final String sourcesAsText;
+    private final String answer;
+    private final String prompt;
 
     private RAGResponse(Builder builder) {
         this.question = builder.question;
         this.sources = builder.sources;
         this.answer = builder.answer;
         this.prompt = builder.prompt;
-        this.sourcesAsText =builder.sourcesAsText;
+        this.sourcesAsText = builder.sourcesAsText;
     }
-
 
     public String getQuestion() {
         return question;
@@ -27,12 +26,13 @@ public class RAGResponse {
         return sources;
     }
 
-    public String getSourcesAsText() { return sourcesAsText;}
+    public String getSourcesAsText() {
+        return sourcesAsText;
+    }
 
     public String getAnswer() {
         return answer;
     }
-
 
     public String getPrompt() {
         return prompt;
@@ -75,8 +75,5 @@ public class RAGResponse {
             return new RAGResponse(this);
         }
     }
-
-
-
 
 }

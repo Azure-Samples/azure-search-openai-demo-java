@@ -1,6 +1,7 @@
 package com.microsoft.openai.samples.rag.approaches;
 
-public interface RAGApproachFactory<I,O> {
+public interface RAGApproachFactory<I, O> {
 
-    RAGApproach<I,O> createApproach(String approachName,RAGType ragType);
+    RAGApproach<I, O> createApproach(String approachName, RAGType ragType);
+
 }

@@ -6,10 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SemanticSearchAskPrompt {
-    private List<String> sources = new ArrayList<>();
-    private String question;
 
-    final private String promptTemplate = """
+    private final List<String> sources = new ArrayList<>();
+    private final String question;
+
+    private static final String PROMPT_TEMPLATE = """
         You are an intelligent assistant helping Contoso Inc employees with their healthcare plan questions and employee handbook questions.
         Use 'you' to refer to the individual asking the questions even if they ask with 'I'.
         Answer the following question using only the data provided in the sources below.
@@ -45,12 +46,12 @@ public class SemanticSearchAskPrompt {
         if (question == null  || question.isEmpty())
             throw new IllegalStateException("question cannot be null or empty.");
 
-        sources.iterator().forEachRemaining(source -> this.sources.add(source.getSourceName()+": "+source.getSourceContent()));
+        sources.iterator().forEachRemaining(source -> this.sources.add(source.getSourceName() + ": " + source.getSourceContent()));
         this.question = question;
     }
 
     public  String getFormattedPrompt() {
-        if (this.sources == null  || this.sources.isEmpty())
+        if (this.sources.isEmpty())
             throw new IllegalStateException("sources cannot be null or empty. Please use setSources() before calling getFormattedPrompt()");
 
         if (this.question == null  || this.question.isEmpty())
@@ -59,8 +60,7 @@ public class SemanticSearchAskPrompt {
         StringBuffer sourcesText = new StringBuffer();
         sources.iterator().forEachRemaining(source -> sourcesText.append(source).append("\n"));
 
-        return promptTemplate.formatted(question, sourcesText.toString());
-
+        return PROMPT_TEMPLATE.formatted(question, sourcesText.toString());
     }
 
 }

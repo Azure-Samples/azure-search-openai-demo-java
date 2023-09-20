@@ -10,9 +10,11 @@ public class ChatResponse {
     @JsonProperty("data_points")
     private List<String> dataPoints;
     private String thoughts;
+
     public void setAnswer(String answer) {
         this.answer = answer;
     }
+
     public String getAnswer() {
         return answer;
     }
@@ -20,6 +22,7 @@ public class ChatResponse {
     public void setDataPoints(List<String> dataPoints) {
         this.dataPoints = dataPoints;
     }
+
     public List<String> getDataPoints() {
         return dataPoints;
     }
@@ -27,6 +30,7 @@ public class ChatResponse {
     public void setThoughts(String thoughts) {
         this.thoughts = thoughts;
     }
+
     public String getThoughts() {
         return thoughts;
     }
