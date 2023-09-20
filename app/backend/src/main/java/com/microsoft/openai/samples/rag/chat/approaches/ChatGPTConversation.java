@@ -3,7 +3,6 @@ package com.microsoft.openai.samples.rag.chat.approaches;
 import com.azure.ai.openai.models.ChatMessage;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ChatGPTConversation {
 
@@ -22,7 +21,7 @@ public class ChatGPTConversation {
                 chatMessage.setContent(message.content());
                 return chatMessage;
             })
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public List<ChatGPTMessage> getMessages() {

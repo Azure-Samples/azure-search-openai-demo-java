@@ -17,7 +17,7 @@ public class SemanticSearchChat {
     private Boolean replacePrompt = false;
 
     private static final String FOLLOW_UP_QUESTIONS_TEMPLATE = """
-    Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook. 
+    Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook.
     Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
     Try not to repeat questions that have already been asked.
     Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'

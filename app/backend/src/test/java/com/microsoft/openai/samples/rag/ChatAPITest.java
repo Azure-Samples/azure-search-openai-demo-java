@@ -8,17 +8,15 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.net.URI;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ChatAPITest {
+class ChatAPITest {
 
 	@Autowired
 	private TestRestTemplate restTemplate;
 
 	@Test
-	public void testExample() throws Exception {
+	void testExample() throws Exception {
 		//TODO This test is failing due to external services dependencies.
 		// Explore springmockserver to mock the external services response based on specific requests. Sevices to mock are: Azure token, Cognitive Search, OpenAI chat apis
 /** ChatTurn chatTurn = new ChatTurn();

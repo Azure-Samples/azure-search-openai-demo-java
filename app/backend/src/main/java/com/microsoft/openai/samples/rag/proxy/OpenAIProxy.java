@@ -24,11 +24,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class OpenAIProxy {
 
-    private OpenAIClient client;
-
+    private final OpenAIClient client;
     @Value("${openai.gpt.deployment}")
     private String gptDeploymentModelId;
-
     @Value("${openai.chatgpt.deployment}")
     private String gptChatDeploymentModelId;
 

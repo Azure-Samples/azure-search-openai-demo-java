@@ -57,7 +57,7 @@ public class SemanticSearchAskPrompt {
         if (this.question == null  || this.question.isEmpty())
             throw new IllegalStateException("question cannot be null or empty. Please use setQuestion() before calling getFormattedPrompt()");
 
-        StringBuffer sourcesText = new StringBuffer();
+        StringBuilder sourcesText = new StringBuilder();
         sources.iterator().forEachRemaining(source -> sourcesText.append(source).append("\n"));
 
         return PROMPT_TEMPLATE.formatted(question, sourcesText.toString());

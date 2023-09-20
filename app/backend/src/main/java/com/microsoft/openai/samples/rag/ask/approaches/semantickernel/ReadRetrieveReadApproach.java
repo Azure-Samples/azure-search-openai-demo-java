@@ -1,7 +1,6 @@
 package com.microsoft.openai.samples.rag.ask.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
-import com.azure.search.documents.models.*;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -34,11 +32,10 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
             Take the input as a question and answer it finding any information needed
             """;
     private final CognitiveSearchProxy cognitiveSearchProxy;
+    private final OpenAIAsyncClient openAIAsyncClient;
     // This will be injected as prototype bean
     @Value("${openai.gpt.deployment}")
     private String gptDeploymentModelId;
-
-    OpenAIAsyncClient openAIAsyncClient;
 
     public ReadRetrieveReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIAsyncClient openAIAsyncClient) {
         this.cognitiveSearchProxy = cognitiveSearchProxy;
@@ -106,28 +103,9 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
         return kernel;
     }
 
-    private SearchOptions buildSearchOptions(RAGOptions options){
-        var searchOptions = new SearchOptions();
-
-        Optional.ofNullable(options.getTop()).ifPresentOrElse(
-                searchOptions::setTop,
-                () -> searchOptions.setTop(3));
-        Optional.ofNullable(options.getExcludeCategory())
-                .ifPresentOrElse(
-                        value -> searchOptions.setFilter("category ne '%s'".formatted(value.replace("'", "''"))),
-                        () -> searchOptions.setFilter(null));
-
-        Optional.ofNullable(options.isSemanticRanker()).ifPresent(isSemanticRanker -> {
-            if(isSemanticRanker) {
-                searchOptions.setQueryType(QueryType.SEMANTIC);
-                searchOptions.setQueryLanguage(QueryLanguage.EN_US);
-                searchOptions.setSpeller(QuerySpellerType.LEXICON);
-                searchOptions.setSemanticConfigurationName("default");
-                searchOptions.setQueryCaption(QueryCaptionType.EXTRACTIVE);
-                searchOptions.setQueryCaptionHighlightEnabled(false);
-            }
-        });
-        return searchOptions;
+    @Override
+    public CognitiveSearchProxy getCognitiveSearchProxy() {
+        return this.cognitiveSearchProxy;
     }
 
 }
