@@ -22,14 +22,12 @@ The repo includes sample data so it's ready to try end to end. In this sample ap
 This repo is focused to showcase different options to implement semantic search using RAG patterns with Java, Azure OpenAI and Semantic Kernel.
 It is still under active development. Below you can find the status of the python original repo convertion and the planned features.
 
- RAG Approach | Description                                                                                                                                                                                                                  | Java Open AI SDK   | Java Semantic Kernel | 
-:------------ |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------| :-------------|
-RetrieveThenRead | Use Cognitive Search and OpenAI APIs directly. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer (completion) for the user question                    | :white_check_mark: | :x:                           
-ChatReadRetrieveRead| Use Cognitive Search and OpenAI APIs directly. It first uses OpenAI to generate a search keyword for the chat history and then answer to the last chat question replicating RetrieveThenRead same steps.                    | :white_check_mark: | :x:                
-ReadRetrieveRead | Use java Semantic Kernel framework to orchestrate Cognitive Search and OpenAI as native and semantic functions respectively. A sequential planner is used to generate steps orchestation for answering the user question.   | :x:                | :white_check_mark: 
-ReadDecomposeAsk | Like ReadRetrieveRead but use Java Semantic Kernel built-in vector storage and search capabilities to simplify RAG implementation when vector similarity search is used to retrieve relevant documents to answer a question. | :x:                | :soon:             
-
-
+| RAG Approach         | Description                                                                                                                                                                                                                  | Java Open AI SDK   | Java Semantic Kernel | 
+|:---------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------|:---------------------|
+| RetrieveThenRead     | Use Cognitive Search and OpenAI APIs directly. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer (completion) for the user question                    | :white_check_mark: | :x:                  |
+| ChatReadRetrieveRead | Use Cognitive Search and OpenAI APIs directly. It first uses OpenAI to generate a search keyword for the chat history and then answer to the last chat question replicating RetrieveThenRead same steps.                     | :white_check_mark: | :x:                  |
+| ReadRetrieveRead     | Use java Semantic Kernel framework to orchestrate Cognitive Search and OpenAI as native and semantic functions respectively. A sequential planner is used to generate steps orchestation for answering the user question.    | :x:                | :white_check_mark:   |
+| ReadDecomposeAsk     | Like ReadRetrieveRead but use Java Semantic Kernel built-in vector storage and search capabilities to simplify RAG implementation when vector similarity search is used to retrieve relevant documents to answer a question. | :x:                | :soon:               |
 
 ## Getting Started
 
@@ -60,23 +58,23 @@ ReadDecomposeAsk | Like ReadRetrieveRead but use Java Semantic Kernel built-in v
 Execute the following command, if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
 1. Run `azd auth login`
-1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
+2. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
     * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
-1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.  
+3. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.  
 
 It will look like the following:
 
-!['Output from running azd up'](assets/endpoint.png)
+!['Output from running azd up'](docs/endpoint.png)
 
 > NOTE: It may take a minute for the application to be fully deployed.
 
 #### Use existing resources
 
 1. Run `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
-1. Run `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
-1. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
-1. Run `azd env set AZURE_OPENAI_GPT_DEPLOYMENT {Name of existing GPT deployment}`. Only needed if your ChatGPT deployment is not the default 'davinci'.
-1. Run `azd up`
+2. Run `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
+3. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
+4. Run `azd env set AZURE_OPENAI_GPT_DEPLOYMENT {Name of existing GPT deployment}`. Only needed if your ChatGPT deployment is not the default 'davinci'.
+5. Run `azd up`
 
 > NOTE: You can also use existing Search and Storage Accounts.  See `./infra/main.parameters.json` for list of environment variables to pass to `azd env set` to configure those existing resources.
 
@@ -101,7 +99,7 @@ You can run this repo virtually by using GitHub Codespaces or VS Code Remote Con
 
 Once in the web app:
 
-* Try different topics in chat or Q&A context. For chat, try follow up questions, clarifications, ask to simplify or elaborate on answer, etc.
+* Try different topics in chat or Q&A context. For chat, try follow-up questions, clarifications, ask to simplify or elaborate on answer, etc.
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
 
@@ -109,15 +107,15 @@ Once in the web app:
 
 ### GitHub
 if you don't want to use azd to build and deploy the app, a GitHub automated CI pipeline is provided in `.github/workflows/app-ci.yml`. Some notes about the CI pipeline design:
-- It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
-- GitHub environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in github repository settings:
+- It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore, on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
+- GitHub's environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in GitHub repository settings:
     - `AZUREAPPSERVICE_PUBLISHPROFILE` is used to store the azure app service publish profile configuration securely.
     - `AZUREAPPSERVICE_APP_NAME` is used to store the azure web app resource name generated during infra arm deployment.
 
 To properly configure automated build and deploy for both backend and frontend components follow below steps:
  
  1. Go to your forked repository in GitHub and create an [environment]((https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)) called 'Development' (yes this is the exact name; don't change it). If you want to change the environment name (also adding new branches and environments, change the current branch/env mapping) you can do that, but make sure to change the pipeline code accordingly in `.github/workflows/app-ci.yml` (starting line 29)
- 2. Create 'Development' environment [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the azure web app hosting both frontend and backend [publish profiles]((https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service?view=vs-2022)). You'll need to copy paste the xml content from the .PublishSettings file into the secret value:
+ 2. Create 'Development' environment [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the azure web app hosting both frontend and backend [publish profiles]((https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service?view=vs-2022)). You'll need to copy and paste the xml content from the .PublishSettings file into the secret value:
      - Create a secret with name `AZUREAPPSERVICE_PUBLISHPROFILE` and set the Value field to publish profile of the azure web app
 3. Create 'Development' environment [variables](https://docs.github.com/en/actions/learn-github-actions/variables#creating-configuration-variables-for-an-environment) for azure web app resource name:
     - Create a variable with name `AZUREAPPSERVICE_APP_NAME` and set the Value field to the azure web app resource name 
@@ -126,21 +124,21 @@ To properly configure automated build and deploy for both backend and frontend c
 ![pipeline success](./docs/github-actions-pipeline-success.png)
 
 ### Azure DevOps
-Azure Devops can also be used to build and deploy the app.  Azure Devops automated CICD pipeline is provided in `.azdo/pipelines/app-ci.yaml`.  Some notes about the CICD pipeline design:
-- Similar to Github action above, this pipeline uses branch per environment approach as well.
+Azure Devops can also be used to build and deploy the app.  Azure Devops automated CICD pipeline is provided in `.azdo/pipelines/app-ci.yaml`.  Some notes about the CI/CD pipeline design:
+- Similar to GitHub action above, this pipeline uses branch per environment approach as well.
 - Azure Devops library variable groups and variables are used to configure environment specific configuration.  They need to be configured manually in Azure Devops Pipeline Library.
 1. Navigate to Pipeline / Library
 2. Add new variable group `azureSearchOpenAiDemoJavaDev` and variable `azureAppServiceName`.  Put the name of the Azure App Service for development as the value.
 3. Add new variable group `azureSearchOpenAiDemoJavaProd` and variable `azureAppServiceName`.  Put the name of the Azure App Service for production as the value.
 
-Connect Azure Devops to the Github Repo:
+Connect Azure Devops to the GitHub Repo:
 1. Create a new pipeline.
-2. For 'Where is your code?' Select Github.
-3. Go through the Github App authentication process [Github App](https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#github-app-authentication).
+2. For 'Where is your code?' Select GitHub.
+3. Go through the GitHub App authentication process [GitHub App](https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#github-app-authentication).
 4. Select Existing Azure Pipeline YAML file.
 5. Point dropdown values to the path `.azdo/pipelines/app-ci.yaml`.
 6. Do not Run but Save the pipeline.
-Once saved, you will see dev and prod enviornment got automatically created under Pipeline / Enviornments.  You can setup Approvals and Checks within enviornments if necessary.
+Once saved, you will see dev and prod environment got automatically created under Pipeline / Environments. You can set up Approvals and Checks within environments if necessary.
 
 Connect Azure Devops to Azure:
 1. Add a Service Connection following this [guide](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops) to allow Azure Devops pipeline to connect to your Azure resources /App Service.
@@ -155,10 +153,10 @@ You can now either run the pipeline manually or commit to a branch to trigger th
 The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
 
 If you want to chat with your custom documents you can:
-1. Add your pdf documents in the [data folder](./data/).
+1. Add your pdf documents in the [data folder](./data).
 2. Open a terminal and cd to repo root folder. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java` 
 3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead on each run all documents in data folder will be ingested.Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, cognitive search index have been updated and stored (until you want to manually delete it from your azure cognitive search instance)
+4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, cognitive search index have been updated and stored (until you want to manually delete it from your azure cognitive search instance)
 5. if ingestion and indexing is completed successfully you should see a message like this
 ![prepdocs success](./docs/prepdocs-success.png)
 
@@ -183,7 +181,7 @@ Chunking allows us to limit the amount of information we send to OpenAI due to t
 <details>
 <summary>How can we upload additional PDFs without redeploying everything?</summary>
 
-To upload more PDFs, put them in the data/ folder and run `./scripts/prepdocs.sh` or `./scripts/prepdocs.ps1`. To avoid reuploading existing docs, move them out of the data folder. You could also implement checks to see whats been uploaded before; our code doesn't yet have such checks.
+To upload more PDFs, put them in the data/ folder and run `./scripts/prepdocs.sh` or `./scripts/prepdocs.ps1`. To avoid reuploading existing docs, move them out of the data folder. You could also implement checks to see what's been uploaded before; our code doesn't yet have such checks.
 </details>
 
 ### Troubleshooting
@@ -192,17 +190,17 @@ Here are the most common failure scenarios and solutions:
 
 1. The subscription (`AZURE_SUBSCRIPTION_ID`) doesn't have access to the Azure OpenAI Service. Please ensure `AZURE_SUBSCRIPTION_ID` matches the ID specified in the [OpenAI access request process](https://aka.ms/oai/access).
 
-1. You're attempting to create resources in regions not enabled for Azure OpenAI (e.g. East US 2 instead of East US), or where the model you're trying to use isn't enabled. See [this matrix of model availability](https://aka.ms/oai/models).
+2. You're attempting to create resources in regions not enabled for Azure OpenAI (e.g. East US 2 instead of East US), or where the model you're trying to use isn't enabled. See [this matrix of model availability](https://aka.ms/oai/models).
 
-1. You've exceeded a quota, most often number of resources per region. See [this article on quotas and limits](https://aka.ms/oai/quotas).
+3. You've exceeded a quota, most often number of resources per region. See [this article on quotas and limits](https://aka.ms/oai/quotas).
 
-1. You're getting "same resource name not allowed" conflicts. That's likely because you've run the sample multiple times and deleted the resources you've been creating each time, but are forgetting to purge them. Azure keeps resources for 48 hours unless you purge from soft delete. See [this article on purging resources](https://learn.microsoft.com/azure/cognitive-services/manage-resources?tabs=azure-portal#purge-a-deleted-resource).
+4. You're getting "same resource name not allowed" conflicts. That's likely because you've run the sample multiple times and deleted the resources you've been creating each time, but are forgetting to purge them. Azure keeps resources for 48 hours unless you purge from soft delete. See [this article on purging resources](https://learn.microsoft.com/azure/cognitive-services/manage-resources?tabs=azure-portal#purge-a-deleted-resource).
 
-1. You see `CERTIFICATE_VERIFY_FAILED` when the `prepdocs.py` script runs. That's typically due to incorrect SSL certificates setup on your machine. Try the suggestions in this [StackOverflow answer](https://stackoverflow.com/questions/35569042/ssl-certificate-verify-failed-with-python3/43855394#43855394).
+5. You see `CERTIFICATE_VERIFY_FAILED` when the `prepdocs.py` script runs. That's typically due to incorrect SSL certificates setup on your machine. Try the suggestions in this [StackOverflow answer](https://stackoverflow.com/questions/35569042/ssl-certificate-verify-failed-with-python3/43855394#43855394).
 
-1. After running `azd up` and visiting the website, you see a '404 Not Found' in the browser. Wait 10 minutes and try again, as it might be still starting up. Then try running `azd deploy` and wait again. If you still encounter errors with the deployed app, consult these [tips for debugging Flask app deployments](http://blog.pamelafox.org/2023/06/tips-for-debugging-flask-deployments-to.html)
+6. After running `azd up` and visiting the website, you see a '404 Not Found' in the browser. Wait 10 minutes and try again, as it might be still starting up. Then try running `azd deploy` and wait again. If you still encounter errors with the deployed app, consult these [tips for debugging Flask app deployments](http://blog.pamelafox.org/2023/06/tips-for-debugging-flask-deployments-to.html)
 and file an issue if the error logs don't help you resolve the issue.
 
-1. After running `./app/start.ps1` on windows power shell you get `The file C:\path\to\azure-search-openai-demo-java\app\start.ps1 is not digitally signed. You cannot run this script on the current system`. Try to run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and try to re-run `./app/start.ps1`
+7. After running `./app/start.ps1` on Windows PowerShell you get `The file C:\path\to\azure-search-openai-demo-java\app\start.ps1 is not digitally signed. You cannot run this script on the current system`. Try to run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and try to re-run `./app/start.ps1`
 
-1. After running `./app/start.ps1` or `./app/start.sh` you get `Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17` it means you are not using JDK 17 but a previous versions. Be sure to set `JAVA_HOME` env variable to your java 17 installation directory and update your 'PATH' env variable to have java 17 bin folder as first occurence in the executables directories. more info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
+8. After running `./app/start.ps1` or `./app/start.sh` you get `Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17` it means you are not using JDK 17 but a previous versions. Be sure to set `JAVA_HOME` env variable to your java 17 installation directory and update your 'PATH' env variable to have java 17 bin folder as first occurrence in the executables directories. more info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
