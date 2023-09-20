@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
  */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class AskAPITests {
+class AskAPITest {
 
     @Autowired
     private TestRestTemplate restTemplate;

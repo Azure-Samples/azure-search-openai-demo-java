@@ -1,28 +1,18 @@
 package com.microsoft.openai.samples.rag;
 
-import com.microsoft.openai.samples.rag.ask.controller.AskRequest;
-import com.microsoft.openai.samples.rag.ask.controller.AskResponse;
-import com.microsoft.openai.samples.rag.chat.controller.ChatRequest;
-import com.microsoft.openai.samples.rag.chat.controller.ChatResponse;
-import com.microsoft.openai.samples.rag.chat.controller.ChatTurn;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ChatAPITests {
+public class ChatAPITest {
 
 	@Autowired
 	private TestRestTemplate restTemplate;
