@@ -1,7 +1,7 @@
 import { AskRequest, AskResponse, ChatRequest } from "./models";
 
 export async function askApi(options: AskRequest): Promise<AskResponse> {
-    const response = await fetch("/api/ask", {
+    const response = await fetch("/ask", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -10,6 +10,7 @@ export async function askApi(options: AskRequest): Promise<AskResponse> {
             question: options.question,
             approach: options.approach,
             overrides: {
+                retrieval_mode: options.overrides?.retrievalMode,
                 semantic_ranker: options.overrides?.semanticRanker,
                 semantic_captions: options.overrides?.semanticCaptions,
                 top: options.overrides?.top,
@@ -30,8 +31,9 @@ export async function askApi(options: AskRequest): Promise<AskResponse> {
     return parsedResponse;
 }
 
-export async function chatApi(options: ChatRequest): Promise<AskResponse> {
-    const response = await fetch("/api/chat", {
+export async function chatApi(options: ChatRequest): Promise<Response> {
+    const url = options.shouldStream ? "/chat_stream" : "/chat";
+    return await fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -40,6 +42,7 @@ export async function chatApi(options: ChatRequest): Promise<AskResponse> {
             history: options.history,
             approach: options.approach,
             overrides: {
+                retrieval_mode: options.overrides?.retrievalMode,
                 semantic_ranker: options.overrides?.semanticRanker,
                 semantic_captions: options.overrides?.semanticCaptions,
                 top: options.overrides?.top,
@@ -52,15 +55,8 @@ export async function chatApi(options: ChatRequest): Promise<AskResponse> {
             }
         })
     });
-
-    const parsedResponse: AskResponse = await response.json();
-    if (response.status > 299 || !response.ok) {
-        throw Error(parsedResponse.error || "Unknown error");
-    }
-
-    return parsedResponse;
 }
 
 export function getCitationFilePath(citation: string): string {
-    return `/api/content/${citation}`;
+    return `/content/${citation}`;
 }
