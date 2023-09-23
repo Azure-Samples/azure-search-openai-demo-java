@@ -33,9 +33,9 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
             """;
     private final CognitiveSearchProxy cognitiveSearchProxy;
     private final OpenAIAsyncClient openAIAsyncClient;
-    // This will be injected as prototype bean
-    @Value("${openai.gpt.deployment}")
-    private String gptDeploymentModelId;
+
+    @Value("${openai.chatgpt.deployment}")
+    private String gptChatDeploymentModelId;
 
     public ReadRetrieveReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIAsyncClient openAIAsyncClient) {
         this.cognitiveSearchProxy = cognitiveSearchProxy;
@@ -77,7 +77,8 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
        return new RAGResponse.Builder()
                                 .prompt(plan.toPlanString())
                                 .answer(planContext.getResult())
-                                .sourcesAsText(planContext.getVariables().get("sources"))
+                                //.sourcesAsText(planContext.getVariables().get("sources"))
+                                .sourcesAsText("sources placeholders")
                                 .question(questionOrConversation)
                                 .build();
 
@@ -85,13 +86,13 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
 
     private Kernel buildSemanticKernel( RAGOptions options) {
         Kernel kernel = SKBuilders.kernel()
-                .withDefaultAIService(SKBuilders.textCompletionService()
-                        .setModelId(gptDeploymentModelId)
+                .withDefaultAIService(SKBuilders.chatCompletion()
+                        .setModelId(gptChatDeploymentModelId)
                         .withOpenAIClient(this.openAIAsyncClient)
                         .build())
                 .build();
 
-        kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, buildSearchOptions(options),options), "CognitiveSearchPlugin");
+        kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, CognitiveSearchPlugin.buildSearchOptions(options),options), "CognitiveSearchPlugin");
 
         kernel.importSkillFromResources(
                 "semantickernel/Plugins",
@@ -103,9 +104,6 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
         return kernel;
     }
 
-    @Override
-    public CognitiveSearchProxy getCognitiveSearchProxy() {
-        return this.cognitiveSearchProxy;
-    }
+
 
 }

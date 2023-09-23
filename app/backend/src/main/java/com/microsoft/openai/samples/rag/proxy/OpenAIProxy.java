@@ -25,8 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class OpenAIProxy {
 
     private final OpenAIClient client;
-    @Value("${openai.gpt.deployment}")
-    private String gptDeploymentModelId;
     @Value("${openai.chatgpt.deployment}")
     private String gptChatDeploymentModelId;
 
@@ -37,7 +35,7 @@ public class OpenAIProxy {
     public Completions getCompletions(CompletionsOptions completionsOptions) {
         Completions completions;
         try {
-            completions = client.getCompletions(this.gptDeploymentModelId, completionsOptions);
+            completions = client.getCompletions(this.gptChatDeploymentModelId, completionsOptions);
         } catch (HttpResponseException e) {
             throw new ResponseStatusException(e.getResponse().getStatusCode(), "Error calling OpenAI API:" + e.getValue(), e);
         }
@@ -48,7 +46,7 @@ public class OpenAIProxy {
 
         Completions completions;
         try {
-            completions = client.getCompletions(this.gptDeploymentModelId, prompt);
+            completions = client.getCompletions(this.gptChatDeploymentModelId, prompt);
         } catch (HttpResponseException e) {
             throw new ResponseStatusException(e.getResponse().getStatusCode(), "Error calling OpenAI API:" + e.getMessage(), e);
         }

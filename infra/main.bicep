@@ -37,9 +37,6 @@ param formRecognizerResourceGroupLocation string = location
 
 param formRecognizerSkuName string = 'S0'
 
-param gptDeploymentName string // Set in main.parameters.json
-param gptDeploymentCapacity int = 30
-param gptModelName string = 'text-davinci-003'
 param chatGptDeploymentName string // Set in main.parameters.json
 param chatGptDeploymentCapacity int = 30
 param chatGptModelName string = 'gpt-35-turbo'
@@ -118,7 +115,6 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_SERVICE: openAi.outputs.name
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_OPENAI_GPT_DEPLOYMENT: gptDeploymentName
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
     }
 
@@ -138,19 +134,6 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
       name: openAiSkuName
     }
     deployments: [
-      {
-        name: gptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: gptModelName
-          version: '1'
-        }
-        sku: {
-          name: 'Standard'
-          capacity: gptDeploymentCapacity
-        }
-      }
-
       {
         name: chatGptDeploymentName
         model: {
@@ -338,7 +321,6 @@ output BACKEND_URI string = backend.outputs.uri
 
 output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
-output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
 
 output AZURE_FORMRECOGNIZER_SERVICE string = formRecognizer.outputs.name

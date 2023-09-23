@@ -28,7 +28,7 @@ public class OpenAIConfiguration {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
 
         var httpLogOptions = new HttpLogOptions();
-        httpLogOptions.setPrettyPrintBody(true);
+        //httpLogOptions.setPrettyPrintBody(true);
         httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
 
         return new OpenAIClientBuilder()

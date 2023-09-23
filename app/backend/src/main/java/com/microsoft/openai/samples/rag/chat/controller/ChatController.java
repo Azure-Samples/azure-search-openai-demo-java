@@ -1,8 +1,8 @@
 package com.microsoft.openai.samples.rag.chat.controller;
 
 import com.microsoft.openai.samples.rag.approaches.*;
-import com.microsoft.openai.samples.rag.chat.approaches.ChatGPTConversation;
-import com.microsoft.openai.samples.rag.chat.approaches.ChatGPTMessage;
+import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
+import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.controller.Overrides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

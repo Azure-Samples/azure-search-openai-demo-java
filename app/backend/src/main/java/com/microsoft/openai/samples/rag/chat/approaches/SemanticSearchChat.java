@@ -3,6 +3,8 @@ package com.microsoft.openai.samples.rag.chat.approaches;
 import com.azure.ai.openai.models.ChatMessage;
 import com.azure.ai.openai.models.ChatRole;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
+import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
+import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 
 import java.util.ArrayList;
 import java.util.List;

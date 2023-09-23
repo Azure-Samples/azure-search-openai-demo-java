@@ -1,4 +1,4 @@
-package com.microsoft.openai.samples.rag.chat.approaches;
+package com.microsoft.openai.samples.rag.common;
 
 import com.azure.ai.openai.models.ChatMessage;
 

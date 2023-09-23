@@ -2,7 +2,7 @@ package com.microsoft.openai.samples.rag.ask.approaches.semantickernel;
 
 import com.azure.core.util.Context;
 import com.azure.search.documents.SearchDocument;
-import com.azure.search.documents.models.SearchOptions;
+import com.azure.search.documents.models.*;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -69,4 +70,27 @@ public class CognitiveSearchPlugin {
         return Mono.just(sourcesText.toString());
     }
 
+    public static SearchOptions buildSearchOptions(RAGOptions options) {
+        var searchOptions = new SearchOptions();
+
+        Optional.ofNullable(options.getTop()).ifPresentOrElse(
+                searchOptions::setTop,
+                () -> searchOptions.setTop(3));
+        Optional.ofNullable(options.getExcludeCategory())
+                .ifPresentOrElse(
+                        value -> searchOptions.setFilter("category ne '%s'".formatted(value.replace("'", "''"))),
+                        () -> searchOptions.setFilter(null));
+
+        Optional.ofNullable(options.isSemanticRanker()).ifPresent(isSemanticRanker -> {
+            if (isSemanticRanker) {
+                searchOptions.setQueryType(QueryType.SEMANTIC);
+                searchOptions.setQueryLanguage(QueryLanguage.EN_US);
+                searchOptions.setSpeller(QuerySpellerType.LEXICON);
+                searchOptions.setSemanticConfigurationName("default");
+                searchOptions.setQueryCaption(QueryCaptionType.EXTRACTIVE);
+                searchOptions.setQueryCaptionHighlightEnabled(false);
+            }
+        });
+        return searchOptions;
+    }
 }

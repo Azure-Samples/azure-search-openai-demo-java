@@ -1,10 +1,10 @@
-package com.microsoft.openai.samples.rag.chat.approaches;
+package com.microsoft.openai.samples.rag.common;
 
 import com.azure.core.util.ExpandableStringEnum;
 
 import java.util.Collection;
 
-public record ChatGPTMessage(com.microsoft.openai.samples.rag.chat.approaches.ChatGPTMessage.ChatRole role,
+public record ChatGPTMessage(ChatGPTMessage.ChatRole role,
                              String content) {
 
     public static final class ChatRole extends ExpandableStringEnum<ChatRole> {

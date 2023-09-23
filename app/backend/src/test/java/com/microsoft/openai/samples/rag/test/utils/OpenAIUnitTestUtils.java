@@ -3,6 +3,7 @@ package com.microsoft.openai.samples.rag.test.utils;
 import com.azure.ai.openai.models.*;
 
 import java.lang.reflect.Constructor;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class OpenAIUnitTestUtils {
@@ -50,14 +51,14 @@ public class OpenAIUnitTestUtils {
     public Completions createCompletions(List<Choice> choices, CompletionsUsage completionsUsage) {
         Constructor<Completions> pcc;
         try {
-            pcc = Completions.class.getDeclaredConstructor(String.class, int.class, List.class, CompletionsUsage.class);
+            pcc = Completions.class.getDeclaredConstructor(String.class, OffsetDateTime.class, List.class, CompletionsUsage.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("No constructor found for Completions.class", e);
         }
         pcc.setAccessible(true);
         Completions choice;
         try {
-            choice = pcc.newInstance(null, 0, choices, completionsUsage);
+            choice = pcc.newInstance(null, OffsetDateTime.now(), choices, completionsUsage);
         } catch (Exception e) {
             throw new RuntimeException("Cannot create Completions Instance", e);
         }
