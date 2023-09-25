@@ -141,6 +141,8 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
+      XDT_MicrosoftApplicationInsights_Java: useApplicationInsights ? '1' : '0'
       // Shared by all OpenAI deployments
       OPENAI_HOST: openAiHost
       AZURE_OPENAI_EMB_MODEL_NAME: embeddingModelName

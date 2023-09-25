@@ -20,19 +20,19 @@ class RAGApproachFactorySpringBootImplTest {
 
     @Test
     void testCreateApproachWithRetrieveThenRead() {
-        RAGApproach approach = ragApproachFactory.createApproach("rtr", RAGType.ASK);
+        RAGApproach approach = ragApproachFactory.createApproach("jos", RAGType.ASK);
         assertInstanceOf(PlainJavaAskApproach.class, approach);
     }
 
     @Test
     void testCreateApproachWithChatReadRetrieveRead() {
-        RAGApproach approach = ragApproachFactory.createApproach("rrr", RAGType.ASK);
+        RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK);
         assertInstanceOf(JavaSemanticKernelAskApproach.class, approach);
     }
 
     @Test
     void testChatCreateApproachWithChatReadRetrieveRead() {
-        RAGApproach approach = ragApproachFactory.createApproach("rrr", RAGType.CHAT);
+        RAGApproach approach = ragApproachFactory.createApproach("jos", RAGType.CHAT);
         assertInstanceOf(PlainJavaChatApproach.class, approach);
     }
 
