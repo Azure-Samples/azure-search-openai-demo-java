@@ -46,6 +46,7 @@ public class AskController {
         }
 
         var ragOptions = new RAGOptions.Builder()
+            .retrievialMode(askRequest.getOverrides().getRetrievalMode())
             .semanticRanker(askRequest.getOverrides().isSemanticRanker())
             .semanticCaptions(askRequest.getOverrides().isSemanticCaptions())
             .excludeCategory(askRequest.getOverrides().getExcludeCategory())

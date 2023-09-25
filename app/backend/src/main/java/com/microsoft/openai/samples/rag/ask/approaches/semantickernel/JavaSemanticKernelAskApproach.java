@@ -25,9 +25,9 @@ import java.util.Set;
  *    Accomplish the same task as in the Retrieve-then-read approach but using Semantic Kernel framework and Planner goal oriented concept.
  */
 @Component
-public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse> {
+public class JavaSemanticKernelAskApproach implements RAGApproach<String, RAGResponse> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReadRetrieveReadApproach.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaSemanticKernelAskApproach.class);
     private static final String PLAN_PROMPT = """
             Take the input as a question and answer it finding any information needed
             """;
@@ -37,7 +37,7 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
     @Value("${openai.chatgpt.deployment}")
     private String gptChatDeploymentModelId;
 
-    public ReadRetrieveReadApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIAsyncClient openAIAsyncClient) {
+    public JavaSemanticKernelAskApproach(CognitiveSearchProxy cognitiveSearchProxy, OpenAIAsyncClient openAIAsyncClient) {
         this.cognitiveSearchProxy = cognitiveSearchProxy;
         this.openAIAsyncClient = openAIAsyncClient;
     }
@@ -92,6 +92,7 @@ public class ReadRetrieveReadApproach implements RAGApproach<String, RAGResponse
                         .build())
                 .build();
 
+        //TODO: should be refactored to reuse the facts retriever provider injected by spring
         kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, CognitiveSearchPlugin.buildSearchOptions(options),options), "CognitiveSearchPlugin");
 
         kernel.importSkillFromResources(

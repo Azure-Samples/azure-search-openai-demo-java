@@ -1,13 +1,14 @@
 package com.microsoft.openai.samples.rag.retrieval;
 
 import com.azure.ai.openai.models.ChatCompletions;
-import com.azure.ai.openai.models.Completions;
+import com.azure.ai.openai.models.Embeddings;
 import com.azure.core.util.Context;
 import com.azure.search.documents.SearchDocument;
 import com.azure.search.documents.models.*;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
+import com.microsoft.openai.samples.rag.approaches.RetrievalMode;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
@@ -20,22 +21,48 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Cognitive Search retriever implementation that uses the Cognitive Search API to retrieve documents from the search
+ * index. If retrieval mode is set to vectors or hybrid, it will use the OpenAI API to convert the user's query text to an embedding vector
+ * The hybrid search is specific to cognitive search feature which fuses the best of text search and vector search.
+ */
 @Component
 public class CognitiveSearchRetriever implements Retriever{
     private static final Logger LOGGER = LoggerFactory.getLogger(CognitiveSearchRetriever.class);
     private final CognitiveSearchProxy cognitiveSearchProxy;
     private final OpenAIProxy openAIProxy;
 
-    public CognitiveSearchRetriever(CognitiveSearchProxy cognitiveSearchProxy,OpenAIProxy openAIProxy){
+    public CognitiveSearchRetriever(CognitiveSearchProxy cognitiveSearchProxy, OpenAIProxy openAIProxy){
         this.cognitiveSearchProxy = cognitiveSearchProxy;
         this.openAIProxy = openAIProxy;
     }
     @Override
     public List<ContentSource> retrieveFromQuestion(String question, RAGOptions ragOptions) {
-        SearchPagedIterable searchResults = getCognitiveSearchResults(question, ragOptions);
-        return buildSourcesFromSearchResults(ragOptions, searchResults);
+        // step 1. Convert the user's query text to an embedding
+        SearchOptions searchOptions = new SearchOptions();
+        String searchText = null;
+
+        if(ragOptions.getRetrievalMode() == RetrievalMode.vectors || ragOptions.getRetrievalMode() == RetrievalMode.hybrid) {
+           LOGGER.info("Retrieval mode is set to {}. Retrieving vectors for question [{}]",ragOptions.getRetrievalMode(),question);
+
+           Embeddings response = openAIProxy.getEmbeddings(List.of(question));
+            var questionVector = response.getData().get(0).getEmbedding().stream().map(Double::floatValue).toList();
+            if (ragOptions.getRetrievalMode() == RetrievalMode.vectors) {
+                setSearchOptionsForVector(ragOptions, questionVector,searchOptions);
+            } else {
+                searchText = question;
+                setSearchOptionsForHybrid(ragOptions, questionVector,searchOptions);
+            }
+        } else {
+           searchText = question;
+           setSearchOptions(ragOptions,searchOptions);
+        }
+
+       SearchPagedIterable searchResults = cognitiveSearchProxy.search(searchText,searchOptions, Context.NONE);
+       return buildSourcesFromSearchResults(ragOptions, searchResults);
 
     }
+
 
     @Override
     public List<ContentSource> retrieveFromConversation(ChatGPTConversation conversation, RAGOptions ragOptions) {
@@ -49,12 +76,7 @@ public class CognitiveSearchRetriever implements Retriever{
         LOGGER.info("Search Keywords extracted by Open AI [{}]",searchKeywords);
 
         // STEP 2: Retrieve relevant documents from the search index with the GPT optimized search keywords
-        SearchPagedIterable searchResults = getCognitiveSearchResults(searchKeywords, ragOptions);
-        return buildSourcesFromSearchResults(ragOptions, searchResults);
-    }
-
-    private SearchPagedIterable getCognitiveSearchResults(String question, RAGOptions options) {
-        return this.cognitiveSearchProxy.search(question, buildSearchOptions(options), Context.NONE);
+        return retrieveFromQuestion(searchKeywords, ragOptions);
     }
 
     private List<ContentSource> buildSourcesFromSearchResults(RAGOptions options, SearchPagedIterable searchResults) {
@@ -83,8 +105,25 @@ public class CognitiveSearchRetriever implements Retriever{
         return sources;
     }
 
-    private SearchOptions buildSearchOptions(RAGOptions options) {
-        var searchOptions = new SearchOptions();
+
+    private void setSearchOptionsForHybrid(RAGOptions ragOptions, List<Float> questionVector,SearchOptions searchOptions) {
+    setSearchOptions(ragOptions,searchOptions);
+    setSearchOptionsForVector(ragOptions,questionVector,searchOptions);
+    }
+    private void setSearchOptionsForVector(RAGOptions options,List<Float> questionVector,SearchOptions searchOptions) {
+
+        Optional.ofNullable(options.getTop()).ifPresentOrElse(
+                searchOptions::setTop,
+                () -> searchOptions.setTop(3));
+
+        searchOptions.setVectors( new SearchQueryVector()
+                .setValue(questionVector)
+                .setKNearestNeighborsCount(options.getTop())
+                .setFields("embedding"));
+
+    }
+
+    private void setSearchOptions(RAGOptions options,SearchOptions searchOptions) {
 
         Optional.ofNullable(options.getTop()).ifPresentOrElse(
                 searchOptions::setTop,
@@ -105,6 +144,5 @@ public class CognitiveSearchRetriever implements Retriever{
             }
         });
 
-        return searchOptions;
     }
 }

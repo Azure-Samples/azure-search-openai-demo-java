@@ -12,7 +12,7 @@ import { SettingsButton } from "../../components/SettingsButton/SettingsButton";
 
 export function Component(): JSX.Element {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [approach, setApproach] = useState<Approaches>(Approaches.RetrieveThenRead);
+    const [approach, setApproach] = useState<Approaches>(Approaches.JAVA_OPENAI_SDK);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [promptTemplatePrefix, setPromptTemplatePrefix] = useState<string>("");
     const [promptTemplateSuffix, setPromptTemplateSuffix] = useState<string>("");
@@ -84,7 +84,7 @@ export function Component(): JSX.Element {
     };
 
     const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
-        setApproach((option?.key as Approaches) || Approaches.RetrieveThenRead);
+        setApproach((option?.key as Approaches) || Approaches.JAVA_OPENAI_SDK);
     };
 
     const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
@@ -122,16 +122,17 @@ export function Component(): JSX.Element {
 
     const approaches: IChoiceGroupOption[] = [
         {
-            key: Approaches.RetrieveThenRead,
-            text: "Retrieve-Then-Read"
+            key: Approaches.JAVA_OPENAI_SDK,
+            text: "Plain Java Open AI SDK"
         },
         {
-            key: Approaches.ReadRetrieveRead,
-            text: "Read-Retrieve-Read"
+            key: Approaches.JAVA_SEMANTIC_KERNEL,
+            text: "Java Semantic Kernel"
         },
         {
-            key: Approaches.ReadDecomposeAsk,
-            text: "Read-Decompose-Ask"
+            key: Approaches.JAVA_SEMANTIC_KERNEL_VECTORS,
+            text: "Java Semantic Kernel - Vector Memory",
+            disabled: true
         }
     ];
 
@@ -196,7 +197,7 @@ export function Component(): JSX.Element {
                     onChange={onApproachChange}
                 />
 
-                {(approach === Approaches.RetrieveThenRead || approach === Approaches.ReadDecomposeAsk) && (
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
                     <TextField
                         className={styles.oneshotSettingsSeparator}
                         defaultValue={promptTemplate}
@@ -207,27 +208,7 @@ export function Component(): JSX.Element {
                     />
                 )}
 
-                {approach === Approaches.ReadRetrieveRead && (
-                    <>
-                        <TextField
-                            className={styles.oneshotSettingsSeparator}
-                            defaultValue={promptTemplatePrefix}
-                            label="Override prompt prefix template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplatePrefixChange}
-                        />
-                        <TextField
-                            className={styles.oneshotSettingsSeparator}
-                            defaultValue={promptTemplateSuffix}
-                            label="Override prompt suffix template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplateSuffixChange}
-                        />
-                    </>
-                )}
-
+                
                 <SpinButton
                     className={styles.oneshotSettingsSeparator}
                     label="Retrieve this many search results:"

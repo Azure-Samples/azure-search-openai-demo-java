@@ -50,6 +50,7 @@ public class ChatController {
         }
 
         var ragOptions = new RAGOptions.Builder()
+            .retrievialMode(chatRequest.getOverrides().getRetrievalMode())
             .semanticRanker(chatRequest.getOverrides().isSemanticRanker())
             .semanticCaptions(chatRequest.getOverrides().isSemanticCaptions())
             .suggestFollowupQuestions(chatRequest.getOverrides().isSuggestFollowupQuestions())

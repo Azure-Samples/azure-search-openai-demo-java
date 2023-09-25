@@ -1,7 +1,7 @@
 import { AskRequest, AskResponse, ChatRequest } from "./models";
 
 export async function askApi(options: AskRequest): Promise<AskResponse> {
-    const response = await fetch("/ask", {
+    const response = await fetch("/api/ask", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -32,7 +32,7 @@ export async function askApi(options: AskRequest): Promise<AskResponse> {
 }
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = options.shouldStream ? "/chat_stream" : "/chat";
+    const url = options.shouldStream ? "/api/chat_stream" : "/api/chat";
     return await fetch(url, {
         method: "POST",
         headers: {
@@ -58,5 +58,5 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
 }
 
 export function getCitationFilePath(citation: string): string {
-    return `/content/${citation}`;
+    return `/api/content/${citation}`;
 }

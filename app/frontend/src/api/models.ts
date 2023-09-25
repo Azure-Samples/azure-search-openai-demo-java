@@ -1,7 +1,7 @@
 export const enum Approaches {
-    RetrieveThenRead = "rtr",
-    ReadRetrieveRead = "rrr",
-    ReadDecomposeAsk = "rda"
+    JAVA_OPENAI_SDK = "jos",
+    JAVA_SEMANTIC_KERNEL = "jsk",
+    JAVA_SEMANTIC_KERNEL_VECTORS = "jskv"
 }
 
 export const enum RetrievalMode {

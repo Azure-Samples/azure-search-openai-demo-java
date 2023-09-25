@@ -6,32 +6,29 @@ import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
-import com.microsoft.openai.samples.rag.retrieval.CognitiveSearchRetriever;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
- * Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
+ * Simple retrieve-then-read java implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
  *     top documents from search, then constructs a prompt with them, and then uses OpenAI to generate a completion
  *     (answer) with that prompt.
  */
 @Component
-public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse>, ApplicationContextAware {
+public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RetrieveThenReadApproach.class);
-    private ApplicationContext applicationContext;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlainJavaAskApproach.class);
     private final OpenAIProxy openAIProxy;
-    private final Retriever factsRetriever;
+    private final FactsRetrieverProvider factsRetrieverProvider;
 
-    public RetrieveThenReadApproach(Retriever factsRetriever, OpenAIProxy openAIProxy) {
-        this.factsRetriever = factsRetriever;
+    public PlainJavaAskApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy) {
+        this.factsRetrieverProvider = factsRetrieverProvider;
         this.openAIProxy = openAIProxy;
     }
 
@@ -44,7 +41,8 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
     public RAGResponse run(String question, RAGOptions options) {
         //TODO exception handling
 
-        Retriever factsRetriever = getFactsRetriever(options);
+        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors
+        Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
         LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),
                 question);
@@ -80,19 +78,5 @@ public class RetrieveThenReadApproach implements RAGApproach<String, RAGResponse
 
     }
 
-    /**
-     *
-     * @param options rag options containing search types(Cognitive Semantic Search, Cognitive Vector Search, Cognitive Hybrid Search, Semantic Kernel Memory) )
-     * @return retriever implementation
-     */
-    private CognitiveSearchRetriever getFactsRetriever(RAGOptions options) {
-        //default to Cognitive Semantic Search for MVP.
-        return this.applicationContext.getBean(CognitiveSearchRetriever.class);
-
-    }
-
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
 }

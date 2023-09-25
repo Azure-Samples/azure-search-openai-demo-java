@@ -7,27 +7,32 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
-import com.microsoft.openai.samples.rag.retrieval.CognitiveSearchRetriever;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
+ * It uses the ChatGPT API to turn the user question into a good search query.
+ * It queries Azure Cognitive Search for search results for that query (optionally using the vector embeddings for that query).
+ * It then combines the search results and original user question, and asks ChatGPT API to answer the question based on the sources. It includes the last 4K of message history as well (or however many tokens are allowed by the deployed model).
+ */
 @Component
-public class ChatReadRetrieveReadApproach implements RAGApproach<ChatGPTConversation, RAGResponse>, ApplicationContextAware {
+public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChatReadRetrieveReadApproach.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlainJavaChatApproach.class);
     private ApplicationContext applicationContext;
     private final OpenAIProxy openAIProxy;
-    private final Retriever factsRetriever;
+    private final FactsRetrieverProvider factsRetrieverProvider;
 
-    public ChatReadRetrieveReadApproach(Retriever factsRetriever, OpenAIProxy openAIProxy) {
-        this.factsRetriever = factsRetriever;
+    public PlainJavaChatApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy) {
+        this.factsRetrieverProvider = factsRetrieverProvider;
         this.openAIProxy = openAIProxy;
     }
 
@@ -39,7 +44,7 @@ public class ChatReadRetrieveReadApproach implements RAGApproach<ChatGPTConversa
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
 
-        Retriever factsRetriever = getFactsRetriever(options);
+        Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromConversation(questionOrConversation, options);
         LOGGER.info("Total {} sources retrieved", sources.size());
 
@@ -64,19 +69,5 @@ public class ChatReadRetrieveReadApproach implements RAGApproach<ChatGPTConversa
                 .build();
     }
 
-
-    /**
-     *
-     * @param options rag options containing search types(Cognitive Semantic Search, Cognitive Vector Search, Cognitive Hybrid Search, Semantic Kernel Memory) )
-     * @return retriever implementation
-     */
-    private CognitiveSearchRetriever getFactsRetriever(RAGOptions options) {
-        //default to Cognitive Semantic Search for MVP.
-        return this.applicationContext.getBean(CognitiveSearchRetriever.class);
-
-    }
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
 }

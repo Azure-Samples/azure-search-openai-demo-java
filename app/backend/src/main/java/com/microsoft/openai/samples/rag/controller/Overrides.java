@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Overrides {
 
+    @JsonProperty("retrieval_mode")
+    private String retrievalMode;
     @JsonProperty("semantic_ranker")
     private boolean semanticRanker;
     @JsonProperty("semantic_captions")
@@ -16,6 +18,13 @@ public class Overrides {
     private String promptTemplate;
     private Integer top;
 
+    public String getRetrievalMode() {
+        return retrievalMode;
+    }
+
+    public void setRetrievalMode(String retrievalMode) {
+        this.retrievalMode = retrievalMode;
+    }
     public void setSemanticRanker(boolean semanticRanker) {
         this.semanticRanker = semanticRanker;
     }

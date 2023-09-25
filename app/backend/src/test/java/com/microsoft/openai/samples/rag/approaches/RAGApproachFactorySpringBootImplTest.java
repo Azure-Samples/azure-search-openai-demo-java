@@ -1,8 +1,8 @@
 package com.microsoft.openai.samples.rag.approaches;
 
-import com.microsoft.openai.samples.rag.ask.approaches.RetrieveThenReadApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.ReadRetrieveReadApproach;
-import com.microsoft.openai.samples.rag.chat.approaches.ChatReadRetrieveReadApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelAskApproach;
+import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,19 +21,19 @@ class RAGApproachFactorySpringBootImplTest {
     @Test
     void testCreateApproachWithRetrieveThenRead() {
         RAGApproach approach = ragApproachFactory.createApproach("rtr", RAGType.ASK);
-        assertInstanceOf(RetrieveThenReadApproach.class, approach);
+        assertInstanceOf(PlainJavaAskApproach.class, approach);
     }
 
     @Test
     void testCreateApproachWithChatReadRetrieveRead() {
         RAGApproach approach = ragApproachFactory.createApproach("rrr", RAGType.ASK);
-        assertInstanceOf(ReadRetrieveReadApproach.class, approach);
+        assertInstanceOf(JavaSemanticKernelAskApproach.class, approach);
     }
 
     @Test
     void testChatCreateApproachWithChatReadRetrieveRead() {
         RAGApproach approach = ragApproachFactory.createApproach("rrr", RAGType.CHAT);
-        assertInstanceOf(ChatReadRetrieveReadApproach.class, approach);
+        assertInstanceOf(PlainJavaChatApproach.class, approach);
     }
 
     @Test

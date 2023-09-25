@@ -20,7 +20,7 @@ const Chat = () => {
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
-    const [shouldStream, setShouldStream] = useState<boolean>(true);
+    const [shouldStream, setShouldStream] = useState<boolean>(false);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
     const [excludeCategory, setExcludeCategory] = useState<string>("");
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
@@ -82,7 +82,7 @@ const Chat = () => {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
-                approach: Approaches.ReadRetrieveRead,
+                approach: Approaches.JAVA_OPENAI_SDK,
                 shouldStream: shouldStream,
                 overrides: {
                     promptTemplate: promptTemplate.length === 0 ? undefined : promptTemplate,
@@ -337,12 +337,14 @@ const Chat = () => {
                         required
                         onChange={onRetrievalModeChange}
                     />
+                    {/*
                     <Checkbox
                         className={styles.chatSettingsSeparator}
                         checked={shouldStream}
                         label="Stream chat completion responses"
                         onChange={onShouldStreamChange}
                     />
+                    */}
                 </Panel>
             </div>
         </div>
