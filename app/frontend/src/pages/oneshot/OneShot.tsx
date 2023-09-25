@@ -1,21 +1,22 @@
 import { useRef, useState } from "react";
-import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton } from "@fluentui/react";
+import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton, IDropdownOption, Dropdown } from "@fluentui/react";
 
 import styles from "./OneShot.module.css";
 
-import { askApi, Approaches, AskResponse, AskRequest } from "../../api";
+import { askApi, Approaches, AskResponse, AskRequest, RetrievalMode } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
 import { SettingsButton } from "../../components/SettingsButton/SettingsButton";
 
-const OneShot = () => {
+export function Component(): JSX.Element {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [approach, setApproach] = useState<Approaches>(Approaches.RetrieveThenRead);
+    const [approach, setApproach] = useState<Approaches>(Approaches.JAVA_OPENAI_SDK);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [promptTemplatePrefix, setPromptTemplatePrefix] = useState<string>("");
     const [promptTemplateSuffix, setPromptTemplateSuffix] = useState<string>("");
+    const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
@@ -48,6 +49,7 @@ const OneShot = () => {
                     promptTemplateSuffix: promptTemplateSuffix.length === 0 ? undefined : promptTemplateSuffix,
                     excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
                     top: retrieveCount,
+                    retrievalMode: retrievalMode,
                     semanticRanker: useSemanticRanker,
                     semanticCaptions: useSemanticCaptions
                 }
@@ -77,8 +79,12 @@ const OneShot = () => {
         setRetrieveCount(parseInt(newValue || "3"));
     };
 
+    const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
+        setRetrievalMode(option?.data || RetrievalMode.Hybrid);
+    };
+
     const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
-        setApproach((option?.key as Approaches) || Approaches.RetrieveThenRead);
+        setApproach((option?.key as Approaches) || Approaches.JAVA_OPENAI_SDK);
     };
 
     const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
@@ -116,17 +122,16 @@ const OneShot = () => {
 
     const approaches: IChoiceGroupOption[] = [
         {
-            key: Approaches.RetrieveThenRead,
-            text: "Retrieve-Then-Read"
+            key: Approaches.JAVA_OPENAI_SDK,
+            text: "Plain Java Open AI SDK"
         },
         {
-            key: Approaches.ReadRetrieveRead,
-            text: "Read-Retrieve-Read"
-
+            key: Approaches.JAVA_SEMANTIC_KERNEL,
+            text: "Java Semantic Kernel"
         },
         {
-            key: Approaches.ReadDecomposeAsk,
-            text: "Read-Decompose-Ask",
+            key: Approaches.JAVA_SEMANTIC_KERNEL_VECTORS,
+            text: "Java Semantic Kernel - Vector Memory",
             disabled: true
         }
     ];
@@ -151,6 +156,7 @@ const OneShot = () => {
                     <div className={styles.oneshotAnswerContainer}>
                         <Answer
                             answer={answer}
+                            isStreaming={false}
                             onCitationClicked={x => onShowCitation(x)}
                             onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab)}
                             onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab)}
@@ -191,7 +197,7 @@ const OneShot = () => {
                     onChange={onApproachChange}
                 />
 
-                {(approach === Approaches.RetrieveThenRead || approach === Approaches.ReadDecomposeAsk) && (
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
                     <TextField
                         className={styles.oneshotSettingsSeparator}
                         defaultValue={promptTemplate}
@@ -202,30 +208,10 @@ const OneShot = () => {
                     />
                 )}
 
-                {approach === Approaches.ReadRetrieveRead && (
-                    <>
-                        <TextField
-                            className={styles.oneshotSettingsSeparator}
-                            defaultValue={promptTemplatePrefix}
-                            label="Override prompt prefix template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplatePrefixChange}
-                        />
-                        <TextField
-                            className={styles.oneshotSettingsSeparator}
-                            defaultValue={promptTemplateSuffix}
-                            label="Override prompt suffix template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplateSuffixChange}
-                        />
-                    </>
-                )}
-
+                
                 <SpinButton
                     className={styles.oneshotSettingsSeparator}
-                    label="Retrieve this many documents from search:"
+                    label="Retrieve this many search results:"
                     min={1}
                     max={50}
                     defaultValue={retrieveCount.toString()}
@@ -245,9 +231,20 @@ const OneShot = () => {
                     onChange={onUseSemanticCaptionsChange}
                     disabled={!useSemanticRanker}
                 />
+                <Dropdown
+                    className={styles.oneshotSettingsSeparator}
+                    label="Retrieval mode"
+                    options={[
+                        { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
+                        { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
+                        { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
+                    ]}
+                    required
+                    onChange={onRetrievalModeChange}
+                />
             </Panel>
         </div>
     );
-};
+}
 
-export default OneShot;
+Component.displayName = "OneShot";

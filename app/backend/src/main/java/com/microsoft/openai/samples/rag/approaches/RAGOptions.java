@@ -2,6 +2,8 @@ package com.microsoft.openai.samples.rag.approaches;
 
 public class RAGOptions {
 
+    private RetrievalMode retrievalMode;
+
     private boolean semanticRanker;
     private boolean semanticCaptions;
     private boolean suggestFollowupQuestions;
@@ -12,6 +14,9 @@ public class RAGOptions {
     private RAGOptions() {
     }
 
+    public RetrievalMode getRetrievalMode() {
+        return retrievalMode;
+    }
     public boolean isSemanticRanker() {
         return semanticRanker;
     }
@@ -37,6 +42,7 @@ public class RAGOptions {
     }
 
     public static class Builder {
+        private RetrievalMode retrievalMode;
         private boolean semanticRanker;
         private boolean semanticCaptions;
         private String excludeCategory;
@@ -45,6 +51,10 @@ public class RAGOptions {
 
         private boolean suggestFollowupQuestions;
 
+        public Builder retrievialMode(String retrievialMode) {
+            this.retrievalMode = RetrievalMode.valueOf(retrievialMode);
+            return this;
+        }
         public Builder semanticRanker(boolean semanticRanker) {
             this.semanticRanker = semanticRanker;
             return this;
@@ -77,12 +87,12 @@ public class RAGOptions {
 
         public RAGOptions build() {
             RAGOptions ragOptions = new RAGOptions();
+            ragOptions.retrievalMode = this.retrievalMode;
             ragOptions.semanticRanker = this.semanticRanker;
             ragOptions.semanticCaptions = this.semanticCaptions;
             ragOptions.suggestFollowupQuestions = this.suggestFollowupQuestions;
             ragOptions.excludeCategory = this.excludeCategory;
             ragOptions.promptTemplate = this.promptTemplate;
-
             ragOptions.top = this.top;
             return ragOptions;
         }

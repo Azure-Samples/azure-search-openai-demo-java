@@ -1,10 +1,17 @@
 export const enum Approaches {
-    RetrieveThenRead = "rtr",
-    ReadRetrieveRead = "rrr",
-    ReadDecomposeAsk = "rda"
+    JAVA_OPENAI_SDK = "jos",
+    JAVA_SEMANTIC_KERNEL = "jsk",
+    JAVA_SEMANTIC_KERNEL_VECTORS = "jskv"
+}
+
+export const enum RetrievalMode {
+    Hybrid = "hybrid",
+    Vectors = "vectors",
+    Text = "text"
 }
 
 export type AskRequestOverrides = {
+    retrievalMode?: RetrievalMode;
     semanticRanker?: boolean;
     semanticCaptions?: boolean;
     excludeCategory?: string;
@@ -38,4 +45,5 @@ export type ChatRequest = {
     history: ChatTurn[];
     approach: Approaches;
     overrides?: AskRequestOverrides;
+    shouldStream?: boolean;
 };
