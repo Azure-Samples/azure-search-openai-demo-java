@@ -72,6 +72,7 @@ either by deleting the resource group in the Portal or running `azd down`.
 Execute the following command, if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
 1. Run `azd auth login`
+3. You can clone this repo and change directory to the root of the repo. Or you can run `azd init -t Azure-Samples/azure-search-openai-demo-java`.
 2. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
     * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
 3. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.  
@@ -128,7 +129,7 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 
 ### Running locally
 
-1. Run `azd login`
+1. Run `az login`
 2. Change dir to `app`
 3. Run `./start.ps1` or `./start.sh` or run the "VS Code Task: Start App" to start the project locally.
 4. Wait for the spring boot server to start and refresh your browser to localhost:8080
