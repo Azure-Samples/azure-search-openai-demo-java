@@ -334,6 +334,7 @@ Related commands are `azd provision` for just provisioning (if infra files chang
 
 You can view production logs in the Portal using either the Log stream or by downloading the default_docker.log file from Advanced tools.
 </details>
+
 ### Troubleshooting
 
 Here are the most common failure scenarios and solutions:
@@ -351,3 +352,5 @@ Here are the most common failure scenarios and solutions:
 6. After running `./app/start.ps1` on Windows PowerShell you get `The file C:\path\to\azure-search-openai-demo-java\app\start.ps1 is not digitally signed. You cannot run this script on the current system`. Try to run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and try to re-run `./app/start.ps1`
 
 7. After running `./app/start.ps1` or `./app/start.sh` you get `Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17`. It means you are not using JDK 17 but a previous version. Be sure to set the `JAVA_HOME` env variable to your Java 17 installation directory and update your `PATH` env variable to have the Java 17 bin folder as the first occurrence amongst the listed directories. More info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
+8. After running `./app/start.sh` on Ubuntu 16.04 or later, the first time you try to create a virtual environment with Python 3.6, Python 3.7, Python 3.8 or Python 3.9, you'll get the following error `The virtual environment was not created successfully because ensurepip is not
+   available`. Just follow the hint provided in the error message and run `apt-get install python3-venv` to install the missing packages. More info [here](https://www.softwarepragmatism.com/cannot-create-a-python-virtual-environment-on-ubuntu-ensurepip-is-not-available)
