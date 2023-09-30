@@ -41,23 +41,24 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
+        var ragOptions = new RAGOptions.Builder()
+                .retrievialMode(chatRequest.getOverrides().getRetrievalMode())
+                .semanticRanker(chatRequest.getOverrides().isSemanticRanker())
+                .semanticCaptions(chatRequest.getOverrides().isSemanticCaptions())
+                .suggestFollowupQuestions(chatRequest.getOverrides().isSuggestFollowupQuestions())
+                .excludeCategory(chatRequest.getOverrides().getExcludeCategory())
+                .promptTemplate(chatRequest.getOverrides().getPromptTemplate())
+                .top(chatRequest.getOverrides().getTop())
+                .build();
 
-        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.getApproach(), RAGType.CHAT);
+        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.getApproach(), RAGType.CHAT,ragOptions);
 
         //set empty overrides if not provided
         if (chatRequest.getOverrides() == null) {
             chatRequest.setOverrides(new Overrides());
         }
 
-        var ragOptions = new RAGOptions.Builder()
-            .retrievialMode(chatRequest.getOverrides().getRetrievalMode())
-            .semanticRanker(chatRequest.getOverrides().isSemanticRanker())
-            .semanticCaptions(chatRequest.getOverrides().isSemanticCaptions())
-            .suggestFollowupQuestions(chatRequest.getOverrides().isSuggestFollowupQuestions())
-            .excludeCategory(chatRequest.getOverrides().getExcludeCategory())
-            .promptTemplate(chatRequest.getOverrides().getPromptTemplate())
-            .top(chatRequest.getOverrides().getTop())
-            .build();
+
 
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.getChatHistory());
         return ResponseEntity.ok(buildChatResponse(ragApproach.run(chatGPTConversation, ragOptions)));

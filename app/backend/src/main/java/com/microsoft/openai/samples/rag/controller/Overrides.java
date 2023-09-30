@@ -6,6 +6,8 @@ public class Overrides {
 
     @JsonProperty("retrieval_mode")
     private String retrievalMode;
+    @JsonProperty("sk_mode")
+    private String semantickKernelMode;
     @JsonProperty("semantic_ranker")
     private boolean semanticRanker;
     @JsonProperty("semantic_captions")
@@ -21,10 +23,7 @@ public class Overrides {
     public String getRetrievalMode() {
         return retrievalMode;
     }
-
-    public void setRetrievalMode(String retrievalMode) {
-        this.retrievalMode = retrievalMode;
-    }
+    public String getSemantickKernelMode() { return semantickKernelMode; }
     public void setSemanticRanker(boolean semanticRanker) {
         this.semanticRanker = semanticRanker;
     }

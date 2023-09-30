@@ -11,12 +11,12 @@ public class FactsRetrieverProvider implements ApplicationContextAware {
 
     /**
      *
-     * @param options rag options containing search types(Cognitive Semantic Search, Cognitive Vector Search, Cognitive Hybrid Search, Semantic Kernel Memory)
+     * @param options rag options containing search types(Cognitive Semantic Search, Cognitive Vector Search, Cognitive Hybrid Search)
      *                Default is now cognitive search.
      * @return retriever implementation
      */
     public Retriever getFactsRetriever(RAGOptions options) {
-        //default to Cognitive Semantic Search for MVP.
+        //default to Cognitive Semantic Search for MVP. More useful in the future to support multiple retrivial systems (RedisSearch.Pinecone, etc)
        switch (options.getRetrievalMode()){
            case vectors,hybrid,text:
                return this.applicationContext.getBean(CognitiveSearchRetriever.class);

@@ -3,7 +3,7 @@ import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinne
 
 import styles from "./OneShot.module.css";
 
-import { askApi, Approaches, AskResponse, AskRequest, RetrievalMode } from "../../api";
+import { askApi, Approaches, AskResponse, AskRequest, RetrievalMode, SKMode } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -17,6 +17,7 @@ export function Component(): JSX.Element {
     const [promptTemplatePrefix, setPromptTemplatePrefix] = useState<string>("");
     const [promptTemplateSuffix, setPromptTemplateSuffix] = useState<string>("");
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
+    const [skMode, setSKMode] = useState<SKMode>(SKMode.Chains);
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
@@ -50,6 +51,7 @@ export function Component(): JSX.Element {
                     excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
                     top: retrieveCount,
                     retrievalMode: retrievalMode,
+                    skMode: skMode,
                     semanticRanker: useSemanticRanker,
                     semanticCaptions: useSemanticCaptions
                 }
@@ -81,6 +83,10 @@ export function Component(): JSX.Element {
 
     const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
         setRetrievalMode(option?.data || RetrievalMode.Hybrid);
+    };
+
+    const onSKModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<SKMode> | undefined, index?: number | undefined) => {
+        setSKMode(option?.data || SKMode.Chains);
     };
 
     const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
@@ -127,12 +133,11 @@ export function Component(): JSX.Element {
         },
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL,
-            text: "Java Semantic Kernel"
+            text: "Java Semantic Kernel - Memory"
         },
         {
-            key: Approaches.JAVA_SEMANTIC_KERNEL_VECTORS,
-            text: "Java Semantic Kernel - Vector Memory",
-            disabled: true
+            key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
+            text: "Java Semantic Kernel - Planner"
         }
     ];
 
@@ -218,12 +223,16 @@ export function Component(): JSX.Element {
                     onChange={onRetrieveCountChange}
                 />
                 <TextField className={styles.oneshotSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
+                
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Checkbox
                     className={styles.oneshotSettingsSeparator}
                     checked={useSemanticRanker}
                     label="Use semantic ranker for retrieval"
                     onChange={onUseSemanticRankerChange}
                 />
+                )}
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Checkbox
                     className={styles.oneshotSettingsSeparator}
                     checked={useSemanticCaptions}
@@ -231,6 +240,9 @@ export function Component(): JSX.Element {
                     onChange={onUseSemanticCaptionsChange}
                     disabled={!useSemanticRanker}
                 />
+                )}
+                
+                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Dropdown
                     className={styles.oneshotSettingsSeparator}
                     label="Retrieval mode"
@@ -242,6 +254,19 @@ export function Component(): JSX.Element {
                     required
                     onChange={onRetrievalModeChange}
                 />
+                )}
+                 {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                <Dropdown
+                    className={styles.oneshotSettingsSeparator}
+                    label="Semantic Kernel mode"
+                    options={[
+                        { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
+                        { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner }
+                    ]}
+                    required
+                    onChange={onSKModeChange}
+                />
+                )}
             </Panel>
         </div>
     );

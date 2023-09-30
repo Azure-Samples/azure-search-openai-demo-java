@@ -41,7 +41,7 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     public RAGResponse run(String question, RAGOptions options) {
         //TODO exception handling
 
-        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors
+        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
         LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),

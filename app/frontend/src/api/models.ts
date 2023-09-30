@@ -1,7 +1,7 @@
 export const enum Approaches {
     JAVA_OPENAI_SDK = "jos",
     JAVA_SEMANTIC_KERNEL = "jsk",
-    JAVA_SEMANTIC_KERNEL_VECTORS = "jskv"
+    JAVA_SEMANTIC_KERNEL_PLANNER = "jskp"
 }
 
 export const enum RetrievalMode {
@@ -10,8 +10,14 @@ export const enum RetrievalMode {
     Text = "text"
 }
 
+export const enum SKMode {
+    Chains = "chains",
+    Planner = "planner"
+}
+
 export type AskRequestOverrides = {
     retrievalMode?: RetrievalMode;
+    skMode?: SKMode;
     semanticRanker?: boolean;
     semanticCaptions?: boolean;
     excludeCategory?: string;

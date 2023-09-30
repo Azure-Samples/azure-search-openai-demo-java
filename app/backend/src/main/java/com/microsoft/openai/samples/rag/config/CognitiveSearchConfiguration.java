@@ -3,6 +3,7 @@ package com.microsoft.openai.samples.rag.config;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.http.policy.HttpLogOptions;
+import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +49,35 @@ public class CognitiveSearchConfiguration {
                 .credential(tokenCredential)
                 .indexName(indexName)
                 .buildClient();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "cognitive.tracing.enabled", havingValue = "true")
+    public SearchAsyncClient asyncSearchTracingEnabledClient() {
+        String endpoint = "https://%s.search.windows.net".formatted(searchServiceName);
+
+        var httpLogOptions = new HttpLogOptions();
+        httpLogOptions.setPrettyPrintBody(true);
+        httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
+
+        return new SearchClientBuilder()
+                .endpoint(endpoint)
+                .credential(tokenCredential)
+                .indexName(indexName)
+                .httpLogOptions(httpLogOptions)
+                .buildAsyncClient();
+
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "cognitive.tracing.enabled", havingValue = "false")
+    public SearchAsyncClient asyncSearchDefaultClient() {
+        String endpoint = "https://%s.search.windows.net".formatted(searchServiceName);
+        return new SearchClientBuilder()
+                .endpoint(endpoint)
+                .credential(tokenCredential)
+                .indexName(indexName)
+                .buildAsyncClient();
     }
 
 }

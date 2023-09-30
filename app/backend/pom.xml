@@ -18,7 +18,7 @@
 		<spring-cloud-azure.version>4.9.0</spring-cloud-azure.version>
 		<azure-search.version>11.6.0-beta.8</azure-search.version>
 		<azure-openai.version>1.0.0-beta.2</azure-openai.version>
-		<semantic-kernel.version>0.2.8-alpha</semantic-kernel.version>
+		<semantic-kernel.version>0.2.9-alpha</semantic-kernel.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
 	</properties>
 
@@ -100,6 +100,10 @@
 		<dependency>
 			<groupId>com.microsoft.semantic-kernel</groupId>
 			<artifactId>semantickernel-planners</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-connectors-memory-azurecognitivesearch</artifactId>
 		</dependency>
 		<!-- Semantic Kernel end -->
 	</dependencies>

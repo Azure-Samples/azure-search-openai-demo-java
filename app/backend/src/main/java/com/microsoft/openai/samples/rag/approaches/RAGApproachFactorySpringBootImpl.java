@@ -1,7 +1,9 @@
 package com.microsoft.openai.samples.rag.approaches;
 
 import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelAskApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithMemoryApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelPlannerApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -13,7 +15,7 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
     private static final String JAVA_OPENAI_SDK = "jos";
     private static final String JAVA_SEMANTIC_KERNEL = "jsk";
 
-    private static final String JAVA_SEMANTIC_KERNEL_VECTORS = "jskv";
+    private static final String JAVA_SEMANTIC_KERNEL_PLANNER = "jskp";
     private ApplicationContext applicationContext;
 
     /**
@@ -23,7 +25,7 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
      * @return
      */
     @Override
-    public RAGApproach createApproach(String approachName, RAGType ragType) {
+    public RAGApproach createApproach(String approachName, RAGType ragType, RAGOptions ragOptions) {
 
         if (ragType.equals(RAGType.CHAT) && JAVA_OPENAI_SDK.equals(approachName)) {
             return applicationContext.getBean(PlainJavaChatApproach.class);
@@ -32,7 +34,12 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
             if (JAVA_OPENAI_SDK.equals(approachName))
                 return applicationContext.getBean(PlainJavaAskApproach.class);
             else if (JAVA_SEMANTIC_KERNEL.equals(approachName))
-                return applicationContext.getBean(JavaSemanticKernelAskApproach.class);
+                return applicationContext.getBean(JavaSemanticKernelWithMemoryApproach.class);
+            else if (JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.planner)
+                      return  applicationContext.getBean(JavaSemanticKernelPlannerApproach.class);
+                    else if(JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions != null && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains)
+                        return applicationContext.getBean(JavaSemanticKernelChainsApproach.class);
+
         }
         //if this point is reached then the combination of approach and rag type is not supported
         throw new IllegalArgumentException("Invalid combination for approach[%s] and rag type[%s]: ".formatted(approachName, ragType));

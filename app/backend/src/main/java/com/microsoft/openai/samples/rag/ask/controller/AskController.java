@@ -38,21 +38,24 @@ public class AskController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach(), RAGType.ASK);
+        var ragOptions = new RAGOptions.Builder()
+                .retrievialMode(askRequest.getOverrides().getRetrievalMode())
+                .semanticKernelMode(askRequest.getOverrides().getSemantickKernelMode())
+                .semanticRanker(askRequest.getOverrides().isSemanticRanker())
+                .semanticCaptions(askRequest.getOverrides().isSemanticCaptions())
+                .excludeCategory(askRequest.getOverrides().getExcludeCategory())
+                .promptTemplate(askRequest.getOverrides().getPromptTemplate())
+                .top(askRequest.getOverrides().getTop())
+                .build();
+
+        RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.getApproach(), RAGType.ASK, ragOptions);
 
         //set empty overrides if not provided
         if (askRequest.getOverrides() == null) {
             askRequest.setOverrides(new Overrides());
         }
 
-        var ragOptions = new RAGOptions.Builder()
-            .retrievialMode(askRequest.getOverrides().getRetrievalMode())
-            .semanticRanker(askRequest.getOverrides().isSemanticRanker())
-            .semanticCaptions(askRequest.getOverrides().isSemanticCaptions())
-            .excludeCategory(askRequest.getOverrides().getExcludeCategory())
-            .promptTemplate(askRequest.getOverrides().getPromptTemplate())
-            .top(askRequest.getOverrides().getTop())
-            .build();
+
 
         return ResponseEntity.ok(buildAskResponse(ragApproach.run(askRequest.getQuestion(), ragOptions)));
     }
