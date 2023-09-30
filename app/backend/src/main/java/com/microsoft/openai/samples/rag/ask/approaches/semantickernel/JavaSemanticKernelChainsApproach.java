@@ -20,7 +20,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *    Accomplish the same task as in the Retrieve-then-read approach but using Semantic Kernel framework and Planner goal oriented concept.
+ *    Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining.
+ *    InformationFinder.Search native function and RAG.AnswerQuestion semantic function are called sequentially.
  */
 @Component
 public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAGResponse> {

@@ -20,7 +20,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *    Accomplish the same task as in the Retrieve-then-read approach but using Semantic Kernel framework and Planner goal oriented concept.
+ *    Use Java Semantic Kernel framework with built-in Planner for functions orchestration. It uses a declarative style for AI orchestration through the built-in SequentialPlanner.
+ *    SequentialPlanner call OpenAI to generate a plan for answering a question using available skills/plugins: InformationFinder and RAG
  */
 @Component
 public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RAGResponse> {
