@@ -129,7 +129,7 @@ export function Component(): JSX.Element {
     const approaches: IChoiceGroupOption[] = [
         {
             key: Approaches.JAVA_OPENAI_SDK,
-            text: "Plain Java Open AI SDK"
+            text: "Java Azure Open AI SDK"
         },
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL,
@@ -137,7 +137,7 @@ export function Component(): JSX.Element {
         },
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
-            text: "Java Semantic Kernel - Planner"
+            text: "Java Semantic Kernel - Orchestration"
         }
     ];
 
