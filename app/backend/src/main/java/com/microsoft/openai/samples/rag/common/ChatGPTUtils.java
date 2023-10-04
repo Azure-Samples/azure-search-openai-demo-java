@@ -13,10 +13,10 @@ public class ChatGPTUtils {
     public static ChatCompletionsOptions buildDefaultChatCompletionsOptions(List<ChatMessage> messages) {
         ChatCompletionsOptions completionsOptions = new ChatCompletionsOptions(messages);
 
-        // Due to a potential bug in using JVM 17 and java open SDK 1.0.0-beta.2, we need to provide default for all properties to avoid 404 bad Request on the server
         completionsOptions.setMaxTokens(1024);
-        completionsOptions.setTemperature(0.3);
-        completionsOptions.setStop(new ArrayList<>(List.of("\n")));
+        completionsOptions.setTemperature(0.1);
+        completionsOptions.setTopP(1.0);
+        //completionsOptions.setStop(new ArrayList<>(List.of("\n")));
         completionsOptions.setLogitBias(new HashMap<>());
         completionsOptions.setN(1);
         completionsOptions.setStream(false);
