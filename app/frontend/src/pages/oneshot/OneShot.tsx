@@ -3,12 +3,15 @@ import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinne
 
 import styles from "./OneShot.module.css";
 
-import { askApi, Approaches, AskResponse, AskRequest, RetrievalMode, SKMode } from "../../api";
+import {askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest} from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
 import { SettingsButton } from "../../components/SettingsButton/SettingsButton";
+import { useLogin, getToken } from "../../authConfig";
+import { useMsal } from "@azure/msal-react";
+import { TokenClaimsDisplay } from "../../components/TokenClaimsDisplay";
 
 export function Component(): JSX.Element {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
@@ -22,15 +25,19 @@ export function Component(): JSX.Element {
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
     const [excludeCategory, setExcludeCategory] = useState<string>("");
+    const [useOidSecurityFilter, setUseOidSecurityFilter] = useState<boolean>(false);
+    const [useGroupsSecurityFilter, setUseGroupsSecurityFilter] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
-    const [answer, setAnswer] = useState<AskResponse>();
+    const [answer, setAnswer] = useState<ChatAppResponse>();
 
     const [activeCitation, setActiveCitation] = useState<string>();
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
+
+    const client = useLogin ? useMsal().instance : undefined
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -40,23 +47,34 @@ export function Component(): JSX.Element {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
 
+        const token = client ? await getToken(client) : undefined
+
         try {
-            const request: AskRequest = {
-                question,
-                approach,
-                overrides: {
-                    promptTemplate: promptTemplate.length === 0 ? undefined : promptTemplate,
-                    promptTemplatePrefix: promptTemplatePrefix.length === 0 ? undefined : promptTemplatePrefix,
-                    promptTemplateSuffix: promptTemplateSuffix.length === 0 ? undefined : promptTemplateSuffix,
-                    excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
-                    top: retrieveCount,
-                    retrievalMode: retrievalMode,
-                    skMode: skMode,
-                    semanticRanker: useSemanticRanker,
-                    semanticCaptions: useSemanticCaptions
-                }
+            const request: ChatAppRequest = {
+                messages: [
+                    {
+                        content: question,
+                        role: "user"
+                    }
+                ],
+                context: {
+                    overrides: {
+                        prompt_template: promptTemplate.length === 0 ? undefined : promptTemplate,
+                        prompt_template_prefix: promptTemplatePrefix.length === 0 ? undefined : promptTemplatePrefix,
+                        prompt_template_suffix: promptTemplateSuffix.length === 0 ? undefined : promptTemplateSuffix,
+                        exclude_category: excludeCategory.length === 0 ? undefined : excludeCategory,
+                        top: retrieveCount,
+                        retrieval_mode: retrievalMode,
+                        semantic_ranker: useSemanticRanker,
+                        semantic_captions: useSemanticCaptions,
+                        use_oid_security_filter: useOidSecurityFilter,
+                        use_groups_security_filter: useGroupsSecurityFilter,
+                        semantic_kernel_mode: skMode
+                    }
+                },
+                approach: approach
             };
-            const result = await askApi(request);
+            const result = await askApi(request, token?.accessToken);
             setAnswer(result);
         } catch (e) {
             setError(e);
@@ -124,6 +142,14 @@ export function Component(): JSX.Element {
         } else {
             setActiveAnalysisPanelTab(tab);
         }
+    };
+
+    const onUseOidSecurityFilterChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseOidSecurityFilter(!!checked);
+    };
+
+    const onUseGroupsSecurityFilterChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseGroupsSecurityFilter(!!checked);
     };
 
     const approaches: IChoiceGroupOption[] = [
@@ -194,6 +220,7 @@ export function Component(): JSX.Element {
                 onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
                 isFooterAtBottom={true}
             >
+
                 <ChoiceGroup
                     className={styles.oneshotSettingsSeparator}
                     label="Approach"
@@ -203,17 +230,17 @@ export function Component(): JSX.Element {
                 />
 
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
-                    <TextField
-                        className={styles.oneshotSettingsSeparator}
-                        defaultValue={promptTemplate}
-                        label="Override prompt template"
-                        multiline
-                        autoAdjustHeight
-                        onChange={onPromptTemplateChange}
-                    />
+                <TextField
+                    className={styles.oneshotSettingsSeparator}
+                    defaultValue={promptTemplate}
+                    label="Override prompt template"
+                    multiline
+                    autoAdjustHeight
+                    onChange={onPromptTemplateChange}
+                />
                 )}
 
-                
+
                 <SpinButton
                     className={styles.oneshotSettingsSeparator}
                     label="Retrieve this many search results:"
@@ -223,7 +250,7 @@ export function Component(): JSX.Element {
                     onChange={onRetrieveCountChange}
                 />
                 <TextField className={styles.oneshotSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
-                
+
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Checkbox
                     className={styles.oneshotSettingsSeparator}
@@ -241,32 +268,50 @@ export function Component(): JSX.Element {
                     disabled={!useSemanticRanker}
                 />
                 )}
-                
-                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                <Dropdown
-                    className={styles.oneshotSettingsSeparator}
-                    label="Retrieval mode"
-                    options={[
-                        { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
-                        { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
-                        { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
-                    ]}
-                    required
-                    onChange={onRetrievalModeChange}
-                />
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <Dropdown
+                        className={styles.oneshotSettingsSeparator}
+                        label="Retrieval mode"
+                        options={[
+                            { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
+                            { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
+                            { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
+                        ]}
+                        required
+                        onChange={onRetrievalModeChange}
+                    />
                 )}
-                 {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                <Dropdown
-                    className={styles.oneshotSettingsSeparator}
-                    label="Semantic Kernel mode"
-                    options={[
-                        { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                        { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner }
-                    ]}
-                    required
-                    onChange={onSKModeChange}
-                />
+                {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <Dropdown
+                        className={styles.oneshotSettingsSeparator}
+                        label="Semantic Kernel mode"
+                        options={[
+                            { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
+                            { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
+                        ]}
+                        required
+                        onChange={onSKModeChange}
+                    />
                 )}
+                {useLogin && (
+                    <Checkbox
+                        className={styles.oneshotSettingsSeparator}
+                        checked={useOidSecurityFilter}
+                        label="Use oid security filter"
+                        disabled={!client?.getActiveAccount()}
+                        onChange={onUseOidSecurityFilterChange}
+                    />
+                )}
+                {useLogin &&  (
+                    <Checkbox
+                        className={styles.oneshotSettingsSeparator}
+                        checked={useGroupsSecurityFilter}
+                        label="Use groups security filter"
+                        disabled={!client?.getActiveAccount()}
+                        onChange={onUseGroupsSecurityFilterChange}
+                    />
+                )}
+                { useLogin && <TokenClaimsDisplay />}
             </Panel>
         </div>
     );

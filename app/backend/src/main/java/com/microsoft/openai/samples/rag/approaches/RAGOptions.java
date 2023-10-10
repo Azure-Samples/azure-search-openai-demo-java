@@ -94,6 +94,7 @@ public class RAGOptions {
             return this;
         }
 
+
         public RAGOptions build() {
             RAGOptions ragOptions = new RAGOptions();
             ragOptions.retrievalMode = this.retrievalMode;
