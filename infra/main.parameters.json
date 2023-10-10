@@ -20,6 +20,9 @@
     "openAiResourceGroupName": {
       "value": "${AZURE_OPENAI_RESOURCE_GROUP}"
     },
+    "openAiResourceGroupLocation": {
+      "value": "${AZURE_OPENAI_SERVICE_LOCATION}"
+    },
     "openAiSkuName": {
       "value": "S0"
     },
