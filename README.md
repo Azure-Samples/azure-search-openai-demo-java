@@ -101,12 +101,13 @@ If you already have existing Azure resources, you can re-use those by setting `a
 #### Existing resource group
 
 1. Run `azd env set AZURE_RESOURCE_GROUP {Name of existing resource group}`
-1. Run `azd env set AZURE_LOCATION {Location of existing resource group}`
+1. Run `azd env set AZURE_LOCATION {Location of existing resource group (i.e eastus2)}`
 
 #### Existing OpenAI resource
 
 1. Run `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
 1. Run `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
+1. Run `azd env set AZURE_OPENAI_SERVICE_LOCATION {Location of existing resource (i.e eastus2)}`. Only needed if your OpenAI resource is in a different location than the one you'll pick for the `azd up` step.
 1. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
 1. Run `azd env set AZURE_OPENAI_EMB_DEPLOYMENT {Name of existing GPT embedding deployment}`. Only needed if your embeddings deployment is not the default 'embedding'.
 
