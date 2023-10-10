@@ -261,7 +261,9 @@ export function Component(): JSX.Element {
                     label="Semantic Kernel mode"
                     options={[
                         { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                        { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner }
+
+                        // TODO: Enable this once the planner is ready
+                        { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
                     ]}
                     required
                     onChange={onSKModeChange}
