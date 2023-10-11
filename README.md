@@ -141,6 +141,42 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 
 ```azd up```
 
+### Examples of an azd deployment
+
+#### Example creating new OpenAI and Azure Cognitive Search resources
+
+```shell
+azd auth login
+azd init
+
+azd env set AZURE_RESOURCE_GROUP "openai-test-resource-group" # Target resource group for the new resources
+azd env set AZURE_LOCATION "eastus" # Target region for the new resources
+
+azd up
+```
+
+#### Example reusing an existing OpenAI and Azure Cognitive Search resources
+
+```shell
+azd auth login
+azd init
+
+azd env set AZURE_RESOURCE_GROUP "openai-test-resource-group" # Target resource group for the new resources
+azd env set AZURE_LOCATION "eastus" # Target region for the new resources
+
+azd env set AZURE_OPENAI_SERVICE "my-openai-test-service" # Name of the OpenAI service
+azd env set AZURE_OPENAI_RESOURCE_GROUP "my-openai-test-resource-group" # Resource group where the OpenAI service is deployed
+azd env set AZURE_OPENAI_SERVICE_LOCATION "eastus2" # Region of the OpenAI service
+azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT "gpt-35-turbo" # The "Deployment name" of the deployed model, deployed in the Azure OpenAI studio
+azd env set AZURE_OPENAI_EMB_DEPLOYMENT "text-embedding-ada-002"  # The "Deployment name" of the deployed model, deployed in the Azure OpenAI studio
+
+azd env set AZURE_SEARCH_SERVICE "my-acs-test-service" # Name of the ACS service
+azd env set AZURE_SEARCH_SERVICE_RESOURCE_GROUP "my-acs-test-resource-group" # Resource group where the ACS service is deployed
+azd env set AZURE_SEARCH_SERVICE_LOCATION "eastus2" # Region of the ACS service
+
+azd up
+```
+
 ### Running locally
 
 1. Run `az login`
