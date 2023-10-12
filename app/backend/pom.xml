@@ -15,11 +15,19 @@
 	<description>This sample demonstrates a few approaches for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern</description>
 	<properties>
 		<java.version>17</java.version>
+
 		<spring-cloud-azure.version>4.9.0</spring-cloud-azure.version>
 		<azure-search.version>11.6.0-beta.8</azure-search.version>
 		<azure-openai.version>1.0.0-beta.2</azure-openai.version>
 		<semantic-kernel.version>0.2.9-alpha</semantic-kernel.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
+		<maven.compiler-plugin.version>3.11.0</maven.compiler-plugin.version>
+
+		<maven.spotless-plugin.version>2.40.0</maven.spotless-plugin.version>
+		<google.java.format.version>1.18.1</google.java.format.version>
+		<com.uber.nullaway.version>0.10.14</com.uber.nullaway.version>
+		<google.errorprone.core.version>2.22.0</google.errorprone.core.version>
+		<maven.spotbugs-plugin.version>4.7.3.6</maven.spotbugs-plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -116,5 +124,108 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>bug-check</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven.compiler-plugin.version}</version>
+						<configuration>
+							<source>${java.version}</source>
+							<target>${java.version}</target>
+							<release>${java.version}</release>
+							<encoding>${project.build.sourceEncoding}</encoding>
+							<showWarnings>true</showWarnings>
+							<compilerArgs>
+								<arg>-XDcompilePolicy=simple</arg>
+								<arg>-Xplugin:ErrorProne
+									-XepOpt:NullAway:AnnotatedPackages=com.microsoft.openai.samples.rag
+									-Xep:AlmostJavadoc:OFF -Xep:MissingSummary:OFF
+									-Xep:UnusedVariable:OFF -Xep:EmptyBlockTag:OFF
+								</arg>
+							</compilerArgs>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>com.google.errorprone</groupId>
+									<artifactId>error_prone_core</artifactId>
+									<version>${google.errorprone.core.version}</version>
+								</path>
+								<path>
+									<groupId>com.uber.nullaway</groupId>
+									<artifactId>nullaway</artifactId>
+									<version>${com.uber.nullaway.version}</version>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>com.diffplug.spotless</groupId>
+						<artifactId>spotless-maven-plugin</artifactId>
+						<version>${maven.spotless-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>check</id>
+								<goals>
+									<goal>check</goal>
+								</goals>
+								<phase>compile</phase>
+							</execution>
+							<execution>
+								<id>apply</id>
+								<goals>
+									<goal>apply</goal>
+								</goals>
+								<phase>process-sources</phase>
+							</execution>
+						</executions>
+						<configuration>
+							<java>
+								<googleJavaFormat>
+									<version>${google.java.format.version}</version>
+									<style>AOSP</style>
+									<reflowLongStrings>true</reflowLongStrings>
+								</googleJavaFormat>
+								<licenseHeader>
+									<content>// Copyright (c) Microsoft. All rights reserved.</content>
+								</licenseHeader>
+								<toggleOffOn />
+							</java>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+						<version>${maven.spotbugs-plugin.version}</version>
+						<configuration>
+							<excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+							<effort>Max</effort>
+							<!-- Lower when more project is stable -->
+							<threshold>Normal</threshold>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>spotbugs</goal>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- Check compatibility with Android API -->
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>animal-sniffer-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
