@@ -42,6 +42,7 @@ param openAiResourceGroupName string = ''
   }
 })
 param openAiResourceGroupLocation string
+param customOpenAiResourceGroupLocation string = ''
 
 param openAiSkuName string = 'S0'
 
@@ -163,7 +164,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
   params: {
     name: !empty(openAiServiceName) ? openAiServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}'
-    location: openAiResourceGroupLocation
+    location: !empty(customOpenAiResourceGroupLocation) ? customOpenAiResourceGroupLocation : openAiResourceGroupLocation
     tags: tags
     sku: {
       name: openAiSkuName
