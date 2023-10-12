@@ -145,6 +145,7 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 
 ```shell
 azd auth login
+azd init -t Azure-Samples/azure-search-openai-demo-java.
 
 azd env set AZURE_RESOURCE_GROUP "openai-test-resource-group" # Target resource group for the new resources
 azd env set AZURE_LOCATION "eastus" # Target region for the new resources
