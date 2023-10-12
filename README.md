@@ -1,5 +1,38 @@
 # ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
 
+<!-- TOC -->
+
+* [Open this project](#open-this-project)
+* [Features](#features)
+* [RAG Implementation Options](#rag-implementation-options)
+* [Getting Started](#getting-started)
+  * [Prerequisites](#prerequisites)
+  * [Cost estimation](#cost-estimation)
+  * [Starting from scratch](#starting-from-scratch)
+  * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
+    * [Existing resource group](#existing-resource-group)
+    * [Existing OpenAI resource](#existing-openai-resource)
+    * [Existing Azure Cognitive Search resource](#existing-azure-cognitive-search-resource)
+    * [Other existing Azure resources](#other-existing-azure-resources)
+    * [Provision remaining resources](#provision-remaining-resources)
+  * [Deploying again](#deploying-again)
+  * [Running locally](#running-locally)
+  * [To Run in GitHub Codespaces or VS Code Remote Containers](#to-run-in-github-codespaces-or-vs-code-remote-containers)
+  * [UI Navigation](#ui-navigation)
+* [Enabling optional features](#enabling-optional-features)
+  * [Enabling Application Insights](#enabling-application-insights)
+  * [Enabling authentication](#enabling-authentication)
+* [App Continuous Integration](#app-continuous-integration)
+  * [GitHub](#github)
+  * [Azure DevOps](#azure-devops)
+* [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
+* [Productionizing](#productionizing)
+* [Resources](#resources)
+  * [Note](#note)
+  * [FAQ](#faq)
+  * [Troubleshooting](#troubleshooting)
+<!-- TOC -->
+
 This repo is the java conversion of the well known [ChatGPT + Enterprise data code sample](https://github.com/Azure-Samples/azure-search-openai-demo) originally written in python.
 It demonstrates a few approaches for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model (gpt-35-turbo), and Azure Cognitive Search for data indexing and retrieval.
 
