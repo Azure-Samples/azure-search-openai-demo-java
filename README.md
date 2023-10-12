@@ -141,25 +141,10 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 
 ```azd up```
 
-### Examples of an azd deployment
-
-#### Example creating new OpenAI and Azure Cognitive Search resources
+### Examples of an azd deployment reusing an existing OpenAI and Azure Cognitive Search resources
 
 ```shell
 azd auth login
-azd init
-
-azd env set AZURE_RESOURCE_GROUP "openai-test-resource-group" # Target resource group for the new resources
-azd env set AZURE_LOCATION "eastus" # Target region for the new resources
-
-azd up
-```
-
-#### Example reusing an existing OpenAI and Azure Cognitive Search resources
-
-```shell
-azd auth login
-azd init
 
 azd env set AZURE_RESOURCE_GROUP "openai-test-resource-group" # Target resource group for the new resources
 azd env set AZURE_LOCATION "eastus" # Target region for the new resources
