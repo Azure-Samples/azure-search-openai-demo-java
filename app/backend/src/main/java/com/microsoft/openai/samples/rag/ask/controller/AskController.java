@@ -5,11 +5,11 @@ import com.microsoft.openai.samples.rag.approaches.RAGApproachFactory;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.approaches.RAGType;
-import com.microsoft.openai.samples.rag.chat.controller.ChatAppRequest;
-import com.microsoft.openai.samples.rag.chat.controller.ChatResponse;
-import com.microsoft.openai.samples.rag.chat.controller.ResponseChoice;
-import com.microsoft.openai.samples.rag.chat.controller.ResponseContext;
-import com.microsoft.openai.samples.rag.chat.controller.ResponseMessage;
+import com.microsoft.openai.samples.rag.controller.ChatAppRequest;
+import com.microsoft.openai.samples.rag.controller.ChatResponse;
+import com.microsoft.openai.samples.rag.controller.ResponseChoice;
+import com.microsoft.openai.samples.rag.controller.ResponseContext;
+import com.microsoft.openai.samples.rag.controller.ResponseMessage;
 import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,34 +60,8 @@ public class AskController {
 
         RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
 
-        return ResponseEntity.ok(buildChatResponse(ragApproach.run(question, ragOptions)));
+        return ResponseEntity.ok(ChatResponse.buildChatResponse(ragApproach.run(question, ragOptions)));
     }
 
-    private ChatResponse buildChatResponse(RAGResponse ragResponse) {
-        List<String> dataPoints = Collections.emptyList();
 
-        if (ragResponse.getSources() != null) {
-            dataPoints = ragResponse.getSources().stream()
-                    .map(source -> source.getSourceName() + ": " + source.getSourceContent())
-                    .toList();
-        }
-
-        String thoughts = "Question:<br>" + ragResponse.getQuestion() + "<br><br>Prompt:<br>" + ragResponse.getPrompt().replace("\n", "<br>");
-
-        return new ChatResponse(
-                List.of(
-                        new ResponseChoice(
-                                0,
-                                new ResponseMessage(
-                                        ragResponse.getAnswer(),
-                                        ChatGPTMessage.ChatRole.ASSISTANT.toString()
-                                ),
-                                new ResponseContext(
-                                        thoughts,
-                                        dataPoints
-                                )
-                        )
-                )
-        );
-    }
 }

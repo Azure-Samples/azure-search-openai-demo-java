@@ -1,4 +1,4 @@
-package com.microsoft.openai.samples.rag.chat.controller;
+package com.microsoft.openai.samples.rag.controller;
 
 import com.microsoft.openai.samples.rag.approaches.RetrievalMode;
 

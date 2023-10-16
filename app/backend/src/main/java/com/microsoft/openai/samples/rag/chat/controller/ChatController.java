@@ -7,6 +7,7 @@ import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.approaches.RAGType;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
+import com.microsoft.openai.samples.rag.controller.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -58,7 +59,7 @@ public class ChatController {
 
 
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.messages());
-        return ResponseEntity.ok(buildChatResponse(ragApproach.run(chatGPTConversation, ragOptions)));
+        return ResponseEntity.ok(ChatResponse.buildChatResponse(ragApproach.run(chatGPTConversation, ragOptions)));
 
     }
 
@@ -72,29 +73,6 @@ public class ChatController {
                         })
                         .flatMap(Collection::stream)
                         .toList());
-    }
-
-    private ChatResponse buildChatResponse(RAGResponse ragResponse) {
-        List<String> dataPoints = ragResponse.getSources().stream()
-                .map(source -> source.getSourceName() + ": " + source.getSourceContent())
-                .toList();
-        String thoughts = "Searched for:<br>" + ragResponse.getQuestion() + "<br><br>Chat:<br>" + ragResponse.getPrompt().replace("\n", "<br>");
-
-        return new ChatResponse(
-                List.of(
-                        new ResponseChoice(
-                                0,
-                                new ResponseMessage(
-                                        ragResponse.getAnswer(),
-                                        "ASSISTANT"
-                                ),
-                                new ResponseContext(
-                                        thoughts,
-                                        dataPoints
-                                )
-                        )
-                )
-        );
     }
 
 }

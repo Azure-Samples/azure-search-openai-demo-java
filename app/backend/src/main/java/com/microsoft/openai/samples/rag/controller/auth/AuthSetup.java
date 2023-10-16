@@ -1,4 +1,4 @@
-package com.microsoft.openai.samples.rag.config;
+package com.microsoft.openai.samples.rag.controller.auth;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
