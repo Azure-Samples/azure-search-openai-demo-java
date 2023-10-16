@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
@@ -94,7 +93,7 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
         var semanticSearchChat = new SemanticSearchChat(questionOrConversation, sources, options.getPromptTemplate(), false, options.isSuggestFollowupQuestions());
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 
-        AtomicInteger counter = new AtomicInteger(0);
+        int index = 0;
 
         IterableStream<ChatCompletions> completions = openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
 
@@ -120,13 +119,13 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
                         .sources(sources)
                         .build();
 
-                int index = counter.getAndIncrement();
                 ChatResponse response;
                 if (index == 0) {
                     response = ChatResponse.buildChatResponse(ragResponse);
                 } else {
                     response = ChatResponse.buildChatDeltaResponse(index, ragResponse);
                 }
+                index++;
 
                 try {
                     String value = objectMapper.writeValueAsString(response) + "\n";

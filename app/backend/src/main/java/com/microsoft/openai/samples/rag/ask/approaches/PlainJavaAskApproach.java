@@ -1,19 +1,23 @@
 package com.microsoft.openai.samples.rag.ask.approaches;
 
+import com.azure.ai.openai.models.ChatChoice;
 import com.azure.ai.openai.models.ChatCompletions;
+import com.azure.core.util.IterableStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -28,10 +32,12 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlainJavaAskApproach.class);
     private final OpenAIProxy openAIProxy;
     private final FactsRetrieverProvider factsRetrieverProvider;
+    private final ObjectMapper objectMapper;
 
-    public PlainJavaAskApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy) {
+    public PlainJavaAskApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy, ObjectMapper objectMapper) {
         this.factsRetrieverProvider = factsRetrieverProvider;
         this.openAIProxy = openAIProxy;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -78,13 +84,7 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     }
 
     @Override
-    public void runStreaming(String questionOrConversation, RAGOptions options, OutputStream outputStream) {
-        throw new UnsupportedOperationException("Streaming not supported for PlainJavaAskApproach");
-    }
-/*
-    @Override
-    public Flux<RAGResponse> runStreaming(String question, RAGOptions options) {
-
+    public void runStreaming(String question, RAGOptions options, OutputStream outputStream) {
         //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
@@ -105,23 +105,43 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
         var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
-        Flux<ChatCompletions> completions = Flux.fromIterable(openAIProxy.getChatCompletionsStream(chatCompletionsOptions));
-        return completions
-                .flatMap(completion -> {
-                    LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
-                            completion.getUsage().getPromptTokens(),
-                            completion.getUsage().getCompletionTokens(),
-                            completion.getUsage().getTotalTokens());
+        IterableStream<ChatCompletions> completions = openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
+        int index = 0;
+        for (ChatCompletions completion : completions) {
 
-                    return Flux.fromIterable(completion.getChoices())
-                            .map(choice -> new RAGResponse.Builder()
-                                    .question(question)
-                                    .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
-                                    .answer(choice.getMessage().getContent())
-                                    .sources(sources)
-                                    .build());
-                });
+            LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+                    completion.getUsage().getPromptTokens(),
+                    completion.getUsage().getCompletionTokens(),
+                    completion.getUsage().getTotalTokens());
+
+            for (ChatChoice choice : completion.getChoices()) {
+                if (choice.getDelta().getContent() == null) {
+                    continue;
+                }
+
+                RAGResponse ragResponse = new RAGResponse.Builder()
+                        .question(question)
+                        .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
+                        .answer(choice.getMessage().getContent())
+                        .sources(sources)
+                        .build();
+
+                ChatResponse response;
+                if (index == 0) {
+                    response = ChatResponse.buildChatResponse(ragResponse);
+                } else {
+                    response = ChatResponse.buildChatDeltaResponse(index, ragResponse);
+                }
+                index++;
+
+                try {
+                    String value = objectMapper.writeValueAsString(response) + "\n";
+                    outputStream.write(value.getBytes());
+                    outputStream.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
-
- */
 }
