@@ -33,7 +33,7 @@ public class OpenAIConfiguration {
 
         return new OpenAIClientBuilder()
             .endpoint(endpoint)
-            .credential(tokenCredential)
+                .credential(tokenCredential)
             .httpLogOptions(httpLogOptions)
             .buildClient();
 

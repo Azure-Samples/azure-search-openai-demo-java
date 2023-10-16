@@ -20,22 +20,23 @@ export default defineConfig({
                     }
                 }
             }
-        }
+        },
+        target: "esnext"
     },
     server: {
         proxy: {
             "/api/ask": {
-                    target: 'http://localhost:8080',
-                    changeOrigin: true
-                  },
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            },
             "/api/chat": {
-                     target: 'http://localhost:8080',
-                     changeOrigin: true
-                                },
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            },
             "/api/content": {
-                     target: 'http://localhost:8080',
-                     changeOrigin: true
-                                            }
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            }
         }
     }
 });

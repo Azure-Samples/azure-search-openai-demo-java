@@ -4,6 +4,7 @@ import com.azure.ai.openai.OpenAIAsyncClient;
 import com.azure.core.credential.TokenCredential;
 import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.SearchDocument;
+import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *    Accomplish the same task as in the PlainJavaAskApproach approach but using Semantic Kernel framework:
@@ -78,6 +80,7 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
         LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", memoryResult.size(), question);
 
         String sources = buildSourcesText(memoryResult);
+        List<ContentSource> sourcesList = buildSources(memoryResult);
 
         SKContext skcontext = SKBuilders.context().build()
                 .setVariable("sources", sources)
@@ -90,10 +93,23 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
                                 //.prompt(plan.toPlanString())
                                 .prompt("placeholders for prompt")
                                 .answer(result.block().getResult())
+                                .sources(sourcesList)
                                 .sourcesAsText(sources)
                                 .question(question)
                                 .build();
 
+    }
+
+    private List<ContentSource> buildSources(List<MemoryQueryResult> memoryResult) {
+        return memoryResult
+                .stream()
+                .map(result -> {
+                    return new ContentSource(
+                            result.getMetadata().getId(),
+                            result.getMetadata().getText()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
     private String buildSourcesText(List<MemoryQueryResult> memoryResult) {

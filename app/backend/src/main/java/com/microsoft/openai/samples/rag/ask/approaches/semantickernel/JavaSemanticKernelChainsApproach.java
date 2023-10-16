@@ -1,6 +1,7 @@
 package com.microsoft.openai.samples.rag.ask.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
+import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
@@ -9,15 +10,16 @@ import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.orchestration.SKContext;
-import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlanner;
-import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlannerRequestSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *    Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining.
@@ -59,6 +61,8 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
                         question,
                         semanticKernel.getSkill("InformationFinder").getFunction("Search", null)).block();
 
+        var sources = formSourcesList(searchContext.getResult());
+
         var answerVariables = SKBuilders.variables()
                 .withVariable("sources", searchContext.getResult())
                 .withVariable("input", question)
@@ -70,10 +74,31 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
        return new RAGResponse.Builder()
                                 .prompt("Prompt is managed by Semantic Kernel")
                                 .answer(answerExecutionContext.getResult())
+                                .sources(sources)
                                 .sourcesAsText(searchContext.getResult())
                                 .question(question)
                                 .build();
 
+    }
+
+    private List<ContentSource> formSourcesList(String result) {
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(result
+                        .split("\n"))
+                .map(source -> {
+                    String[] split = source.split(":", 2);
+                    if (split.length >= 2) {
+                        var sourceName = split[0].trim();
+                        var sourceContent = split[1].trim();
+                        return new ContentSource(sourceName, sourceContent);
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private Kernel buildSemanticKernel( RAGOptions options) {

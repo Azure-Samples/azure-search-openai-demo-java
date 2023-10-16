@@ -15,41 +15,54 @@ export const enum SKMode {
     Planner = "planner"
 }
 
-export type AskRequestOverrides = {
-    retrievalMode?: RetrievalMode;
-    skMode?: SKMode;
-    semanticRanker?: boolean;
-    semanticCaptions?: boolean;
-    excludeCategory?: string;
+export type ChatAppRequestOverrides = {
+    retrieval_mode?: RetrievalMode;
+    semantic_ranker?: boolean;
+    semantic_captions?: boolean;
+    exclude_category?: string;
     top?: number;
     temperature?: number;
-    promptTemplate?: string;
-    promptTemplatePrefix?: string;
-    promptTemplateSuffix?: string;
-    suggestFollowupQuestions?: boolean;
+    prompt_template?: string;
+    prompt_template_prefix?: string;
+    prompt_template_suffix?: string;
+    suggest_followup_questions?: boolean;
+    use_oid_security_filter?: boolean;
+    use_groups_security_filter?: boolean;
+    semantic_kernel_mode?: SKMode;
 };
 
-export type AskRequest = {
-    question: string;
-    approach: Approaches;
-    overrides?: AskRequestOverrides;
-};
+export type ResponseMessage = {
+    content: string;
+    role: string;
+}
 
-export type AskResponse = {
-    answer: string;
+export type ResponseContext = {
     thoughts: string | null;
     data_points: string[];
+}
+
+export type ResponseChoice = {
+    index: number;
+    message: ResponseMessage;
+    context: ResponseContext;
+};
+
+export type ChatAppResponseOrError = {
+    choices?: ResponseChoice[];
     error?: string;
 };
 
-export type ChatTurn = {
-    user: string;
-    bot?: string;
+export type ChatAppResponse = {
+    choices: ResponseChoice[];
 };
 
-export type ChatRequest = {
-    history: ChatTurn[];
+export type ChatAppRequestContext = {
+    overrides?: ChatAppRequestOverrides;
+}
+
+export type ChatAppRequest = {
+    messages: ResponseMessage[];
     approach: Approaches;
-    overrides?: AskRequestOverrides;
-    shouldStream?: boolean;
+    context?: ChatAppRequestContext;
+    stream?: boolean;
 };
