@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,6 +80,11 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
                                 .question(question)
                                 .build();
 
+    }
+
+    @Override
+    public Flux<RAGResponse> runStreaming(String questionOrConversation, RAGOptions options) {
+        return Flux.error(new IllegalStateException("Streaming not supported for this approach"));
     }
 
     private List<ContentSource> formSourcesList(String result) {

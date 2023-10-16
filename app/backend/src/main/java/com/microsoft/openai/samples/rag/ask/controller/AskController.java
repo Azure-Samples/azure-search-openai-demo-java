@@ -7,10 +7,6 @@ import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.approaches.RAGType;
 import com.microsoft.openai.samples.rag.controller.ChatAppRequest;
 import com.microsoft.openai.samples.rag.controller.ChatResponse;
-import com.microsoft.openai.samples.rag.controller.ResponseChoice;
-import com.microsoft.openai.samples.rag.controller.ResponseContext;
-import com.microsoft.openai.samples.rag.controller.ResponseMessage;
-import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,9 +15,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Collections;
-import java.util.List;
 
 @RestController
 public class AskController {
@@ -60,8 +53,7 @@ public class AskController {
 
         RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
 
+
         return ResponseEntity.ok(ChatResponse.buildChatResponse(ragApproach.run(question, ragOptions)));
     }
-
-
 }

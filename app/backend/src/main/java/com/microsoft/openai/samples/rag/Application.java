@@ -14,5 +14,4 @@ public class Application {
         LOG.info("Application profile from system property is [{}]", System.getProperty("spring.profiles.active"));
         new SpringApplication(Application.class).run(args);
     }
-
 }

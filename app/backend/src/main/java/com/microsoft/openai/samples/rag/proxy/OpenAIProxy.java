@@ -3,6 +3,7 @@ package com.microsoft.openai.samples.rag.proxy;
 import com.azure.ai.openai.OpenAIClient;
 import com.azure.ai.openai.models.*;
 import com.azure.core.exception.HttpResponseException;
+import com.azure.core.util.IterableStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -64,6 +65,14 @@ public class OpenAIProxy {
             throw new ResponseStatusException(e.getResponse().getStatusCode(), "Error calling OpenAI API:" + e.getMessage(), e);
         }
         return chatCompletions;
+    }
+
+    public IterableStream<ChatCompletions> getChatCompletionsStream(ChatCompletionsOptions chatCompletionsOptions) {
+        try {
+            return client.getChatCompletionsStream(this.gptChatDeploymentModelId, chatCompletionsOptions);
+        } catch (HttpResponseException e) {
+            throw new ResponseStatusException(e.getResponse().getStatusCode(), "Error calling OpenAI API:" + e.getMessage(), e);
+        }
     }
 
     public Embeddings getEmbeddings(List<String> texts){

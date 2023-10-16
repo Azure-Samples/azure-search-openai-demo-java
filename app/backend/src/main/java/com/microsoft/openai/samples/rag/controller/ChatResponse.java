@@ -30,9 +30,33 @@ public record ChatResponse(List<ResponseChoice> choices) {
                                 new ResponseContext(
                                         thoughts,
                                         dataPoints
+                                ),
+                                new ResponseMessage(
+                                        ragResponse.getAnswer(),
+                                        ChatGPTMessage.ChatRole.ASSISTANT.toString()
                                 )
                         )
                 )
         );
     }
+
+    public static ChatResponse buildChatDeltaResponse(Integer index, RAGResponse ragResponse) {
+        return new ChatResponse(
+                List.of(
+                        new ResponseChoice(
+                                index,
+                                new ResponseMessage(
+                                        ragResponse.getAnswer(),
+                                        "ASSISTANT"
+                                ),
+                                null,
+                                new ResponseMessage(
+                                        ragResponse.getAnswer(),
+                                        "ASSISTANT"
+                                )
+                        )
+                )
+        );
+    }
+
 }
