@@ -19,8 +19,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,6 +43,11 @@ public class ChatController {
     public ResponseEntity<StreamingResponseBody> openAIAskStream(
             @RequestBody ChatAppRequest chatRequest
     ) {
+        if (!chatRequest.stream()) {
+            LOGGER.warn("Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
+        }
+
         LOGGER.info("Received request for chat api with approach[{}]", chatRequest.approach());
 
         if (!StringUtils.hasText(chatRequest.approach())) {
@@ -69,9 +74,6 @@ public class ChatController {
 
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.messages());
 
-
-        Flux<Integer> counter = Flux.range(0, Integer.MAX_VALUE);
-
         StreamingResponseBody response = output -> {
             try {
                 ragApproach.runStreaming(chatGPTConversation, ragOptions, output);
@@ -91,6 +93,11 @@ public class ChatController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<ChatResponse> openAIAsk(@RequestBody ChatAppRequest chatRequest) {
+        if (chatRequest.stream()) {
+            LOGGER.warn("Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
+        }
+
         LOGGER.info("Received request for chat api with approach[{}]", chatRequest.approach());
 
         if (!StringUtils.hasText(chatRequest.approach())) {
