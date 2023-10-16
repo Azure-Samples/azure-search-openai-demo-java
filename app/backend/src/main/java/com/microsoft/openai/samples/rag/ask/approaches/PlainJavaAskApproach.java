@@ -1,8 +1,6 @@
 package com.microsoft.openai.samples.rag.ask.approaches;
 
 import com.azure.ai.openai.models.ChatCompletions;
-import com.azure.ai.openai.models.ChatCompletionsOptions;
-import com.azure.ai.openai.models.ChatMessage;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
@@ -42,65 +40,6 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
      */
     @Override
     public RAGResponse run(String question, RAGOptions options) {
-        return formChatCompletionArguments(
-                question,
-                options,
-                (chatCompletionsOptions, groundedChatMessages, sources) -> {
-                    // STEP 3: Generate a contextual and content specific answer using the retrieve facts
-                    ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
-
-                    LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
-                            chatCompletions.getUsage().getPromptTokens(),
-                            chatCompletions.getUsage().getCompletionTokens(),
-                            chatCompletions.getUsage().getTotalTokens());
-
-                    return new RAGResponse.Builder()
-                            .question(question)
-                            .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
-                            .answer(chatCompletions.getChoices().get(0).getMessage().getContent())
-                            .sources(sources)
-                            .build();
-                });
-    }
-
-    @Override
-    public Flux<RAGResponse> runStreaming(String question, RAGOptions options) {
-        return formChatCompletionArguments(
-                question,
-                options,
-                (chatCompletionsOptions, groundedChatMessages, sources) -> {
-                    Flux<ChatCompletions> completions = Flux.fromIterable(openAIProxy.getChatCompletionsStream(chatCompletionsOptions));
-                    return completions
-                            .flatMap(completion -> {
-                                LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
-                                        completion.getUsage().getPromptTokens(),
-                                        completion.getUsage().getCompletionTokens(),
-                                        completion.getUsage().getTotalTokens());
-
-                                return Flux.fromIterable(completion.getChoices())
-                                        .map(choice -> new RAGResponse.Builder()
-                                                .question(question)
-                                                .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
-                                                .answer(choice.getMessage().getContent())
-                                                .sources(sources)
-                                                .build());
-                            });
-                });
-    }
-
-    private interface CompletionFunction<T> {
-        T apply(
-                ChatCompletionsOptions chatCompletionsOptions,
-                List<ChatMessage> groundedChatMessages,
-                List<ContentSource> sources
-        );
-    }
-
-    private <T> T formChatCompletionArguments(
-            String question,
-            RAGOptions options,
-            CompletionFunction<T> completionFunction
-    ) {
         //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
@@ -121,8 +60,60 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
         var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
-        return completionFunction.apply(chatCompletionsOptions, groundedChatMessages, sources);
+        // STEP 3: Generate a contextual and content specific answer using the retrieve facts
+        ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
+
+        LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+                chatCompletions.getUsage().getPromptTokens(),
+                chatCompletions.getUsage().getCompletionTokens(),
+                chatCompletions.getUsage().getTotalTokens());
+
+        return new RAGResponse.Builder()
+                .question(question)
+                .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
+                .answer(chatCompletions.getChoices().get(0).getMessage().getContent())
+                .sources(sources)
+                .build();
     }
 
+    @Override
+    public Flux<RAGResponse> runStreaming(String question, RAGOptions options) {
 
+        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
+        Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
+        List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
+        LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),
+                question);
+
+        var customPrompt = options.getPromptTemplate();
+        var customPromptEmpty = (customPrompt == null) || (customPrompt != null && customPrompt.isEmpty());
+
+        //true will replace the default prompt. False will add custom prompt as suffix to the default prompt
+        var replacePrompt = !customPromptEmpty && !customPrompt.startsWith("|");
+        if (!replacePrompt && !customPromptEmpty) {
+            customPrompt = customPrompt.substring(1);
+        }
+
+        var answerQuestionChatTemplate = new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
+
+        var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
+        var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
+
+        Flux<ChatCompletions> completions = Flux.fromIterable(openAIProxy.getChatCompletionsStream(chatCompletionsOptions));
+        return completions
+                .flatMap(completion -> {
+                    LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+                            completion.getUsage().getPromptTokens(),
+                            completion.getUsage().getCompletionTokens(),
+                            completion.getUsage().getTotalTokens());
+
+                    return Flux.fromIterable(completion.getChoices())
+                            .map(choice -> new RAGResponse.Builder()
+                                    .question(question)
+                                    .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
+                                    .answer(choice.getMessage().getContent())
+                                    .sources(sources)
+                                    .build());
+                });
+    }
 }
