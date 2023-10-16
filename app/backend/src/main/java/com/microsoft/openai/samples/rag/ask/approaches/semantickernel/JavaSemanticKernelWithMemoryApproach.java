@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -104,8 +105,8 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
     }
 
     @Override
-    public Flux<RAGResponse> runStreaming(String questionOrConversation, RAGOptions options) {
-        return Flux.error(new IllegalStateException("Streaming not supported for this approach"));
+    public void runStreaming(String questionOrConversation, RAGOptions options, OutputStream outputStream) {
+        throw new IllegalStateException("Streaming not supported for this approach");
     }
 
     private List<ContentSource> buildSources(List<MemoryQueryResult> memoryResult) {

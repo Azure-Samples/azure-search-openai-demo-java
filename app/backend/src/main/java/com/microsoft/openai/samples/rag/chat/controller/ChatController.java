@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -39,19 +40,19 @@ public class ChatController {
             value = "/api/chat",
             produces = MediaType.APPLICATION_NDJSON_VALUE
     )
-    public Flux<ChatResponse> openAIAskStream(
+    public ResponseEntity<StreamingResponseBody> openAIAskStream(
             @RequestBody ChatAppRequest chatRequest
     ) {
         LOGGER.info("Received request for chat api with approach[{}]", chatRequest.approach());
 
         if (!StringUtils.hasText(chatRequest.approach())) {
             LOGGER.warn("approach cannot be null in CHAT request");
-            return Flux.error(new IllegalArgumentException("approach cannot be null in CHAT request"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         if (chatRequest.messages() == null || chatRequest.messages().isEmpty()) {
             LOGGER.warn("history cannot be null in Chat request");
-            return Flux.error(new IllegalArgumentException("history cannot be null in Chat request"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         var ragOptions = new RAGOptions.Builder()
@@ -66,21 +67,23 @@ public class ChatController {
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
 
-
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.messages());
+
 
         Flux<Integer> counter = Flux.range(0, Integer.MAX_VALUE);
 
-        return ragApproach
-                .runStreaming(chatGPTConversation, ragOptions)
-                .zipWith(counter)
-                .map((data) -> {
-                    if (data.getT2() == 0) {
-                        return ChatResponse.buildChatResponse(data.getT1());
-                    } else {
-                        return ChatResponse.buildChatDeltaResponse(data.getT2(), data.getT1());
-                    }
-                });
+        StreamingResponseBody response = output -> {
+            try {
+                ragApproach.runStreaming(chatGPTConversation, ragOptions, output);
+            } finally {
+                output.flush();
+                output.close();
+            }
+        };
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(response);
     }
 
     @PostMapping(

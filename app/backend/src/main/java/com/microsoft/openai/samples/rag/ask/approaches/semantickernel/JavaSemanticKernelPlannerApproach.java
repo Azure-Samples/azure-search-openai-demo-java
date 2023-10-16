@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.io.OutputStream;
 import java.util.Objects;
 import java.util.Set;
 
@@ -82,8 +83,8 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
     }
 
     @Override
-    public Flux<RAGResponse> runStreaming(String questionOrConversation, RAGOptions options) {
-        return Flux.error(new IllegalStateException("Streaming not supported for this approach"));
+    public void runStreaming(String questionOrConversation, RAGOptions options, OutputStream outputStream) {
+        throw new IllegalStateException("Streaming not supported for this approach");
     }
 
     private Kernel buildSemanticKernel( RAGOptions options) {

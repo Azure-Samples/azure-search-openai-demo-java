@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -77,6 +78,11 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     }
 
     @Override
+    public void runStreaming(String questionOrConversation, RAGOptions options, OutputStream outputStream) {
+        throw new UnsupportedOperationException("Streaming not supported for PlainJavaAskApproach");
+    }
+/*
+    @Override
     public Flux<RAGResponse> runStreaming(String question, RAGOptions options) {
 
         //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
@@ -116,4 +122,6 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
                                     .build());
                 });
     }
+
+ */
 }

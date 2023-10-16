@@ -1,12 +1,16 @@
 package com.microsoft.openai.samples.rag.chat.approaches;
 
+import com.azure.ai.openai.models.ChatChoice;
 import com.azure.ai.openai.models.ChatCompletions;
+import com.azure.core.util.IterableStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
@@ -14,9 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
@@ -28,13 +34,18 @@ import java.util.List;
 public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlainJavaChatApproach.class);
+    private final ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
     private final OpenAIProxy openAIProxy;
     private final FactsRetrieverProvider factsRetrieverProvider;
 
-    public PlainJavaChatApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy) {
+    public PlainJavaChatApproach(
+            FactsRetrieverProvider factsRetrieverProvider,
+            OpenAIProxy openAIProxy,
+            ObjectMapper objectMapper) {
         this.factsRetrieverProvider = factsRetrieverProvider;
         this.openAIProxy = openAIProxy;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -71,43 +82,60 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
     }
 
     @Override
-    public Flux<RAGResponse> runStreaming(ChatGPTConversation questionOrConversation, RAGOptions options) {
-
+    public void runStreaming(
+            ChatGPTConversation questionOrConversation,
+            RAGOptions options,
+            OutputStream outputStream) {
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromConversation(questionOrConversation, options);
         LOGGER.info("Total {} sources retrieved", sources.size());
-
 
         // Replace whole prompt is not supported yet
         var semanticSearchChat = new SemanticSearchChat(questionOrConversation, sources, options.getPromptTemplate(), false, options.isSuggestFollowupQuestions());
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 
-        // STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        Flux<ChatCompletions> chatCompletions = Flux.fromIterable(openAIProxy.getChatCompletionsStream(chatCompletionsOptions));
+        AtomicInteger counter = new AtomicInteger(0);
 
-        return chatCompletions
-                .flatMap(completion -> {
-                    if (completion.getUsage() != null) {
-                        LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
-                                completion.getUsage().getPromptTokens(),
-                                completion.getUsage().getCompletionTokens(),
-                                completion.getUsage().getTotalTokens());
-                    }
+        IterableStream<ChatCompletions> completions = openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
 
-                    return Flux.fromIterable(completion.getChoices())
-                            .filter(chatChoice -> chatChoice.getDelta().getContent() != null)
-                            .map(choice -> {
-                                return new RAGResponse.Builder()
-                                        .question(ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages()))
-                                        .prompt(ChatGPTUtils.formatAsChatML(semanticSearchChat.getMessages()))
-                                        .answer(choice.getDelta().getContent())
-                                        .sources(sources)
-                                        .build();
-                            });
-                });
+        for (ChatCompletions completion : completions) {
+            if (completion.getUsage() != null) {
+                LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+                        completion.getUsage().getPromptTokens(),
+                        completion.getUsage().getCompletionTokens(),
+                        completion.getUsage().getTotalTokens());
+            }
 
+            List<ChatChoice> choices = completion.getChoices();
 
+            for (ChatChoice choice : choices) {
+                if (choice.getDelta().getContent() == null) {
+                    continue;
+                }
+
+                RAGResponse ragResponse = new RAGResponse.Builder()
+                        .question(ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages()))
+                        .prompt(ChatGPTUtils.formatAsChatML(semanticSearchChat.getMessages()))
+                        .answer(choice.getDelta().getContent())
+                        .sources(sources)
+                        .build();
+
+                int index = counter.getAndIncrement();
+                ChatResponse response;
+                if (index == 0) {
+                    response = ChatResponse.buildChatResponse(ragResponse);
+                } else {
+                    response = ChatResponse.buildChatDeltaResponse(index, ragResponse);
+                }
+
+                try {
+                    String value = objectMapper.writeValueAsString(response) + "\n";
+                    outputStream.write(value.getBytes());
+                    outputStream.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
-
-
 }
