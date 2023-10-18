@@ -2,9 +2,11 @@ package com.microsoft.openai.samples.rag.approaches;
 
 import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithMemoryApproach;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelPlannerApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithMemoryApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
+import com.microsoft.openai.samples.rag.chat.approaches.semantickernel.JavaSemanticKernelChainsChatApproach;
+import com.microsoft.openai.samples.rag.chat.approaches.semantickernel.JavaSemanticKernelWithMemoryChatApproach;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -27,18 +29,27 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
     @Override
     public RAGApproach createApproach(String approachName, RAGType ragType, RAGOptions ragOptions) {
 
-        if (ragType.equals(RAGType.CHAT) && JAVA_OPENAI_SDK.equals(approachName)) {
-            return applicationContext.getBean(PlainJavaChatApproach.class);
-
+        if (ragType.equals(RAGType.CHAT)) {
+            if (JAVA_SEMANTIC_KERNEL.equals(approachName)) {
+                return applicationContext.getBean(JavaSemanticKernelWithMemoryChatApproach.class);
+            } else if (
+                    JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) &&
+                            ragOptions != null &&
+                            ragOptions.getSemantickKernelMode() != null &&
+                            ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains) {
+                return applicationContext.getBean(JavaSemanticKernelChainsChatApproach.class);
+            } else {
+                return applicationContext.getBean(PlainJavaChatApproach.class);
+            }
         } else if (ragType.equals(RAGType.ASK)) {
             if (JAVA_OPENAI_SDK.equals(approachName))
                 return applicationContext.getBean(PlainJavaAskApproach.class);
             else if (JAVA_SEMANTIC_KERNEL.equals(approachName))
                 return applicationContext.getBean(JavaSemanticKernelWithMemoryApproach.class);
             else if (JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.planner)
-                      return  applicationContext.getBean(JavaSemanticKernelPlannerApproach.class);
-                    else if(JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions != null && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains)
-                        return applicationContext.getBean(JavaSemanticKernelChainsApproach.class);
+                return applicationContext.getBean(JavaSemanticKernelPlannerApproach.class);
+            else if (JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions != null && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains)
+                return applicationContext.getBean(JavaSemanticKernelChainsApproach.class);
 
         }
         //if this point is reached then the combination of approach and rag type is not supported

@@ -4,7 +4,6 @@ import com.azure.ai.openai.models.ChatCompletionsOptions;
 import com.azure.ai.openai.models.ChatMessage;
 import com.azure.ai.openai.models.ChatRole;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,12 +26,12 @@ public class ChatGPTUtils {
         return completionsOptions;
     }
 
-    public static  String formatAsChatML(List<ChatMessage> messages) {
+    public static String formatAsChatML(List<ChatMessage> messages) {
         StringBuilder sb = new StringBuilder();
         messages.forEach(message -> {
-            if(message.getRole() == ChatRole.USER){
+            if (message.getRole() == ChatRole.USER) {
                 sb.append("<|im_start|>user\n");
-            } else if(message.getRole() == ChatRole.ASSISTANT) {
+            } else if (message.getRole() == ChatRole.ASSISTANT) {
                 sb.append("<|im_start|>assistant\n");
             } else {
                 sb.append("<|im_start|>system\n");
@@ -42,10 +41,16 @@ public class ChatGPTUtils {
         return sb.toString();
     }
 
-    public static String getLastUserQuestion(List<ChatGPTMessage> messages){
-        ChatGPTMessage message = messages.get(messages.size()-1);
-        if(message.role() != ChatGPTMessage.ChatRole.USER)
-            return message.content();
-        return "";
+    public static String getLastUserQuestion(List<ChatGPTMessage> messages) {
+        List<ChatGPTMessage> userMessages = messages
+                .stream()
+                .filter(message -> message.role() == ChatGPTMessage.ChatRole.USER)
+                .toList();
+
+        if (!userMessages.isEmpty()) {
+            return userMessages.get(userMessages.size() - 1).content();
+        } else {
+            return "";
+        }
     }
 }

@@ -68,6 +68,7 @@ public class ChatController {
                 .excludeCategory(chatRequest.context().overrides().exclude_category())
                 .promptTemplate(chatRequest.context().overrides().prompt_template())
                 .top(chatRequest.context().overrides().top())
+                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
                 .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
@@ -118,6 +119,7 @@ public class ChatController {
                 .excludeCategory(chatRequest.context().overrides().exclude_category())
                 .promptTemplate(chatRequest.context().overrides().prompt_template())
                 .top(chatRequest.context().overrides().top())
+                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
                 .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);

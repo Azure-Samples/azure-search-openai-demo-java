@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Checkbox, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption } from "@fluentui/react";
+import { Checkbox, ChoiceGroup, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption } from "@fluentui/react";
 import { SparkleFilled } from "@fluentui/react-icons";
 import readNDJSONStream from "ndjson-readablestream";
 
@@ -12,7 +12,8 @@ import {
     ChatAppResponseOrError,
     ChatAppRequest,
     ResponseMessage,
-    Approaches
+    Approaches,
+    SKMode
 } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -27,6 +28,8 @@ import { TokenClaimsDisplay } from "../../components/TokenClaimsDisplay";
 
 const Chat = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+    const [approach, setApproach] = useState<Approaches>(Approaches.JAVA_OPENAI_SDK);
+    const [skMode, setSKMode] = useState<SKMode>(SKMode.Chains);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
@@ -129,10 +132,11 @@ const Chat = () => {
                         semantic_captions: useSemanticCaptions,
                         suggest_followup_questions: useSuggestFollowupQuestions,
                         use_oid_security_filter: useOidSecurityFilter,
-                        use_groups_security_filter: useGroupsSecurityFilter
+                        use_groups_security_filter: useGroupsSecurityFilter,
+                        semantic_kernel_mode: skMode
                     }
                 },
-                approach: Approaches.JAVA_OPENAI_SDK,
+                approach: approach,
             };
 
             const response = await chatApi(request, token?.accessToken);
@@ -180,6 +184,14 @@ const Chat = () => {
 
     const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
         setRetrievalMode(option?.data || RetrievalMode.Hybrid);
+    };
+
+    const onSKModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<SKMode> | undefined, index?: number | undefined) => {
+        setSKMode(option?.data || SKMode.Chains);
+    };
+
+    const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
+        setApproach((option?.key as Approaches) || Approaches.JAVA_OPENAI_SDK);
     };
 
     const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
@@ -234,6 +246,21 @@ const Chat = () => {
 
         setSelectedAnswer(index);
     };
+
+    const approaches: IChoiceGroupOption[] = [
+        {
+            key: Approaches.JAVA_OPENAI_SDK,
+            text: "Java Azure Open AI SDK"
+        },
+        {
+            key: Approaches.JAVA_SEMANTIC_KERNEL,
+            text: "Java Semantic Kernel - Memory"
+        },
+        {
+            key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
+            text: "Java Semantic Kernel - Orchestration"
+        }
+    ];
 
     return (
         <div className={styles.container}>
@@ -412,6 +439,38 @@ const Chat = () => {
                         label="Stream chat completion responses"
                         onChange={onShouldStreamChange}
                     />
+
+
+                    <ChoiceGroup
+                        className={styles.chatSettingsSeparator}
+                        label="Approach"
+                        options={approaches}
+                        defaultSelectedKey={approach}
+                        onChange={onApproachChange}
+                    />
+
+                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
+                        <TextField
+                            className={styles.chatSettingsSeparator}
+                            defaultValue={promptTemplate}
+                            label="Override prompt template"
+                            multiline
+                            autoAdjustHeight
+                            onChange={onPromptTemplateChange}
+                        />
+                    )}
+                    {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                        <Dropdown
+                            className={styles.oneshotSettingsSeparator}
+                            label="Semantic Kernel mode"
+                            options={[
+                                { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
+                                { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
+                            ]}
+                            required
+                            onChange={onSKModeChange}
+                        />
+                    )}
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>
             </div>
