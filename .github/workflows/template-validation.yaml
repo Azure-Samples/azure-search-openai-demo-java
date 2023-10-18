@@ -1,0 +1,81 @@
+name: Validate AZD template
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *' # Run at midnight every day
+
+jobs:
+  infra:
+    name: "Infra Biceps Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build Bicep for linting
+        uses: azure/CLI@v1
+        with:
+          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f infra/main.bicep --stdout
+          
+      - name: Run Microsoft Security DevOps Analysis
+        uses: microsoft/security-devops-action@preview
+        id: msdo
+        continue-on-error: true
+        with:
+          tools: templateanalyzer
+
+      - name: Upload alerts to Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: github.repository == 'Azure-Samples/azure-search-openai-demo'
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
+
+  frontend:
+    name: "Front-end validation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build React Frontend
+        run: |
+          echo "Building front-end and merge into Spring Boot static folder. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
+          cd ./app/frontend
+          npm install
+          npm run build
+
+  backend: 
+    name: "Backend validation"
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Java version
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Set environment for branch
+        id: set-deploy-env
+        run: |
+          if [[ $GITHUB_REF_NAME == 'refs/heads/main' ]]; then
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF_NAME == 'refs/heads/develop' ]]; then
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF_NAME == 'refs/heads/release' ]]; then
+               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          else
+              echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Spring Boot App
+        run: |
+          echo "Building Spring Boot app. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
+          cd ./app/backend
+          ./mvnw verify
