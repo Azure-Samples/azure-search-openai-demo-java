@@ -1,16 +1,10 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-name: App Continuous Integration pipeline
+name: Deploy to Production (Azure)
 
 on:
   push:
-    branches:
-      - app-ci-github-actions
-      - main
-  pull_request:
-    branches: [ main ]
+    # Pattern matched against refs/tags
+    tags:        
+      - '*'           # Push events to every tag not containing /
   workflow_dispatch:
 
 jobs:
