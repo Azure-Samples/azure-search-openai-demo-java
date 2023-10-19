@@ -39,7 +39,7 @@ For detailed instructions, see [Getting Started](#getting-started) below.
     * [Provision remaining resources](#provision-remaining-resources)
   * [Deploying again](#deploying-again)
   * [Running locally](#running-locally)
-  * [To Run in GitHub Codespaces or VS Code Remote Containers](#to-run-in-github-codespaces-or-vs-code-remote-containers)
+  * [To Run in GitHub Codespaces or VS Code Dev Containers](#to-run-in-github-codespaces-or-vs-code-dev-containers)
   * [UI Navigation](#ui-navigation)
 * [Enabling optional features](#enabling-optional-features)
   * [Enabling Application Insights](#enabling-application-insights)
@@ -76,12 +76,12 @@ User interface:
 
 > **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/cognitive-search/) to get some free Azure credits to get you started.
 
-### Run in GitHub Codespaces or VS Code Remote Containers
+### Run in GitHub Codespaces or VS Code Dev Containers
 
-You can run this repo virtually by using GitHub Codespaces or VS Code Remote Containers.  Click on one of the buttons below to open this repo in one of those options.
+You can run this repo virtually by using GitHub Codespaces or VS Code Dev Containers.  Click on one of the buttons below to open this repo in one of those options.
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=599293758&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
-[![Open in VS Code Dev - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/azure-search-openai-demo-java/)
+[![Open in VS Code Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/azure-search-openai-demo-java/)
 
 All prerequisites are already installed in the container.  You can skip to the [Starting from scratch](#starting-from-scratch) section.
 
@@ -181,6 +181,13 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 azd up
 ```
 
+### Examples of an azd deployment changing the default chatgpt deployment model
+```shell
+azd auth login
+azd env set AZURE_OPENAI_CHATGPT_MODEL "gpt-4" # Change the chatgpt model to gpt-4
+azd up
+```
+> NOTE: This sample has been tested with gpt-35-turbo/0613 model version.Using other models or different versions might result in unexpected behavior.
 ### Examples of an azd deployment reusing an existing OpenAI and Azure Cognitive Search resources
 
 ```shell
@@ -472,7 +479,7 @@ Here are the most common failure scenarios and solutions:
 
 7. After running `./app/start.ps1` or `./app/start.sh` you get `"Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17"`. It means you are not using JDK 17 but a previous version. Be sure to set the `JAVA_HOME` env variable to your Java 17 installation directory and update your `PATH` env variable to have the Java 17 bin folder as the first occurrence amongst the listed directories. More info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
 8. After running `./app/start.sh` on Ubuntu 16.04 or later, the first time you try to create a virtual environment with Python 3.6, Python 3.7, Python 3.8 or Python 3.9, you'll get the following error `"The virtual environment was not created successfully because ensurepip is not available"`. Just follow the hint provided in the error message and run `apt-get install python3-venv` to install the missing packages. More info [here](https://www.softwarepragmatism.com/cannot-create-a-python-virtual-environment-on-ubuntu-ensurepip-is-not-available)
-9. While running `azd up` in VS Code Remote Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
+9. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
 10. Github App CI pipeline might fail in some scenarios where the provisioned App Service instance doesn't have "Basic Auth Publishing Credentials" enabled in your subscription. To fix it, you can go to your App Service instance in Azure Portal, click on "Settings/Configuration(Panel)->General Settins (Tab)" and flag to ON the "Basic Auth Publishing Credentials" checkbox group. Or you can run the following azd cli commands:
 
     ``` 
