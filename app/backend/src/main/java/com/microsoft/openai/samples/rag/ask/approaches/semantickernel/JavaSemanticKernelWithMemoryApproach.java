@@ -19,16 +19,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *    Accomplish the same task as in the PlainJavaAskApproach approach but using Semantic Kernel framework:
- *    1. Memory abstraction is used for vector search capability. It uses Azure Cognitive Search as memory store.
- *    2. Semantic function has been defined to ask question using sources from memory search results
+ * Accomplish the same task as in the PlainJavaAskApproach approach but using Semantic Kernel framework:
+ * 1. Memory abstraction is used for vector search capability. It uses Azure Cognitive Search as memory store.
+ * 2. Semantic function has been defined to ask question using sources from memory search results
  */
 @Component
 public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String, RAGResponse> {
@@ -40,8 +42,10 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
 
     private final String EMBEDDING_FIELD_NAME = "embedding";
 
-    @Value("${cognitive.search.service}") String searchServiceName ;
-    @Value("${cognitive.search.index}") String indexName;
+    @Value("${cognitive.search.service}")
+    String searchServiceName;
+    @Value("${cognitive.search.index}")
+    String indexName;
     @Value("${openai.chatgpt.deployment}")
     private String gptChatDeploymentModelId;
 
@@ -70,11 +74,11 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
          * Question embeddings are provided to cognitive search via search options.
          */
         List<MemoryQueryResult> memoryResult = semanticKernel.getMemory().searchAsync(
-                indexName,
-                question,
-                options.getTop(),
-                0.5f,
-                false)
+                        indexName,
+                        question,
+                        options.getTop(),
+                        0.5f,
+                        false)
                 .block();
 
         LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", memoryResult.size(), question);
@@ -90,14 +94,19 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
         Mono<SKContext> result = semanticKernel.getFunction("RAG", "AnswerQuestion").invokeAsync(skcontext);
 
         return new RAGResponse.Builder()
-                                //.prompt(plan.toPlanString())
-                                .prompt("placeholders for prompt")
-                                .answer(result.block().getResult())
-                                .sources(sourcesList)
-                                .sourcesAsText(sources)
-                                .question(question)
-                                .build();
+                //.prompt(plan.toPlanString())
+                .prompt("placeholders for prompt")
+                .answer(result.block().getResult())
+                .sources(sourcesList)
+                .sourcesAsText(sources)
+                .question(question)
+                .build();
 
+    }
+
+    @Override
+    public void runStreaming(String questionOrConversation, RAGOptions options, OutputStream outputStream) {
+        throw new IllegalStateException("Streaming not supported for this approach");
     }
 
     private List<ContentSource> buildSources(List<MemoryQueryResult> memoryResult) {
@@ -123,15 +132,14 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
         return sourcesContentBuffer.toString();
     }
 
-    private Kernel buildSemanticKernel( RAGOptions options) {
-
+    private Kernel buildSemanticKernel(RAGOptions options) {
         var kernelWithACS = SKBuilders.kernel()
                 .withMemoryStorage(
                         new CustomAzureCognitiveSearchMemoryStore("https://%s.search.windows.net".formatted(searchServiceName),
-                                                                    tokenCredential,
-                                                                    this.searchAsyncClient,
-                                                                    this.EMBEDDING_FIELD_NAME,
-                                                                    buildCustomMemoryMapper()))
+                                tokenCredential,
+                                this.searchAsyncClient,
+                                this.EMBEDDING_FIELD_NAME,
+                                buildCustomMemoryMapper()))
                 .withDefaultAIService(SKBuilders.textEmbeddingGeneration()
                         .withOpenAIClient(openAIAsyncClient)
                         .withModelId(embeddingDeploymentModelId)
@@ -142,14 +150,13 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
                         .build())
                 .build();
 
-        kernelWithACS.importSkillFromResources("semantickernel/Plugins","RAG","AnswerQuestion",null);
-       return kernelWithACS;
+        kernelWithACS.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerQuestion", null);
+        return kernelWithACS;
     }
 
-
-    private Function<SearchDocument, MemoryRecord> buildCustomMemoryMapper(){
+    private Function<SearchDocument, MemoryRecord> buildCustomMemoryMapper() {
         return searchDocument -> {
-                     return MemoryRecord.localRecord(
+            return MemoryRecord.localRecord(
                     (String) searchDocument.get("sourcepage"),
                     (String) searchDocument.get("content"),
                     "chunked text from original source",
