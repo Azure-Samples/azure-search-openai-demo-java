@@ -16,7 +16,7 @@ public class FactsRetrieverProvider implements ApplicationContextAware {
      * @return retriever implementation
      */
     public Retriever getFactsRetriever(RAGOptions options) {
-        //default to Cognitive Semantic Search for MVP. More useful in the future to support multiple retrivial systems (RedisSearch.Pinecone, etc)
+        //default to Cognitive Semantic Search for MVP. More useful in the future to support multiple retrieval systems (RedisSearch.Pinecone, etc)
        switch (options.getRetrievalMode()){
            case vectors,hybrid,text:
                return this.applicationContext.getBean(CognitiveSearchRetriever.class);

@@ -25,9 +25,9 @@ import java.util.List;
 
 /**
  * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
- * It uses the ChatGPT API to turn the user question into a good search query.
- * It queries Azure Cognitive Search for search results for that query (optionally using the vector embeddings for that query).
- * It then combines the search results and original user question, and asks ChatGPT API to answer the question based on the sources. It includes the last 4K of message history as well (or however many tokens are allowed by the deployed model).
+ * It first calls OpenAI to generate a search keyword for the chat history and then answer to the last chat question.
+ * Several cognitive search retrieval options are available: Text, Vector, Hybrid.
+ * When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the chat extracted keywords.
  */
 @Component
 public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
@@ -54,13 +54,15 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
      */
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
-
+        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
+
+        //STEP 1: Retrieve relevant documents using kewirds extracted from the chat history. An additional call to OpenAI is required to generate keywords.
         List<ContentSource> sources = factsRetriever.retrieveFromConversation(questionOrConversation, options);
         LOGGER.info("Total {} sources retrieved", sources.size());
 
 
-        // Replace whole prompt is not supported yet
+        //STEP 2: Build a grounded prompt using the retrieved documents. RAG options is used to configure additional prompt extension like 'suggesting follow up questions' option.
         var semanticSearchChat = new SemanticSearchChat(questionOrConversation, sources, options.getPromptTemplate(), false, options.isSuggestFollowupQuestions());
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 

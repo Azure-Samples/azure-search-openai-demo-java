@@ -28,9 +28,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Accomplish the same task as in the PlainJavaAskApproach approach but using Semantic Kernel framework:
- * 1. Memory abstraction is used for vector search capability. It uses Azure Cognitive Search as memory store.
- * 2. Semantic function has been defined to ask question using sources from memory search results
+ Use Java Semantic Kernel framework with built-in MemoryStore for embeddings similarity search.
+ A semantic function is defined in RAG.AnswerQuestion (src/main/resources/semantickernel/Plugins) to build the prompt template which is grounded using results from the Memory Store.
+ A customized version of SK built-in CognitiveSearchMemoryStore is used to map index fields populated by the documents ingestion process.
  */
 @Component
 public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String, RAGResponse> {
@@ -66,10 +66,11 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
     @Override
     public RAGResponse run(String question, RAGOptions options) {
 
-        //Build semantic kernel with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from resources.
+        //Build semantic kernel context with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from src/main/resources/semantickernel/Plugins.
         Kernel semanticKernel = buildSemanticKernel(options);
 
         /**
+         * STEP 1: Retrieve relevant documents using user question
          * Use semantic kernel built-in memory.searchAsync. It uses OpenAI to generate embeddings for the provided question.
          * Question embeddings are provided to cognitive search via search options.
          */
@@ -86,16 +87,18 @@ public class JavaSemanticKernelWithMemoryApproach implements RAGApproach<String,
         String sources = buildSourcesText(memoryResult);
         List<ContentSource> sourcesList = buildSources(memoryResult);
 
+        //STEP 2: Build a SK context with the sources retrieved from the memory store and the user question.
         SKContext skcontext = SKBuilders.context().build()
                 .setVariable("sources", sources)
                 .setVariable("input", question);
 
-
+        //STEP 3: Get a reference of the semantic function [AnswerQuestion] of the [RAG] plugin (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
         Mono<SKContext> result = semanticKernel.getFunction("RAG", "AnswerQuestion").invokeAsync(skcontext);
 
         return new RAGResponse.Builder()
                 //.prompt(plan.toPlanString())
-                .prompt("placeholders for prompt")
+                .prompt("Prompt is managed by SK and can't be displayed here. See App logs for prompt")
+                //STEP 4: triggering Open AI to get an answer
                 .answer(result.block().getResult())
                 .sources(sourcesList)
                 .sourcesAsText(sources)
