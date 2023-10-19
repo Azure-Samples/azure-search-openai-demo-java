@@ -1,3 +1,18 @@
+---
+page_type: sample
+languages:
+- java
+products:
+- azure
+- azure-active-directory
+- azure-app-service
+- azure-openai
+- azure-cognitive-search
+- semantic-kernel
+- azure-sdks
+- github
+---
+
 # ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
 
 This repo is the Java version of the well known [ChatGPT + Enterprise data code sample](https://github.com/Azure-Samples/azure-search-openai-demo) originally written in python.
