@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.test.config;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
@@ -37,5 +38,4 @@ public class ProxyMockConfiguration {
     public OpenAIAsyncClient mockedOpenAIAsynchClient() {
         return Mockito.mock(OpenAIAsyncClient.class);
     }
-
 }

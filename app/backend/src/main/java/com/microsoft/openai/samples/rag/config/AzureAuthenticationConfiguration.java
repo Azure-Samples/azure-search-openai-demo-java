@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.config;
 
 import com.azure.core.credential.TokenCredential;
@@ -21,5 +22,4 @@ public class AzureAuthenticationConfiguration {
     public TokenCredential managedIdentityTokenCredential() {
         return new ManagedIdentityCredentialBuilder().build();
     }
-
 }

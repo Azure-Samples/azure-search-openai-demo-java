@@ -1,11 +1,10 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.common;
 
 import com.azure.core.util.ExpandableStringEnum;
-
 import java.util.Collection;
 
-public record ChatGPTMessage(ChatGPTMessage.ChatRole role,
-                             String content) {
+public record ChatGPTMessage(ChatGPTMessage.ChatRole role, String content) {
 
     public static final class ChatRole extends ExpandableStringEnum<ChatRole> {
         public static final ChatGPTMessage.ChatRole SYSTEM = fromString("system");
@@ -22,5 +21,4 @@ public record ChatGPTMessage(ChatGPTMessage.ChatRole role,
             return values(ChatGPTMessage.ChatRole.class);
         }
     }
-
 }

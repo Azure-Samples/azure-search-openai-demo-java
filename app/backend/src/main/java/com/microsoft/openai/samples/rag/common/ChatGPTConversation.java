@@ -1,7 +1,7 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.common;
 
 import com.azure.ai.openai.models.ChatMessage;
-
 import java.util.List;
 
 public class ChatGPTConversation {
@@ -15,13 +15,16 @@ public class ChatGPTConversation {
 
     public List<ChatMessage> toOpenAIChatMessages() {
         return this.messages.stream()
-            .map(message ->
-            {
-                ChatMessage chatMessage = new ChatMessage(com.azure.ai.openai.models.ChatRole.fromString(message.role().toString()));
-                chatMessage.setContent(message.content());
-                return chatMessage;
-            })
-            .toList();
+                .map(
+                        message -> {
+                            ChatMessage chatMessage =
+                                    new ChatMessage(
+                                            com.azure.ai.openai.models.ChatRole.fromString(
+                                                    message.role().toString()));
+                            chatMessage.setContent(message.content());
+                            return chatMessage;
+                        })
+                .toList();
     }
 
     public List<ChatGPTMessage> getMessages() {
@@ -31,5 +34,4 @@ public class ChatGPTConversation {
     public void setMessages(List<ChatGPTMessage> messages) {
         this.messages = messages;
     }
-
 }
