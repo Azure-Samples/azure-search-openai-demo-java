@@ -4,7 +4,7 @@ import { useLogin } from "../authConfig";
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URI ? import.meta.env.VITE_BACKEND_URI : "";
 
 function getHeaders(idToken: string | undefined, stream:boolean): Record<string, string> {
-    var headers : Record<string, string> = {
+    var headers: Record<string, string> = {
         "Content-Type": "application/json"
     };
     // If using login, add the id token of the logged in account as the authorization
