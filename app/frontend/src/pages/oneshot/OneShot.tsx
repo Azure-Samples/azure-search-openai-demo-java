@@ -1,9 +1,12 @@
 import { useRef, useState } from "react";
-import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton, IDropdownOption, Dropdown } from "@fluentui/react";
+import {
+    Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton, IDropdownOption, Dropdown,
+    TooltipHost
+} from "@fluentui/react";
 
 import styles from "./OneShot.module.css";
 
-import {askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest} from "../../api";
+import { askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -12,6 +15,7 @@ import { SettingsButton } from "../../components/SettingsButton/SettingsButton";
 import { useLogin, getToken } from "../../authConfig";
 import { useMsal } from "@azure/msal-react";
 import { TokenClaimsDisplay } from "../../components/TokenClaimsDisplay";
+import { toolTipText, toolTipTextCalloutProps } from "../../i18n/tooltips.js";
 
 export function Component(): JSX.Element {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
@@ -230,56 +234,63 @@ export function Component(): JSX.Element {
                 />
 
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
-                <TextField
-                    className={styles.oneshotSettingsSeparator}
-                    defaultValue={promptTemplate}
-                    label="Override prompt template"
-                    multiline
-                    autoAdjustHeight
-                    onChange={onPromptTemplateChange}
-                />
+                    <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.promptTemplate}>
+                        <TextField
+                            className={styles.oneshotSettingsSeparator}
+                            defaultValue={promptTemplate}
+                            label="Override prompt template"
+                            multiline
+                            autoAdjustHeight
+                            onChange={onPromptTemplateChange}
+                        /></TooltipHost>
                 )}
 
-
-                <SpinButton
-                    className={styles.oneshotSettingsSeparator}
-                    label="Retrieve this many search results:"
-                    min={1}
-                    max={50}
-                    defaultValue={retrieveCount.toString()}
-                    onChange={onRetrieveCountChange}
-                />
-                <TextField className={styles.oneshotSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
-
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                <Checkbox
-                    className={styles.oneshotSettingsSeparator}
-                    checked={useSemanticRanker}
-                    label="Use semantic ranker for retrieval"
-                    onChange={onUseSemanticRankerChange}
-                />
-                )}
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                <Checkbox
-                    className={styles.oneshotSettingsSeparator}
-                    checked={useSemanticCaptions}
-                    label="Use query-contextual summaries instead of whole documents"
-                    onChange={onUseSemanticCaptionsChange}
-                    disabled={!useSemanticRanker}
-                />
-                )}
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                    <Dropdown
+                <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.retrieveNumber}>
+                    <SpinButton
                         className={styles.oneshotSettingsSeparator}
-                        label="Retrieval mode"
-                        options={[
-                            { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
-                            { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
-                            { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
-                        ]}
-                        required
-                        onChange={onRetrievalModeChange}
-                    />
+                        label="Retrieve this many search results:"
+                        min={1}
+                        max={50}
+                        defaultValue={retrieveCount.toString()}
+                        onChange={onRetrieveCountChange}
+                    /></TooltipHost>
+
+                <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.excludeCategory}>
+                    <TextField className={styles.oneshotSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
+                </TooltipHost>
+
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.useSemanticRanker}>
+                        <Checkbox
+                            className={styles.oneshotSettingsSeparator}
+                            checked={useSemanticRanker}
+                            label="Use semantic ranker for retrieval"
+                            onChange={onUseSemanticRankerChange}
+                        /></TooltipHost>
+                )}
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.useQueryContextSummaries}>
+                        <Checkbox
+                            className={styles.oneshotSettingsSeparator}
+                            checked={useSemanticCaptions}
+                            label="Use query-contextual summaries instead of whole documents"
+                            onChange={onUseSemanticCaptionsChange}
+                            disabled={!useSemanticRanker}
+                        /></TooltipHost>
+                )}
+                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <TooltipHost calloutProps={toolTipTextCalloutProps} content={toolTipText.retrievalMode}>
+                        <Dropdown
+                            className={styles.oneshotSettingsSeparator}
+                            label="Retrieval mode"
+                            options={[
+                                { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
+                                { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
+                                { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
+                            ]}
+                            required
+                            onChange={onRetrievalModeChange}
+                        /></TooltipHost>
                 )}
                 {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                     <Dropdown
@@ -302,7 +313,7 @@ export function Component(): JSX.Element {
                         onChange={onUseOidSecurityFilterChange}
                     />
                 )}
-                {useLogin &&  (
+                {useLogin && (
                     <Checkbox
                         className={styles.oneshotSettingsSeparator}
                         checked={useGroupsSecurityFilter}
@@ -311,7 +322,7 @@ export function Component(): JSX.Element {
                         onChange={onUseGroupsSecurityFilterChange}
                     />
                 )}
-                { useLogin && <TokenClaimsDisplay />}
+                {useLogin && <TokenClaimsDisplay />}
             </Panel>
         </div>
     );
