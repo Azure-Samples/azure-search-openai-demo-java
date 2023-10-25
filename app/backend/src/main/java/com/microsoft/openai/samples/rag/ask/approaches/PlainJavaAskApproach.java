@@ -22,9 +22,11 @@ import java.io.OutputStream;
 import java.util.List;
 
 /**
- * Simple retrieve-then-read java implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
- * top documents from search, then constructs a prompt with them, and then uses OpenAI to generate a completion
- * (answer) with that prompt.
+ Use Cognitive Search and Java OpenAI APIs.
+ It first retrieves top documents from search and use them to build a prompt.
+ Then, it uses OpenAI to generate an answer for the user question.
+ Several cognitive search retrieval options are available: Text, Vector, Hybrid.
+ When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the question.
  */
 @Component
 public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
@@ -49,6 +51,8 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     public RAGResponse run(String question, RAGOptions options) {
         //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
+
+       //STEP 1: Retrieve relevant documents using user question as query
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
         LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),
                 question);
@@ -62,12 +66,14 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
             customPrompt = customPrompt.substring(1);
         }
 
+        //STEP 2: Build a prompt using RAG options to see if prompt should be replaced or extended.
         var answerQuestionChatTemplate = new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
 
+        //STEP 3: Build the chat conversation with grounded messages using the retrieved facts
         var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
         var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
-        // STEP 3: Generate a contextual and content specific answer using the retrieve facts
+        // STEP 4: Generate a contextual and content specific answer
         ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
 
         LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",

@@ -1,6 +1,7 @@
 package com.microsoft.openai.samples.rag.ask.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
+import com.azure.core.annotation.Get;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  *    Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining.
  *    InformationFinder.Search native function and RAG.AnswerQuestion semantic function are called sequentially.
+ *    Several cognitive search retrieval options are available: Text, Vector, Hybrid.
  */
 @Component
 public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAGResponse> {
@@ -57,7 +59,11 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
     @Override
     public RAGResponse run(String question, RAGOptions options) {
 
+        //Build semantic kernel context
         Kernel semanticKernel = buildSemanticKernel(options);
+
+
+        //STEP 1: Retrieve relevant documents using user question. It reuses the CognitiveSearchRetriever appraoch through the CognitiveSearchPlugin native function.
         SKContext searchContext =
                 semanticKernel.runAsync(
                         question,
@@ -65,12 +71,18 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
 
         var sources = formSourcesList(searchContext.getResult());
 
+        //STEP 2: Build a SK context with the sources retrieved from the memory store and the user question.
         var answerVariables = SKBuilders.variables()
                 .withVariable("sources", searchContext.getResult())
                 .withVariable("input", question)
                 .build();
 
-        SKContext answerExecutionContext =
+        /**
+         *    STEP 3:
+         *    Get a reference of the semantic function [AnswerQuestion] of the [RAG] plugin (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
+         *    Triggering Open AI to get an answerVariables.
+         */
+         SKContext answerExecutionContext =
                 semanticKernel.runAsync(answerVariables,
                         semanticKernel.getSkill("RAG").getFunction("AnswerQuestion", null)).block();
        return new RAGResponse.Builder()
@@ -108,6 +120,14 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
                 .collect(Collectors.toList());
     }
 
+    /**
+     *  Build semantic kernel context with AnswerQuestion semantic function and InformationFinder.Search native function.
+     *  AnswerQuestion is imported from src/main/resources/semantickernel/Plugins.
+     *  InformationFinder.Search is implemented in a traditional Java class method: CognitiveSearchPlugin.search
+     *
+     * @param options
+     * @return
+     */
     private Kernel buildSemanticKernel( RAGOptions options) {
         Kernel kernel = SKBuilders.kernel()
                 .withDefaultAIService(SKBuilders.chatCompletion()

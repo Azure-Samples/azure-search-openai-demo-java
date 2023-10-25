@@ -23,7 +23,8 @@ import java.util.Optional;
 
 /**
  * Cognitive Search retriever implementation that uses the Cognitive Search API to retrieve documents from the search
- * index. If retrieval mode is set to vectors or hybrid, it will use the OpenAI API to convert the user's query text to an embedding vector
+ * index.
+ * If retrieval mode is set to vectors or hybrid, it will use OpenAI embedding API to convert the user's query text to an embedding vector
  * The hybrid search is specific to cognitive search feature which fuses the best of text search and vector search.
  */
 @Component
@@ -36,6 +37,13 @@ public class CognitiveSearchRetriever implements Retriever{
         this.cognitiveSearchProxy = cognitiveSearchProxy;
         this.openAIProxy = openAIProxy;
     }
+
+    /**
+     *
+     * @param question
+     * @param ragOptions
+     * @return the top documents retrieved from the search index based on the user's query text
+     */
     @Override
     public List<ContentSource> retrieveFromQuestion(String question, RAGOptions ragOptions) {
         // step 1. Convert the user's query text to an embedding
@@ -63,7 +71,12 @@ public class CognitiveSearchRetriever implements Retriever{
 
     }
 
-
+    /**
+     *
+     * @param conversation
+     * @param ragOptions
+     * @return facts retrieved from the search index based on GPT optimized search keywords extracted from the chat history
+     */
     @Override
     public List<ContentSource> retrieveFromConversation(ChatGPTConversation conversation, RAGOptions ragOptions) {
 

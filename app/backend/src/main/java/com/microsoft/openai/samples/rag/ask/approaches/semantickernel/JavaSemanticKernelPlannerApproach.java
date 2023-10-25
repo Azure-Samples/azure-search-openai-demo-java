@@ -22,14 +22,15 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *    Use Java Semantic Kernel framework with built-in Planner for functions orchestration. It uses a declarative style for AI orchestration through the built-in SequentialPlanner.
- *    SequentialPlanner call OpenAI to generate a plan for answering a question using available skills/plugins: InformationFinder and RAG
+ *    Use Java Semantic Kernel framework with built-in Planner for functions orchestration.
+ *    It uses a declarative style for AI orchestration through the built-in SequentialPlanner.
+ *    SequentialPlanner call OpenAI to generate a plan for answering a question using available plugins: InformationFinder and RAG
  */
 @Component
 public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RAGResponse> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaSemanticKernelPlannerApproach.class);
-    private static final String PLAN_PROMPT = """
+    private static final String GOAL_PROMPT = """
             Take the input as a question and answer it finding any information needed
             """;
     private final CognitiveSearchProxy cognitiveSearchProxy;
@@ -55,6 +56,7 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
     @Override
     public RAGResponse run(String question, RAGOptions options) {
 
+        //Build semantic kernel context
         Kernel semanticKernel = buildSemanticKernel(options);
 
         SequentialPlanner sequentialPlanner = new SequentialPlanner(semanticKernel, new SequentialPlannerRequestSettings(
@@ -66,10 +68,12 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
                 1024
         ), null);
 
-        var plan = Objects.requireNonNull(sequentialPlanner.createPlanAsync(PLAN_PROMPT).block());
+        //STEP 1: ask Open AI to generate an execution plan for the goal contained in GOAL_PROMPT.
+        var plan = Objects.requireNonNull(sequentialPlanner.createPlanAsync(GOAL_PROMPT).block());
 
         LOGGER.debug("Semantic kernel plan calculated is [{}]", plan.toPlanString());
 
+        //STEP 2: execute the plan calculated by the planner using Open AI
         SKContext planContext = Objects.requireNonNull(plan.invokeAsync(question).block());
 
        return new RAGResponse.Builder()
@@ -87,6 +91,14 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
         throw new IllegalStateException("Streaming not supported for this approach");
     }
 
+    /**
+     *  Build semantic kernel context with AnswerQuestion semantic function and InformationFinder.Search native function.
+     *  AnswerQuestion is imported from src/main/resources/semantickernel/Plugins.
+     *  InformationFinder.Search is implemented in a traditional Java class method: CognitiveSearchPlugin.search
+     *
+     * @param options
+     * @return
+     */
     private Kernel buildSemanticKernel( RAGOptions options) {
         Kernel kernel = SKBuilders.kernel()
                 .withDefaultAIService(SKBuilders.chatCompletion()
