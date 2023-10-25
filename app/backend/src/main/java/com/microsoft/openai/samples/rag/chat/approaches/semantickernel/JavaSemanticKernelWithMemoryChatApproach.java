@@ -10,13 +10,16 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.memory.CustomAzureCognitiveSearchMemoryStore;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
+import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.ai.embeddings.Embedding;
+import com.microsoft.semantickernel.chatcompletion.ChatCompletion;
+import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAIChatCompletion;
+import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAIChatHistory;
 import com.microsoft.semantickernel.memory.MemoryQueryResult;
 import com.microsoft.semantickernel.memory.MemoryRecord;
-import com.microsoft.semantickernel.orchestration.SKContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +56,24 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
     @Value("${openai.embedding.deployment}")
     private String embeddingDeploymentModelId;
 
+    private static final String FOLLOW_UP_QUESTIONS_TEMPLATE = """
+    After answering question, also generate three very brief follow-up questions that the user would likely ask next.
+    Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
+    Try not to repeat questions that have already been asked.
+    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'
+            """;
+    private static final String SYSTEM_CHAT_MESSAGE_TEMPLATE = """
+     Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
+     Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
+     For tabular information return it as an html table. Do not return markdown format.
+     Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf]. 
+     %s     
+    
+     %s
+     Sources:
+     %s
+    """ ;
+
     public JavaSemanticKernelWithMemoryChatApproach(TokenCredential tokenCredential, OpenAIAsyncClient openAIAsyncClient, SearchAsyncClient searchAsyncClient) {
         this.tokenCredential = tokenCredential;
         this.openAIAsyncClient = openAIAsyncClient;
@@ -61,7 +82,6 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
-
         String question = ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages());
 
         //Build semantic kernel with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from resources.
@@ -84,27 +104,44 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         String sources = buildSourcesText(memoryResult);
         List<ContentSource> sourcesList = buildSources(memoryResult);
 
-        SKContext skcontext = SKBuilders.context().build()
-                .setVariable("sources", sources)
-                .setVariable("input", question);
+        // Use ChatCompletion Service to generate a reply
+        OpenAIChatCompletion chat = (OpenAIChatCompletion) semanticKernel.getService(null, ChatCompletion.class);
+        OpenAIChatHistory history = buildChatHistory(questionOrConversation, options, chat, sources);
 
-
-        Mono<SKContext> result = semanticKernel.getFunction("RAG", "AnswerQuestion").invokeAsync(skcontext);
+        Mono<String> reply = chat.generateMessageAsync(history, null);
 
         return new RAGResponse.Builder()
                 //.prompt(plan.toPlanString())
                 .prompt("placeholders for prompt")
-                .answer(result.block().getResult())
+                .answer(reply.block())
                 .sources(sourcesList)
                 .sourcesAsText(sources)
                 .question(question)
                 .build();
-
     }
 
     @Override
     public void runStreaming(ChatGPTConversation questionOrConversation, RAGOptions options, OutputStream outputStream) {
         throw new IllegalStateException("Streaming not supported for this approach");
+    }
+
+    private OpenAIChatHistory buildChatHistory(ChatGPTConversation conversation, RAGOptions options, OpenAIChatCompletion chat,
+                                               String sources) {
+        String systemMessage =  SYSTEM_CHAT_MESSAGE_TEMPLATE.formatted(
+                options.isSuggestFollowupQuestions() ? FOLLOW_UP_QUESTIONS_TEMPLATE : "",
+                options.getPromptTemplate() != null ? options.getPromptTemplate() : "",
+                sources);
+
+        OpenAIChatHistory chatHistory = chat.createNewChat(systemMessage);
+        conversation.getMessages().forEach(message -> {
+            if(message.role() == ChatGPTMessage.ChatRole.USER){
+                chatHistory.addUserMessage(message.content());
+            } else if(message.role() == ChatGPTMessage.ChatRole.ASSISTANT) {
+                chatHistory.addAssistantMessage(message.content());
+            }
+        });
+
+        return chatHistory;
     }
 
     private List<ContentSource> buildSources(List<MemoryQueryResult> memoryResult) {
