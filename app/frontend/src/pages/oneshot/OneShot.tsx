@@ -3,7 +3,7 @@ import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinne
 
 import styles from "./OneShot.module.css";
 
-import {askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode } from "../../api";
+import { askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
