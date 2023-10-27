@@ -149,9 +149,6 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         Mono<SKContext> result = searchQuery.invokeAsync(skcontext);
         String query = result.block().getResult();
 
-        LOGGER.info("SEARCH QUERY");
-        LOGGER.info(query);
-
         /**
          * Use semantic kernel built-in memory.searchAsync. It uses OpenAI to generate embeddings for the provided question.
          * Question embeddings are provided to cognitive search via search options.
