@@ -17,16 +17,4 @@ public class Application {
         LOG.info("Application profile from system property is [{}]", System.getProperty("spring.profiles.active"));
         new SpringApplication(Application.class).run(args);
     }
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry
-                        .addMapping("/api/**")
-                        .allowedOrigins("http://localhost:8080");
-            }
-        };
-    }
 }
