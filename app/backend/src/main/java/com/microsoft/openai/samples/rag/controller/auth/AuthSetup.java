@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.controller.auth;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ public class AuthSetup {
                 {
                     "useLogin": false
                 }
-                """.stripIndent();
+                """
+                .stripIndent();
     }
 }

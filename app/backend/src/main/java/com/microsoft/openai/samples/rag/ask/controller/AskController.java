@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.ask.controller;
 
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
@@ -29,20 +30,23 @@ public class AskController {
         this.ragApproachFactory = ragApproachFactory;
     }
 
-    @PostMapping(
-            value = "/api/ask",
-            produces = MediaType.APPLICATION_NDJSON_VALUE
-    )
-    public ResponseEntity openAIAskStream(
-            @RequestBody ChatAppRequest askRequest
-    ) {
+    @PostMapping(value = "/api/ask", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public ResponseEntity openAIAskStream(@RequestBody ChatAppRequest askRequest) {
         if (!askRequest.stream()) {
-            LOGGER.warn("Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
+            LOGGER.warn(
+                    "Requested a content-type of application/ndjson however did not requested"
+                            + " streaming. Please use a content-type of application/json");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested a content-type of application/ndjson however did not requested"
+                            + " streaming. Please use a content-type of application/json");
         }
 
         String question = askRequest.messages().get(askRequest.messages().size() - 1).content();
-        LOGGER.info("Received request for ask api with question [{}] and approach[{}]", question, askRequest.approach());
+        LOGGER.info(
+                "Received request for ask api with question [{}] and approach[{}]",
+                question,
+                askRequest.approach());
 
         if (!StringUtils.hasText(askRequest.approach())) {
             LOGGER.warn("approach cannot be null in ASK request");
@@ -54,41 +58,50 @@ public class AskController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        var ragOptions = new RAGOptions.Builder()
-                .retrievialMode(askRequest.context().overrides().retrieval_mode().name())
-                .semanticKernelMode(askRequest.context().overrides().semantic_kernel_mode())
-                .semanticRanker(askRequest.context().overrides().semantic_ranker())
-                .semanticCaptions(askRequest.context().overrides().semantic_captions())
-                .excludeCategory(askRequest.context().overrides().exclude_category())
-                .promptTemplate(askRequest.context().overrides().prompt_template())
-                .top(askRequest.context().overrides().top())
-                .build();
+        var ragOptions =
+                new RAGOptions.Builder()
+                        .retrievialMode(askRequest.context().overrides().retrieval_mode().name())
+                        .semanticKernelMode(askRequest.context().overrides().semantic_kernel_mode())
+                        .semanticRanker(askRequest.context().overrides().semantic_ranker())
+                        .semanticCaptions(askRequest.context().overrides().semantic_captions())
+                        .excludeCategory(askRequest.context().overrides().exclude_category())
+                        .promptTemplate(askRequest.context().overrides().prompt_template())
+                        .top(askRequest.context().overrides().top())
+                        .build();
 
-        RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
+        RAGApproach<String, RAGResponse> ragApproach =
+                ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
 
-        StreamingResponseBody response = output -> {
-            try {
-                ragApproach.runStreaming(question, ragOptions, output);
-            } finally {
-                output.flush();
-                output.close();
-            }
-        };
+        StreamingResponseBody response =
+                output -> {
+                    try {
+                        ragApproach.runStreaming(question, ragOptions, output);
+                    } finally {
+                        output.flush();
+                        output.close();
+                    }
+                };
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_NDJSON)
-                .body(response);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_NDJSON).body(response);
     }
 
     @PostMapping("/api/ask")
     public ResponseEntity<ChatResponse> openAIAsk(@RequestBody ChatAppRequest askRequest) {
         if (askRequest.stream()) {
-            LOGGER.warn("Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
+            LOGGER.warn(
+                    "Requested a content-type of application/json however also requested streaming."
+                            + " Please use a content-type of application/ndjson");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested a content-type of application/json however also requested streaming."
+                            + " Please use a content-type of application/ndjson");
         }
 
         String question = askRequest.messages().get(askRequest.messages().size() - 1).content();
-        LOGGER.info("Received request for ask api with question [{}] and approach[{}]", question, askRequest.approach());
+        LOGGER.info(
+                "Received request for ask api with question [{}] and approach[{}]",
+                question,
+                askRequest.approach());
 
         if (!StringUtils.hasText(askRequest.approach())) {
             LOGGER.warn("approach cannot be null in ASK request");
@@ -100,19 +113,21 @@ public class AskController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        var ragOptions = new RAGOptions.Builder()
-                .retrievialMode(askRequest.context().overrides().retrieval_mode().name())
-                .semanticKernelMode(askRequest.context().overrides().semantic_kernel_mode())
-                .semanticRanker(askRequest.context().overrides().semantic_ranker())
-                .semanticCaptions(askRequest.context().overrides().semantic_captions())
-                .excludeCategory(askRequest.context().overrides().exclude_category())
-                .promptTemplate(askRequest.context().overrides().prompt_template())
-                .top(askRequest.context().overrides().top())
-                .build();
+        var ragOptions =
+                new RAGOptions.Builder()
+                        .retrievialMode(askRequest.context().overrides().retrieval_mode().name())
+                        .semanticKernelMode(askRequest.context().overrides().semantic_kernel_mode())
+                        .semanticRanker(askRequest.context().overrides().semantic_ranker())
+                        .semanticCaptions(askRequest.context().overrides().semantic_captions())
+                        .excludeCategory(askRequest.context().overrides().exclude_category())
+                        .promptTemplate(askRequest.context().overrides().prompt_template())
+                        .top(askRequest.context().overrides().top())
+                        .build();
 
-        RAGApproach<String, RAGResponse> ragApproach = ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
+        RAGApproach<String, RAGResponse> ragApproach =
+                ragApproachFactory.createApproach(askRequest.approach(), RAGType.ASK, ragOptions);
 
-
-        return ResponseEntity.ok(ChatResponse.buildChatResponse(ragApproach.run(question, ragOptions)));
+        return ResponseEntity.ok(
+                ChatResponse.buildChatResponse(ragApproach.run(question, ragOptions)));
     }
 }

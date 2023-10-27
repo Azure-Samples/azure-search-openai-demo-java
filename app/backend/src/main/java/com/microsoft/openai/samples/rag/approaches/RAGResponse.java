@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.approaches;
 
 import java.util.List;
@@ -45,7 +46,6 @@ public class RAGResponse {
         private String answer;
         private String prompt;
 
-
         public Builder question(String question) {
             this.question = question;
             return this;
@@ -75,5 +75,4 @@ public class RAGResponse {
             return new RAGResponse(this);
         }
     }
-
 }

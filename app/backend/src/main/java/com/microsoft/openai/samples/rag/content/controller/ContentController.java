@@ -1,6 +1,11 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.content.controller;
 
 import com.microsoft.openai.samples.rag.proxy.BlobStorageProxy;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -12,11 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
 
 @RestController
 public class ContentController {
@@ -51,9 +51,8 @@ public class ContentController {
         }
 
         return ResponseEntity.ok()
-            .header("Content-Disposition", "inline; filename=%s".formatted(fileName))
-            .contentType(contentType)
-            .body(new InputStreamResource(fileInputStream));
+                .header("Content-Disposition", "inline; filename=%s".formatted(fileName))
+                .contentType(contentType)
+                .body(new InputStreamResource(fileInputStream));
     }
-
 }

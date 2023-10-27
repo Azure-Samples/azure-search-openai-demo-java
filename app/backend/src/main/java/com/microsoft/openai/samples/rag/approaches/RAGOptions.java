@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.approaches;
 
 public class RAGOptions {
@@ -11,15 +12,16 @@ public class RAGOptions {
     private String promptTemplate;
     private Integer top;
 
-    private RAGOptions() {
-    }
+    private RAGOptions() {}
 
     public RetrievalMode getRetrievalMode() {
         return retrievalMode;
     }
+
     public SemanticKernelMode getSemantickKernelMode() {
         return semantickKernelMode;
     }
+
     public boolean isSemanticRanker() {
         return semanticRanker;
     }
@@ -60,10 +62,12 @@ public class RAGOptions {
             this.retrievalMode = RetrievalMode.valueOf(retrievialMode);
             return this;
         }
+
         public Builder semanticKernelMode(String semanticKernelMode) {
             this.semanticKernelMode = SemanticKernelMode.valueOf(semanticKernelMode);
             return this;
         }
+
         public Builder semanticRanker(boolean semanticRanker) {
             this.semanticRanker = semanticRanker;
             return this;
@@ -94,7 +98,6 @@ public class RAGOptions {
             return this;
         }
 
-
         public RAGOptions build() {
             RAGOptions ragOptions = new RAGOptions();
             ragOptions.retrievalMode = this.retrievalMode;
@@ -108,5 +111,4 @@ public class RAGOptions {
             return ragOptions;
         }
     }
-
 }

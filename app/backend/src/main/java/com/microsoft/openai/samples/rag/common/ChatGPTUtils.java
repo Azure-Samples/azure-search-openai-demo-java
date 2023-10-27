@@ -1,22 +1,22 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.common;
 
 import com.azure.ai.openai.models.ChatCompletionsOptions;
 import com.azure.ai.openai.models.ChatMessage;
 import com.azure.ai.openai.models.ChatRole;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class ChatGPTUtils {
 
-    public static ChatCompletionsOptions buildDefaultChatCompletionsOptions(List<ChatMessage> messages) {
+    public static ChatCompletionsOptions buildDefaultChatCompletionsOptions(
+            List<ChatMessage> messages) {
         ChatCompletionsOptions completionsOptions = new ChatCompletionsOptions(messages);
 
         completionsOptions.setMaxTokens(1024);
         completionsOptions.setTemperature(0.1);
         completionsOptions.setTopP(1.0);
-        //completionsOptions.setStop(new ArrayList<>(List.of("\n")));
+        // completionsOptions.setStop(new ArrayList<>(List.of("\n")));
         completionsOptions.setLogitBias(new HashMap<>());
         completionsOptions.setN(1);
         completionsOptions.setStream(false);
@@ -27,25 +27,25 @@ public class ChatGPTUtils {
         return completionsOptions;
     }
 
-    public static  String formatAsChatML(List<ChatMessage> messages) {
+    public static String formatAsChatML(List<ChatMessage> messages) {
         StringBuilder sb = new StringBuilder();
-        messages.forEach(message -> {
-            if(message.getRole() == ChatRole.USER){
-                sb.append("<|im_start|>user\n");
-            } else if(message.getRole() == ChatRole.ASSISTANT) {
-                sb.append("<|im_start|>assistant\n");
-            } else {
-                sb.append("<|im_start|>system\n");
-            }
-            sb.append(message.getContent()).append("\n").append("|im_end|").append("\n");
-        });
+        messages.forEach(
+                message -> {
+                    if (message.getRole() == ChatRole.USER) {
+                        sb.append("<|im_start|>user\n");
+                    } else if (message.getRole() == ChatRole.ASSISTANT) {
+                        sb.append("<|im_start|>assistant\n");
+                    } else {
+                        sb.append("<|im_start|>system\n");
+                    }
+                    sb.append(message.getContent()).append("\n").append("|im_end|").append("\n");
+                });
         return sb.toString();
     }
 
-    public static String getLastUserQuestion(List<ChatGPTMessage> messages){
-        ChatGPTMessage message = messages.get(messages.size()-1);
-        if(message.role() != ChatGPTMessage.ChatRole.USER)
-            return message.content();
+    public static String getLastUserQuestion(List<ChatGPTMessage> messages) {
+        ChatGPTMessage message = messages.get(messages.size() - 1);
+        if (message.role() != ChatGPTMessage.ChatRole.USER) return message.content();
         return "";
     }
 }
