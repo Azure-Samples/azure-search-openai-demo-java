@@ -20,6 +20,9 @@ import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAICh
 import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAIChatHistory;
 import com.microsoft.semantickernel.memory.MemoryQueryResult;
 import com.microsoft.semantickernel.memory.MemoryRecord;
+import com.microsoft.semantickernel.orchestration.SKContext;
+import com.microsoft.semantickernel.orchestration.SKFunction;
+import com.microsoft.semantickernel.semanticfunctions.PromptTemplateConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,22 +90,12 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         //Build semantic kernel with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from resources.
         Kernel semanticKernel = buildSemanticKernel(options);
 
-        /**
-         * Use semantic kernel built-in memory.searchAsync. It uses OpenAI to generate embeddings for the provided question.
-         * Question embeddings are provided to cognitive search via search options.
-         */
-        List<MemoryQueryResult> memoryResult = semanticKernel.getMemory().searchAsync(
-                        indexName,
-                        question,
-                        options.getTop(),
-                        0.5f,
-                        false)
-                .block();
+        List<MemoryQueryResult> sourcesResult = getSourcesFromConversation(questionOrConversation, semanticKernel, options);
 
-        LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", memoryResult.size(), question);
+        LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", sourcesResult.size(), question);
 
-        String sources = buildSourcesText(memoryResult);
-        List<ContentSource> sourcesList = buildSources(memoryResult);
+        String sources = buildSourcesText(sourcesResult);
+        List<ContentSource> sourcesList = buildSources(sourcesResult);
 
         // Use ChatCompletion Service to generate a reply
         OpenAIChatCompletion chat = (OpenAIChatCompletion) semanticKernel.getService(null, ChatCompletion.class);
@@ -123,6 +116,55 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
     @Override
     public void runStreaming(ChatGPTConversation questionOrConversation, RAGOptions options, OutputStream outputStream) {
         throw new IllegalStateException("Streaming not supported for this approach");
+    }
+
+    private List<MemoryQueryResult> getSourcesFromConversation (ChatGPTConversation conversation, Kernel kernel, RAGOptions options) {
+        String searchQueryPrompt = """
+            Generate a search query for the below conversation.
+            Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
+            Do not include any text inside [] or <<>> in the search query terms.
+            Do not enclose the search query in quotes or double quotes.
+            conversation:
+            {{$conversation}}
+            """ ;
+
+        SKContext skcontext = SKBuilders.context().build()
+                .setVariable("conversation", ChatGPTUtils.formatAsChatML(conversation.toOpenAIChatMessages()));
+
+        SKFunction searchQuery = kernel
+                .getSemanticFunctionBuilder()
+                .withPromptTemplate(searchQueryPrompt)
+                .withFunctionName("searchQuery")
+                .withCompletionConfig(
+                        new PromptTemplateConfig.CompletionConfig(
+                                0.2,
+                                1,
+                                0.0,
+                                0.0,
+                                1024
+                        )
+                )
+                .build();
+
+        Mono<SKContext> result = searchQuery.invokeAsync(skcontext);
+        String query = result.block().getResult();
+
+        LOGGER.info("SEARCH QUERY");
+        LOGGER.info(query);
+
+        /**
+         * Use semantic kernel built-in memory.searchAsync. It uses OpenAI to generate embeddings for the provided question.
+         * Question embeddings are provided to cognitive search via search options.
+         */
+        List<MemoryQueryResult> memoryResult = kernel.getMemory().searchAsync(
+                        indexName,
+                        query,
+                        options.getTop(),
+                        0.5f,
+                        false)
+                .block();
+
+        return memoryResult;
     }
 
     private OpenAIChatHistory buildChatHistory(ChatGPTConversation conversation, RAGOptions options, OpenAIChatCompletion chat,
