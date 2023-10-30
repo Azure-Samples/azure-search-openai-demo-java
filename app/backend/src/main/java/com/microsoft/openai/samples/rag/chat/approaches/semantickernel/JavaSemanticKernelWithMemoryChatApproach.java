@@ -85,6 +85,7 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         SKContext skcontext = SKBuilders.context().build()
                 .setVariable("sources", sources)
                 .setVariable("conversation", conversation)
+                .setVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
                 .setVariable("input",  question);
 
         Mono<SKContext> reply = answerConversation.invokeAsync(skcontext);

@@ -22,6 +22,10 @@
       {
         "name": "conversation",
         "description": "Chat history"
+      },
+      {
+        "name": "suggestions",
+        "description": "Whether to suggest follow-up questions"
       }
     ]
   }
