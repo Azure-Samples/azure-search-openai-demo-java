@@ -1,7 +1,7 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.test.utils;
 
 import com.azure.ai.openai.models.*;
-
 import java.lang.reflect.Constructor;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,7 +11,12 @@ public class OpenAIUnitTestUtils {
     public Choice createChoice(String text, int index) {
         Constructor<Choice> pcc;
         try {
-            pcc = Choice.class.getDeclaredConstructor(String.class, int.class, CompletionsLogProbabilityModel.class, CompletionsFinishReason.class);
+            pcc =
+                    Choice.class.getDeclaredConstructor(
+                            String.class,
+                            int.class,
+                            CompletionsLogProbabilityModel.class,
+                            CompletionsFinishReason.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("No constructor found for Choice.class", e);
         }
@@ -26,7 +31,8 @@ public class OpenAIUnitTestUtils {
         return choice;
     }
 
-    public CompletionsUsage createCompletionUsage(int completionTokens, int promptTokens, int totalTokens) {
+    public CompletionsUsage createCompletionUsage(
+            int completionTokens, int promptTokens, int totalTokens) {
         Constructor<CompletionsUsage> pcc;
         try {
             pcc = CompletionsUsage.class.getDeclaredConstructor(int.class, int.class, int.class);
@@ -51,7 +57,9 @@ public class OpenAIUnitTestUtils {
     public Completions createCompletions(List<Choice> choices, CompletionsUsage completionsUsage) {
         Constructor<Completions> pcc;
         try {
-            pcc = Completions.class.getDeclaredConstructor(String.class, OffsetDateTime.class, List.class, CompletionsUsage.class);
+            pcc =
+                    Completions.class.getDeclaredConstructor(
+                            String.class, OffsetDateTime.class, List.class, CompletionsUsage.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("No constructor found for Completions.class", e);
         }
@@ -65,5 +73,4 @@ public class OpenAIUnitTestUtils {
 
         return choice;
     }
-
 }

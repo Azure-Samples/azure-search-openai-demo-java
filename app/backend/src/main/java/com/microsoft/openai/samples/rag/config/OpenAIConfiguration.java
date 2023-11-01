@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.config;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
@@ -16,6 +17,7 @@ public class OpenAIConfiguration {
 
     @Value("${openai.service}")
     String openAIServiceName;
+
     final TokenCredential tokenCredential;
 
     public OpenAIConfiguration(TokenCredential tokenCredential) {
@@ -28,15 +30,14 @@ public class OpenAIConfiguration {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
 
         var httpLogOptions = new HttpLogOptions();
-        //httpLogOptions.setPrettyPrintBody(true);
+        // httpLogOptions.setPrettyPrintBody(true);
         httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
 
         return new OpenAIClientBuilder()
-            .endpoint(endpoint)
+                .endpoint(endpoint)
                 .credential(tokenCredential)
-            .httpLogOptions(httpLogOptions)
-            .buildClient();
-
+                .httpLogOptions(httpLogOptions)
+                .buildClient();
     }
 
     @Bean
@@ -44,9 +45,9 @@ public class OpenAIConfiguration {
     public OpenAIClient openAIDefaultClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
         return new OpenAIClientBuilder()
-            .endpoint(endpoint)
-            .credential(tokenCredential)
-            .buildClient();
+                .endpoint(endpoint)
+                .credential(tokenCredential)
+                .buildClient();
     }
 
     @Bean
@@ -59,11 +60,10 @@ public class OpenAIConfiguration {
         httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
 
         return new OpenAIClientBuilder()
-            .endpoint(endpoint)
-            .credential(tokenCredential)
-            .httpLogOptions(httpLogOptions)
-            .buildAsyncClient();
-
+                .endpoint(endpoint)
+                .credential(tokenCredential)
+                .httpLogOptions(httpLogOptions)
+                .buildAsyncClient();
     }
 
     @Bean
@@ -71,9 +71,8 @@ public class OpenAIConfiguration {
     public OpenAIAsyncClient defaultAsyncClient() {
         String endpoint = "https://%s.openai.azure.com".formatted(openAIServiceName);
         return new OpenAIClientBuilder()
-            .endpoint(endpoint)
-            .credential(tokenCredential)
-            .buildAsyncClient();
+                .endpoint(endpoint)
+                .credential(tokenCredential)
+                .buildAsyncClient();
     }
-
 }

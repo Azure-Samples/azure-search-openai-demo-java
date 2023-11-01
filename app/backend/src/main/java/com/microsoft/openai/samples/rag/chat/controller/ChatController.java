@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.chat.controller;
 
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
@@ -10,6 +11,9 @@ import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.controller.ChatAppRequest;
 import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.controller.ResponseMessage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,10 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 @RestController
 public class ChatController {
 
@@ -36,16 +36,17 @@ public class ChatController {
         this.ragApproachFactory = ragApproachFactory;
     }
 
-    @PostMapping(
-            value = "/api/chat",
-            produces = MediaType.APPLICATION_NDJSON_VALUE
-    )
+    @PostMapping(value = "/api/chat", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public ResponseEntity<StreamingResponseBody> openAIAskStream(
-            @RequestBody ChatAppRequest chatRequest
-    ) {
+            @RequestBody ChatAppRequest chatRequest) {
         if (!chatRequest.stream()) {
-            LOGGER.warn("Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/ndjson however did not requested streaming. Please use a content-type of application/json");
+            LOGGER.warn(
+                    "Requested a content-type of application/ndjson however did not requested"
+                            + " streaming. Please use a content-type of application/json");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested a content-type of application/ndjson however did not requested"
+                            + " streaming. Please use a content-type of application/json");
         }
 
         LOGGER.info("Received request for chat api with approach[{}]", chatRequest.approach());
@@ -71,32 +72,34 @@ public class ChatController {
                 .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
                 .build();
 
-        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
+        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =
+                ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
 
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.messages());
 
-        StreamingResponseBody response = output -> {
-            try {
-                ragApproach.runStreaming(chatGPTConversation, ragOptions, output);
-            } finally {
-                output.flush();
-                output.close();
-            }
-        };
+        StreamingResponseBody response =
+                output -> {
+                    try {
+                        ragApproach.runStreaming(chatGPTConversation, ragOptions, output);
+                    } finally {
+                        output.flush();
+                        output.close();
+                    }
+                };
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_NDJSON)
-                .body(response);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_NDJSON).body(response);
     }
 
-    @PostMapping(
-            value = "/api/chat",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
+    @PostMapping(value = "/api/chat", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ChatResponse> openAIAsk(@RequestBody ChatAppRequest chatRequest) {
         if (chatRequest.stream()) {
-            LOGGER.warn("Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested a content-type of application/json however also requested streaming. Please use a content-type of application/ndjson");
+            LOGGER.warn(
+                    "Requested a content-type of application/json however also requested streaming."
+                            + " Please use a content-type of application/ndjson");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested a content-type of application/json however also requested streaming."
+                            + " Please use a content-type of application/ndjson");
         }
 
         LOGGER.info("Received request for chat api with approach[{}]", chatRequest.approach());
@@ -122,22 +125,27 @@ public class ChatController {
                 .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
                 .build();
 
-        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach = ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
-
+        RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =
+                ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
 
         ChatGPTConversation chatGPTConversation = convertToChatGPT(chatRequest.messages());
-        return ResponseEntity.ok(ChatResponse.buildChatResponse(ragApproach.run(chatGPTConversation, ragOptions)));
-
+        return ResponseEntity.ok(
+                ChatResponse.buildChatResponse(ragApproach.run(chatGPTConversation, ragOptions)));
     }
 
     private ChatGPTConversation convertToChatGPT(List<ResponseMessage> chatHistory) {
         return new ChatGPTConversation(
                 chatHistory.stream()
-                        .map(historyChat -> {
-                            List<ChatGPTMessage> chatGPTMessages = new ArrayList<>();
-                            chatGPTMessages.add(new ChatGPTMessage(ChatGPTMessage.ChatRole.fromString(historyChat.role()), historyChat.content()));
-                            return chatGPTMessages;
-                        })
+                        .map(
+                                historyChat -> {
+                                    List<ChatGPTMessage> chatGPTMessages = new ArrayList<>();
+                                    chatGPTMessages.add(
+                                            new ChatGPTMessage(
+                                                    ChatGPTMessage.ChatRole.fromString(
+                                                            historyChat.role()),
+                                                    historyChat.content()));
+                                    return chatGPTMessages;
+                                })
                         .flatMap(Collection::stream)
                         .toList());
     }

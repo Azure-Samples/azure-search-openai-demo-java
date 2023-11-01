@@ -3,7 +3,7 @@ import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinne
 
 import styles from "./OneShot.module.css";
 
-import {askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest} from "../../api";
+import { askApi, Approaches, ChatAppResponse, RetrievalMode, SKMode, ChatAppRequest } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -37,7 +37,7 @@ export function Component(): JSX.Element {
     const [activeCitation, setActiveCitation] = useState<string>();
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
-    const client = useLogin ? useMsal().instance : undefined
+    const client = useLogin ? useMsal().instance : undefined;
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -47,7 +47,7 @@ export function Component(): JSX.Element {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
 
-        const token = client ? await getToken(client) : undefined
+        const token = client ? await getToken(client) : undefined;
 
         try {
             const request: ChatAppRequest = {
@@ -72,7 +72,9 @@ export function Component(): JSX.Element {
                         semantic_kernel_mode: skMode
                     }
                 },
-                approach: approach
+                approach: approach,
+                // ChatAppProtocol: Client must pass on any session state received from the server
+                session_state: answer ? answer.choices[0].session_state : null
             };
             const result = await askApi(request, token?.accessToken);
             setAnswer(result);
@@ -302,7 +304,7 @@ export function Component(): JSX.Element {
                         onChange={onUseOidSecurityFilterChange}
                     />
                 )}
-                {useLogin &&  (
+                {useLogin && (
                     <Checkbox
                         className={styles.oneshotSettingsSeparator}
                         checked={useGroupsSecurityFilter}
@@ -311,7 +313,7 @@ export function Component(): JSX.Element {
                         onChange={onUseGroupsSecurityFilterChange}
                     />
                 )}
-                { useLogin && <TokenClaimsDisplay />}
+                {useLogin && <TokenClaimsDisplay />}
             </Panel>
         </div>
     );

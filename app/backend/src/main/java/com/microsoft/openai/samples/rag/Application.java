@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag;
 
 import org.slf4j.Logger;
@@ -14,7 +15,9 @@ public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
-        LOG.info("Application profile from system property is [{}]", System.getProperty("spring.profiles.active"));
+        LOG.info(
+                "Application profile from system property is [{}]",
+                System.getProperty("spring.profiles.active"));
         new SpringApplication(Application.class).run(args);
     }
 }

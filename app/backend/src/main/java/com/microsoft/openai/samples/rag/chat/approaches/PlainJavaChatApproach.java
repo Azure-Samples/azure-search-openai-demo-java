@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.chat.approaches;
 
 import com.azure.ai.openai.models.ChatChoice;
@@ -14,20 +15,20 @@ import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
 /**
- * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
- * It first calls OpenAI to generate a search keyword for the chat history and then answer to the last chat question.
- * Several cognitive search retrieval options are available: Text, Vector, Hybrid.
- * When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the chat extracted keywords.
+ * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs
+ * directly. It first calls OpenAI to generate a search keyword for the chat history and then answer
+ * to the last chat question. Several cognitive search retrieval options are available: Text,
+ * Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to
+ * generate embeddings vector for the chat extracted keywords.
  */
 @Component
 public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
@@ -54,22 +55,34 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
      */
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
-        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
+        // Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
 
-        //STEP 1: Retrieve relevant documents using kewirds extracted from the chat history. An additional call to OpenAI is required to generate keywords.
-        List<ContentSource> sources = factsRetriever.retrieveFromConversation(questionOrConversation, options);
+        // STEP 1: Retrieve relevant documents using kewirds extracted from the chat history. An
+        // additional call to OpenAI is required to generate keywords.
+        List<ContentSource> sources =
+                factsRetriever.retrieveFromConversation(questionOrConversation, options);
         LOGGER.info("Total {} sources retrieved", sources.size());
 
+        // STEP 2: Build a grounded prompt using the retrieved documents. RAG options is used to
+        // configure additional prompt extension like 'suggesting follow up questions' option.
+        var semanticSearchChat =
+                new SemanticSearchChat(
+                        questionOrConversation,
+                        sources,
+                        options.getPromptTemplate(),
+                        false,
+                        options.isSuggestFollowupQuestions());
+        var chatCompletionsOptions =
+                ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 
-        //STEP 2: Build a grounded prompt using the retrieved documents. RAG options is used to configure additional prompt extension like 'suggesting follow up questions' option.
-        var semanticSearchChat = new SemanticSearchChat(questionOrConversation, sources, options.getPromptTemplate(), false, options.isSuggestFollowupQuestions());
-        var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
-
-        // STEP 3: Generate a contextual and content specific answer using the search results and chat history
+        // STEP 3: Generate a contextual and content specific answer using the search results and
+        // chat history
         ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
 
-        LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+        LOGGER.info(
+                "Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total"
+                        + " Tokens[{}]",
                 chatCompletions.getUsage().getPromptTokens(),
                 chatCompletions.getUsage().getCompletionTokens(),
                 chatCompletions.getUsage().getTotalTokens());
@@ -88,20 +101,31 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
             RAGOptions options,
             OutputStream outputStream) {
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
-        List<ContentSource> sources = factsRetriever.retrieveFromConversation(questionOrConversation, options);
+        List<ContentSource> sources =
+                factsRetriever.retrieveFromConversation(questionOrConversation, options);
         LOGGER.info("Total {} sources retrieved", sources.size());
 
         // Replace whole prompt is not supported yet
-        var semanticSearchChat = new SemanticSearchChat(questionOrConversation, sources, options.getPromptTemplate(), false, options.isSuggestFollowupQuestions());
-        var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
+        var semanticSearchChat =
+                new SemanticSearchChat(
+                        questionOrConversation,
+                        sources,
+                        options.getPromptTemplate(),
+                        false,
+                        options.isSuggestFollowupQuestions());
+        var chatCompletionsOptions =
+                ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 
         int index = 0;
 
-        IterableStream<ChatCompletions> completions = openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
+        IterableStream<ChatCompletions> completions =
+                openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
 
         for (ChatCompletions completion : completions) {
             if (completion.getUsage() != null) {
-                LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+                LOGGER.info(
+                        "Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}],"
+                                + " Total Tokens[{}]",
                         completion.getUsage().getPromptTokens(),
                         completion.getUsage().getCompletionTokens(),
                         completion.getUsage().getTotalTokens());
@@ -114,12 +138,17 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
                     continue;
                 }
 
-                RAGResponse ragResponse = new RAGResponse.Builder()
-                        .question(ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages()))
-                        .prompt(ChatGPTUtils.formatAsChatML(semanticSearchChat.getMessages()))
-                        .answer(choice.getDelta().getContent())
-                        .sources(sources)
-                        .build();
+                RAGResponse ragResponse =
+                        new RAGResponse.Builder()
+                                .question(
+                                        ChatGPTUtils.getLastUserQuestion(
+                                                questionOrConversation.getMessages()))
+                                .prompt(
+                                        ChatGPTUtils.formatAsChatML(
+                                                semanticSearchChat.getMessages()))
+                                .answer(choice.getDelta().getContent())
+                                .sources(sources)
+                                .build();
 
                 ChatResponse response;
                 if (index == 0) {

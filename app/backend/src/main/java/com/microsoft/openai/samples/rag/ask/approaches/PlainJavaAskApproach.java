@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.ask.approaches;
 
 import com.azure.ai.openai.models.ChatChoice;
@@ -13,20 +14,19 @@ import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
 /**
- Use Cognitive Search and Java OpenAI APIs.
- It first retrieves top documents from search and use them to build a prompt.
- Then, it uses OpenAI to generate an answer for the user question.
- Several cognitive search retrieval options are available: Text, Vector, Hybrid.
- When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the question.
+ * Use Cognitive Search and Java OpenAI APIs. It first retrieves top documents from search and use
+ * them to build a prompt. Then, it uses OpenAI to generate an answer for the user question. Several
+ * cognitive search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector
+ * are selected an additional call to OpenAI is required to generate embeddings vector for the
+ * question.
  */
 @Component
 public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
@@ -36,7 +36,10 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
     private final FactsRetrieverProvider factsRetrieverProvider;
     private final ObjectMapper objectMapper;
 
-    public PlainJavaAskApproach(FactsRetrieverProvider factsRetrieverProvider, OpenAIProxy openAIProxy, ObjectMapper objectMapper) {
+    public PlainJavaAskApproach(
+            FactsRetrieverProvider factsRetrieverProvider,
+            OpenAIProxy openAIProxy,
+            ObjectMapper objectMapper) {
         this.factsRetrieverProvider = factsRetrieverProvider;
         this.openAIProxy = openAIProxy;
         this.objectMapper = objectMapper;
@@ -49,34 +52,42 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
      */
     @Override
     public RAGResponse run(String question, RAGOptions options) {
-        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
+        // Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
 
-       //STEP 1: Retrieve relevant documents using user question as query
+        // STEP 1: Retrieve relevant documents using user question as query
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
-        LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),
+        LOGGER.info(
+                "Total {} sources found in cognitive search for keyword search query[{}]",
+                sources.size(),
                 question);
 
         var customPrompt = options.getPromptTemplate();
-        var customPromptEmpty = (customPrompt == null) || (customPrompt != null && customPrompt.isEmpty());
+        var customPromptEmpty =
+                (customPrompt == null) || (customPrompt != null && customPrompt.isEmpty());
 
-        //true will replace the default prompt. False will add custom prompt as suffix to the default prompt
+        // true will replace the default prompt. False will add custom prompt as suffix to the
+        // default prompt
         var replacePrompt = !customPromptEmpty && !customPrompt.startsWith("|");
         if (!replacePrompt && !customPromptEmpty) {
             customPrompt = customPrompt.substring(1);
         }
 
-        //STEP 2: Build a prompt using RAG options to see if prompt should be replaced or extended.
-        var answerQuestionChatTemplate = new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
+        // STEP 2: Build a prompt using RAG options to see if prompt should be replaced or extended.
+        var answerQuestionChatTemplate =
+                new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
 
-        //STEP 3: Build the chat conversation with grounded messages using the retrieved facts
+        // STEP 3: Build the chat conversation with grounded messages using the retrieved facts
         var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
-        var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
+        var chatCompletionsOptions =
+                ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
         // STEP 4: Generate a contextual and content specific answer
         ChatCompletions chatCompletions = openAIProxy.getChatCompletions(chatCompletionsOptions);
 
-        LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+        LOGGER.info(
+                "Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total"
+                        + " Tokens[{}]",
                 chatCompletions.getUsage().getPromptTokens(),
                 chatCompletions.getUsage().getCompletionTokens(),
                 chatCompletions.getUsage().getTotalTokens());
@@ -91,31 +102,40 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
 
     @Override
     public void runStreaming(String question, RAGOptions options, OutputStream outputStream) {
-        //Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
+        // Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
         List<ContentSource> sources = factsRetriever.retrieveFromQuestion(question, options);
-        LOGGER.info("Total {} sources found in cognitive search for keyword search query[{}]", sources.size(),
+        LOGGER.info(
+                "Total {} sources found in cognitive search for keyword search query[{}]",
+                sources.size(),
                 question);
 
         var customPrompt = options.getPromptTemplate();
-        var customPromptEmpty = (customPrompt == null) || (customPrompt != null && customPrompt.isEmpty());
+        var customPromptEmpty =
+                (customPrompt == null) || (customPrompt != null && customPrompt.isEmpty());
 
-        //true will replace the default prompt. False will add custom prompt as suffix to the default prompt
+        // true will replace the default prompt. False will add custom prompt as suffix to the
+        // default prompt
         var replacePrompt = !customPromptEmpty && !customPrompt.startsWith("|");
         if (!replacePrompt && !customPromptEmpty) {
             customPrompt = customPrompt.substring(1);
         }
 
-        var answerQuestionChatTemplate = new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
+        var answerQuestionChatTemplate =
+                new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
 
         var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
-        var chatCompletionsOptions = ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
+        var chatCompletionsOptions =
+                ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
-        IterableStream<ChatCompletions> completions = openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
+        IterableStream<ChatCompletions> completions =
+                openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
         int index = 0;
         for (ChatCompletions completion : completions) {
 
-            LOGGER.info("Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}], Total Tokens[{}]",
+            LOGGER.info(
+                    "Chat completion generated with Prompt Tokens[{}], Completions Tokens[{}],"
+                            + " Total Tokens[{}]",
                     completion.getUsage().getPromptTokens(),
                     completion.getUsage().getCompletionTokens(),
                     completion.getUsage().getTotalTokens());
@@ -125,12 +145,13 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
                     continue;
                 }
 
-                RAGResponse ragResponse = new RAGResponse.Builder()
-                        .question(question)
-                        .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
-                        .answer(choice.getMessage().getContent())
-                        .sources(sources)
-                        .build();
+                RAGResponse ragResponse =
+                        new RAGResponse.Builder()
+                                .question(question)
+                                .prompt(ChatGPTUtils.formatAsChatML(groundedChatMessages))
+                                .answer(choice.getMessage().getContent())
+                                .sources(sources)
+                                .build();
 
                 ChatResponse response;
                 if (index == 0) {

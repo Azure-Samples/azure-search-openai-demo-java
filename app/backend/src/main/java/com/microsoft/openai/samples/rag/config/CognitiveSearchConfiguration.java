@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.config;
 
 import com.azure.core.credential.TokenCredential;
@@ -14,8 +15,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CognitiveSearchConfiguration {
 
-    @Value("${cognitive.search.service}") String searchServiceName ;
-    @Value("${cognitive.search.index}") String indexName;
+    @Value("${cognitive.search.service}")
+    String searchServiceName;
+
+    @Value("${cognitive.search.index}")
+    String indexName;
+
     final TokenCredential tokenCredential;
 
     public CognitiveSearchConfiguration(TokenCredential tokenCredential) {
@@ -37,7 +42,6 @@ public class CognitiveSearchConfiguration {
                 .indexName(indexName)
                 .httpLogOptions(httpLogOptions)
                 .buildClient();
-
     }
 
     @Bean
@@ -66,7 +70,6 @@ public class CognitiveSearchConfiguration {
                 .indexName(indexName)
                 .httpLogOptions(httpLogOptions)
                 .buildAsyncClient();
-
     }
 
     @Bean
@@ -79,5 +82,4 @@ public class CognitiveSearchConfiguration {
                 .indexName(indexName)
                 .buildAsyncClient();
     }
-
 }

@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.approaches;
 
 public class ContentSource {
@@ -41,5 +42,4 @@ public class ContentSource {
             this.sourceContent = sourceContent.replace("\n", "");
         }
     }
-
 }

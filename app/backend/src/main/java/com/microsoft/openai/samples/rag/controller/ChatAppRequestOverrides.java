@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.controller;
 
 import com.microsoft.openai.samples.rag.approaches.RetrievalMode;
@@ -15,6 +16,4 @@ public record ChatAppRequestOverrides(
         boolean suggest_followup_questions,
         boolean use_oid_security_filter,
         boolean use_groups_security_filter,
-        String semantic_kernel_mode
-) {
-}
+        String semantic_kernel_mode) {}
