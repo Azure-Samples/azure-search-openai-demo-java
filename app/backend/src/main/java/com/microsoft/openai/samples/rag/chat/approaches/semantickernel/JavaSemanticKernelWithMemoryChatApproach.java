@@ -4,31 +4,29 @@ import com.azure.ai.openai.OpenAIAsyncClient;
 import com.azure.core.credential.TokenCredential;
 import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.SearchDocument;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.memory.CustomAzureCognitiveSearchMemoryStore;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
-import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.ai.embeddings.Embedding;
-import com.microsoft.semantickernel.chatcompletion.ChatCompletion;
-import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAIChatCompletion;
-import com.microsoft.semantickernel.connectors.ai.openai.chatcompletion.OpenAIChatHistory;
 import com.microsoft.semantickernel.memory.MemoryQueryResult;
 import com.microsoft.semantickernel.memory.MemoryRecord;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.orchestration.SKFunction;
-import com.microsoft.semantickernel.semanticfunctions.PromptTemplateConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
@@ -47,6 +45,8 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     private final SearchAsyncClient searchAsyncClient;
 
+    private final ObjectMapper objectMapper;
+
     private final String EMBEDDING_FIELD_NAME = "embedding";
 
     @Value("${cognitive.search.service}")
@@ -58,10 +58,11 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     @Value("${openai.embedding.deployment}")
     private String embeddingDeploymentModelId;
-    public JavaSemanticKernelWithMemoryChatApproach(TokenCredential tokenCredential, OpenAIAsyncClient openAIAsyncClient, SearchAsyncClient searchAsyncClient) {
+    public JavaSemanticKernelWithMemoryChatApproach(TokenCredential tokenCredential, OpenAIAsyncClient openAIAsyncClient, SearchAsyncClient searchAsyncClient, ObjectMapper objectMapper) {
         this.tokenCredential = tokenCredential;
         this.openAIAsyncClient = openAIAsyncClient;
         this.searchAsyncClient = searchAsyncClient;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -101,7 +102,48 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     @Override
     public void runStreaming(ChatGPTConversation questionOrConversation, RAGOptions options, OutputStream outputStream) {
-        throw new IllegalStateException("Streaming not supported for this approach");
+        String question = ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages());
+
+        // STEP 1: Build semantic kernel with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from resources.
+        Kernel semanticKernel = buildSemanticKernel(options);
+
+        // STEP 2: Retrieve relevant documents using keywords extracted from the chat history
+        String conversation = ChatGPTUtils.formatAsChatML(questionOrConversation.toOpenAIChatMessages());
+        List<MemoryQueryResult> sourcesResult = getSourcesFromConversation(conversation, semanticKernel, options);
+
+        LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", sourcesResult.size(), question);
+
+        String sources = buildSourcesText(sourcesResult);
+        List<ContentSource> sourcesList = buildSources(sourcesResult);
+
+        // STEP 3: Generate a contextual and content specific answer using the search results and chat history
+        SKFunction answerConversation = semanticKernel.getFunction("RAG", "AnswerConversation");
+        SKContext skcontext = SKBuilders.context().build()
+                .setVariable("sources", sources)
+                .setVariable("conversation", conversation)
+                .setVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
+                .setVariable("input",  question);
+
+        SKContext reply = (SKContext) answerConversation.invokeAsync(skcontext).block();
+
+        RAGResponse ragResponse =
+                new RAGResponse.Builder()
+                        .question(
+                                ChatGPTUtils.getLastUserQuestion(
+                                        questionOrConversation.getMessages()))
+                        .prompt("placeholders for prompt")
+                        .answer(reply.getResult())
+                        .sources(sourcesList)
+                        .sourcesAsText(sources)
+                        .build();
+
+        try {
+            String value = objectMapper.writeValueAsString(ChatResponse.buildChatResponse(ragResponse)) + "\n";
+            outputStream.write(value.getBytes());
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private List<MemoryQueryResult> getSourcesFromConversation (String conversation, Kernel kernel, RAGOptions options) {
