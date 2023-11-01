@@ -2,9 +2,8 @@ name: Deploy to Production (Azure)
 
 on:
   push:
-    # Pattern matched against refs/tags
-    tags:        
-      - '*'           # Push events to every tag not containing /
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
