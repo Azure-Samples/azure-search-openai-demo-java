@@ -30,7 +30,9 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
     public RAGApproach createApproach(String approachName, RAGType ragType, RAGOptions ragOptions) {
 
         if (ragType.equals(RAGType.CHAT)) {
-            if (JAVA_SEMANTIC_KERNEL.equals(approachName)) {
+            if (JAVA_OPENAI_SDK.equals(approachName)) {
+                return applicationContext.getBean(PlainJavaChatApproach.class);
+            } else if (JAVA_SEMANTIC_KERNEL.equals(approachName)) {
                 return applicationContext.getBean(JavaSemanticKernelWithMemoryChatApproach.class);
             } else if (
                     JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) &&
@@ -38,8 +40,6 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
                             ragOptions.getSemantickKernelMode() != null &&
                             ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains) {
                 return applicationContext.getBean(JavaSemanticKernelChainsChatApproach.class);
-            } else {
-                return applicationContext.getBean(PlainJavaChatApproach.class);
             }
         } else if (ragType.equals(RAGType.ASK)) {
             if (JAVA_OPENAI_SDK.equals(approachName))
@@ -50,7 +50,6 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
                 return applicationContext.getBean(JavaSemanticKernelPlannerApproach.class);
             else if (JAVA_SEMANTIC_KERNEL_PLANNER.equals(approachName) && ragOptions != null && ragOptions.getSemantickKernelMode() != null && ragOptions.getSemantickKernelMode() == SemanticKernelMode.chains)
                 return applicationContext.getBean(JavaSemanticKernelChainsApproach.class);
-
         }
         //if this point is reached then the combination of approach and rag type is not supported
         throw new IllegalArgumentException("Invalid combination for approach[%s] and rag type[%s]: ".formatted(approachName, ragType));
