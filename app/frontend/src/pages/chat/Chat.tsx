@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Checkbox, ChoiceGroup, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption } from "@fluentui/react";
+import { Checkbox, ChoiceGroup, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption, IChoiceGroupOption } from "@fluentui/react";
 import { SparkleFilled } from "@fluentui/react-icons";
 import readNDJSONStream from "ndjson-readablestream";
 
@@ -362,14 +362,36 @@ const Chat = () => {
                     onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
                     isFooterAtBottom={true}
                 >
-                    <TextField
+                    <ChoiceGroup
                         className={styles.chatSettingsSeparator}
-                        defaultValue={promptTemplate}
-                        label="Override prompt template"
-                        multiline
-                        autoAdjustHeight
-                        onChange={onPromptTemplateChange}
+                        label="Approach"
+                        options={approaches}
+                        defaultSelectedKey={approach}
+                        onChange={onApproachChange}
                     />
+
+                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
+                        <TextField
+                            className={styles.chatSettingsSeparator}
+                            defaultValue={promptTemplate}
+                            label="Override prompt template"
+                            multiline
+                            autoAdjustHeight
+                            onChange={onPromptTemplateChange}
+                        />
+                    )}
+                    {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                        <Dropdown
+                            className={styles.oneshotSettingsSeparator}
+                            label="Semantic Kernel mode"
+                            options={[
+                                { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
+                                { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
+                            ]}
+                            required
+                            onChange={onSKModeChange}
+                        />
+                    )}
 
                     <SpinButton
                         className={styles.chatSettingsSeparator}
@@ -435,37 +457,6 @@ const Chat = () => {
                         onChange={onShouldStreamChange}
                     />
 
-
-                    <ChoiceGroup
-                        className={styles.chatSettingsSeparator}
-                        label="Approach"
-                        options={approaches}
-                        defaultSelectedKey={approach}
-                        onChange={onApproachChange}
-                    />
-
-                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
-                        <TextField
-                            className={styles.chatSettingsSeparator}
-                            defaultValue={promptTemplate}
-                            label="Override prompt template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplateChange}
-                        />
-                    )}
-                    {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                        <Dropdown
-                            className={styles.oneshotSettingsSeparator}
-                            label="Semantic Kernel mode"
-                            options={[
-                                { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                                { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
-                            ]}
-                            required
-                            onChange={onSKModeChange}
-                        />
-                    )}
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>
             </div>
