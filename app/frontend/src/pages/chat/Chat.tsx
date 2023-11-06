@@ -35,6 +35,7 @@ const Chat = () => {
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
     const [shouldStream, setShouldStream] = useState<boolean>(true);
+    const [streamAvailable, setStreamAvailable] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
     const [excludeCategory, setExcludeCategory] = useState<string>("");
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
@@ -112,9 +113,10 @@ const Chat = () => {
                 { content: a[1].choices[0].message.content, role: "assistant" }
             ]);
 
+            const stream = streamAvailable && shouldStream;
             const request: ChatAppRequest = {
                 messages: [...messages, { content: question, role: "user" }],
-                stream: shouldStream,
+                stream: stream,
                 context: {
                     overrides: {
                         prompt_template: promptTemplate.length === 0 ? undefined : promptTemplate,
@@ -138,7 +140,7 @@ const Chat = () => {
             if (!response.body) {
                 throw Error("No response body");
             }
-            if (shouldStream) {
+            if (stream) {
                 const parsedResponse: ChatAppResponse = await handleAsyncRequest(question, answers, setAnswers, response.body);
                 setAnswers([...answers, [question, parsedResponse]]);
             } else {
@@ -186,7 +188,9 @@ const Chat = () => {
     };
 
     const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
-        setApproach((option?.key as Approaches) || Approaches.JAVA_OPENAI_SDK);
+        const newApproach = (option?.key as Approaches);
+        setApproach(newApproach || Approaches.JAVA_OPENAI_SDK);
+        setStreamAvailable(newApproach === Approaches.JAVA_OPENAI_SDK);
     };
 
     const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
@@ -450,12 +454,14 @@ const Chat = () => {
                         required
                         onChange={onRetrievalModeChange}
                     />
-                    <Checkbox
-                        className={styles.chatSettingsSeparator}
-                        checked={shouldStream}
-                        label="Stream chat completion responses"
-                        onChange={onShouldStreamChange}
-                    />
+                    {streamAvailable &&
+                        <Checkbox
+                            className={styles.chatSettingsSeparator}
+                            checked={shouldStream}
+                            label="Stream chat completion responses"
+                            onChange={onShouldStreamChange}
+                        />
+                    }
 
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>

@@ -95,6 +95,7 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
             ChatGPTConversation questionOrConversation,
             RAGOptions options,
             OutputStream outputStream) {
+        throw new IllegalStateException("Streaming not supported for this approach");
     }
 
     private List<ContentSource> formSourcesList(String result) {

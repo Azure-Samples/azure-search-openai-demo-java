@@ -102,48 +102,7 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     @Override
     public void runStreaming(ChatGPTConversation questionOrConversation, RAGOptions options, OutputStream outputStream) {
-        String question = ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages());
-
-        // STEP 1: Build semantic kernel with Azure Cognitive Search as memory store. AnswerQuestion skill is imported from resources.
-        Kernel semanticKernel = buildSemanticKernel(options);
-
-        // STEP 2: Retrieve relevant documents using keywords extracted from the chat history
-        String conversation = ChatGPTUtils.formatAsChatML(questionOrConversation.toOpenAIChatMessages());
-        List<MemoryQueryResult> sourcesResult = getSourcesFromConversation(conversation, semanticKernel, options);
-
-        LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", sourcesResult.size(), question);
-
-        String sources = buildSourcesText(sourcesResult);
-        List<ContentSource> sourcesList = buildSources(sourcesResult);
-
-        // STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        SKFunction answerConversation = semanticKernel.getFunction("RAG", "AnswerConversation");
-        SKContext skcontext = SKBuilders.context().build()
-                .setVariable("sources", sources)
-                .setVariable("conversation", conversation)
-                .setVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
-                .setVariable("input",  question);
-
-        SKContext reply = (SKContext) answerConversation.invokeAsync(skcontext).block();
-
-        RAGResponse ragResponse =
-                new RAGResponse.Builder()
-                        .question(
-                                ChatGPTUtils.getLastUserQuestion(
-                                        questionOrConversation.getMessages()))
-                        .prompt("placeholders for prompt")
-                        .answer(reply.getResult())
-                        .sources(sourcesList)
-                        .sourcesAsText(sources)
-                        .build();
-
-        try {
-            String value = objectMapper.writeValueAsString(ChatResponse.buildChatResponse(ragResponse)) + "\n";
-            outputStream.write(value.getBytes());
-            outputStream.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        throw new IllegalStateException("Streaming not supported for this approach");
     }
 
     private List<MemoryQueryResult> getSourcesFromConversation (String conversation, Kernel kernel, RAGOptions options) {
