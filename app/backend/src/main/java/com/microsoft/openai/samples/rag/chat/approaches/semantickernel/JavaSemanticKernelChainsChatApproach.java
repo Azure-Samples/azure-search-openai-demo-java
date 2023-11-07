@@ -5,17 +5,15 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.CognitiveSearchPlugin;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
-import com.microsoft.semantickernel.chatcompletion.ChatCompletion;
+import com.microsoft.semantickernel.orchestration.ContextVariables;
 import com.microsoft.semantickernel.orchestration.SKContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,18 +25,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Simple chat-read-retrieve-read java implementation, using the Cognitive Search and OpenAI APIs directly.
- * It uses the ChatGPT API to turn the user question into a good search query.
- * It queries Azure Cognitive Search for search results for that query (optionally using the vector embeddings for that query).
- * It then combines the search results and original user question, and asks ChatGPT API to answer the question based on the sources. It includes the last 4K of message history as well (or however many tokens are allowed by the deployed model).
+ * Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an
+ * imperative style for AI orchestration through semantic kernel functions chaining.
+ * InformationFinder.SearchFromConversation native function and RAG.AnswerConversation semantic function are called
+ * sequentially. Several cognitive search retrieval options are available: Text, Vector, Hybrid.
  */
 @Component
 public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JavaSemanticKernelChainsChatApproach.class);
-    private static final String PLAN_PROMPT = """
-            Take the input as a question and answer it finding any information needed
-            """;
     private final CognitiveSearchProxy cognitiveSearchProxy;
 
     private final OpenAIProxy openAIProxy;
@@ -61,30 +54,38 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
      */
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
-
         String question = ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages());
+        String conversation = ChatGPTUtils.formatAsChatML(questionOrConversation.toOpenAIChatMessages());
 
         Kernel semanticKernel = buildSemanticKernel(options);
 
+        // STEP 1: Retrieve relevant documents using the current conversation. It reuses the
+        // CognitiveSearchRetriever appraoch through the CognitiveSearchPlugin native function.
         SKContext searchContext =
                 semanticKernel.runAsync(
-                        question,
-                        semanticKernel.getSkill("InformationFinder").getFunction("Search", null)).block();
+                        conversation,
+                        semanticKernel.getSkill("InformationFinder").getFunction("SearchFromConversation", null)).block();
 
-        var sources = formSourcesList(searchContext.getResult());
-
-        var answerVariables = SKBuilders.variables()
+        // STEP 2: Build a SK context with the sources retrieved from the memory store and conversation
+        ContextVariables variables = SKBuilders.variables()
                 .withVariable("sources", searchContext.getResult())
-                .withVariable("input", question)
+                .withVariable("conversation", conversation)
+                .withVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
+                .withVariable("input",  question)
                 .build();
 
-        SKContext answerExecutionContext =
-                semanticKernel.runAsync(answerVariables,
-                        semanticKernel.getSkill("RAG").getFunction("AnswerQuestion", null)).block();
+        /**
+         * STEP 3: Get a reference of the semantic function [AnswerConversation] of the [RAG] plugin
+         * (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
+         * Triggering Open AI to get a reply.
+         */
+        SKContext reply = semanticKernel.runAsync(variables,
+                semanticKernel.getSkill("RAG").getFunction("AnswerConversation", null)).block();
+
         return new RAGResponse.Builder()
                 .prompt("Prompt is managed by Semantic Kernel")
-                .answer(answerExecutionContext.getResult())
-                .sources(sources)
+                .answer(reply.getResult())
+                .sources(formSourcesList(searchContext.getResult()))
                 .sourcesAsText(searchContext.getResult())
                 .question(question)
                 .build();
@@ -118,6 +119,15 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Build semantic kernel context with AnswerConversation semantic function and
+     * InformationFinder.SearchFromConversation native function. AnswerConversation is imported from
+     * src/main/resources/semantickernel/Plugins. InformationFinder.SearchFromConversation is implemented in a
+     * traditional Java class method: CognitiveSearchPlugin.searchFromConversation
+     *
+     * @param options
+     * @return
+     */
     private Kernel buildSemanticKernel(RAGOptions options) {
         Kernel kernel = SKBuilders.kernel()
                 .withDefaultAIService(SKBuilders.chatCompletion()
@@ -126,14 +136,10 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
                         .build())
                 .build();
 
-        kernel.importSkill(new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options), "InformationFinder");
-
-        kernel.importSkillFromResources(
-                "semantickernel/Plugins",
-                "RAG",
-                "AnswerQuestion",
-                null
-        );
+        kernel.importSkill(
+                new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
+                "InformationFinder");
+        kernel.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerConversation", null);
 
         return kernel;
     }

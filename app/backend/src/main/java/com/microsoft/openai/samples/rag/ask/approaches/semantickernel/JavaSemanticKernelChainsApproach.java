@@ -6,6 +6,7 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.semantickernel.Kernel;
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Component;
 /**
  * Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an
  * imperative style for AI orchestration through semantic kernel functions chaining.
- * InformationFinder.Search native function and RAG.AnswerQuestion semantic function are called
+ * InformationFinder.SearchFromQuestion native function and RAG.AnswerQuestion semantic function are called
  * sequentially. Several cognitive search retrieval options are available: Text, Vector, Hybrid.
  */
 @Component
@@ -74,7 +75,7 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
                                 question,
                                 semanticKernel
                                         .getSkill("InformationFinder")
-                                        .getFunction("Search", null))
+                                        .getFunction("SearchFromQuestion", null))
                         .block();
 
         var sources = formSourcesList(searchContext.getResult());
@@ -135,9 +136,9 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
 
     /**
      * Build semantic kernel context with AnswerQuestion semantic function and
-     * InformationFinder.Search native function. AnswerQuestion is imported from
-     * src/main/resources/semantickernel/Plugins. InformationFinder.Search is implemented in a
-     * traditional Java class method: CognitiveSearchPlugin.search
+     * InformationFinder.SearchFromQuestion native function. AnswerQuestion is imported from
+     * src/main/resources/semantickernel/Plugins. InformationFinder.SearchFromQuestion is implemented in a
+     * traditional Java class method: CognitiveSearchPlugin.searchFromConversation
      *
      * @param options
      * @return
@@ -155,7 +156,6 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
         kernel.importSkill(
                 new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
                 "InformationFinder");
-
         kernel.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerQuestion", null);
 
         return kernel;

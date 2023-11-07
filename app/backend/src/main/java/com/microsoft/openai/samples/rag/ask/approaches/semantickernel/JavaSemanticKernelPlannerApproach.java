@@ -5,6 +5,7 @@ import com.azure.ai.openai.OpenAIAsyncClient;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.semantickernel.Kernel;
@@ -97,8 +98,8 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
     /**
      * Build semantic kernel context with AnswerQuestion semantic function and
      * InformationFinder.Search native function. AnswerQuestion is imported from
-     * src/main/resources/semantickernel/Plugins. InformationFinder.Search is implemented in a
-     * traditional Java class method: CognitiveSearchPlugin.search
+     * src/main/resources/semantickernel/Plugins. InformationFinder.SearchFromQuestion is implemented in a
+     * traditional Java class method: CognitiveSearchPlugin.searchFromQuestion
      *
      * @param options
      * @return

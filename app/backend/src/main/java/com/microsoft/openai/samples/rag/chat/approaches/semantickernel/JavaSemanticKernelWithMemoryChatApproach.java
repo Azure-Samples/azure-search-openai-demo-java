@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Accomplish the same task as in the PlainJavaAskApproach approach but using Semantic Kernel framework:
  * 1. Memory abstraction is used for vector search capability. It uses Azure Cognitive Search as memory store.
- * 2. Semantic function has been defined to ask question using sources from memory search results
+ * 2. Semantic functions have been defined to ask question using sources from memory search results
  */
 @Component
 public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
@@ -89,11 +89,11 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
                 .setVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
                 .setVariable("input",  question);
 
-        Mono<SKContext> reply = answerConversation.invokeAsync(skcontext);
+        SKContext reply = (SKContext) answerConversation.invokeAsync(skcontext).block();
 
         return new RAGResponse.Builder()
-                .prompt("placeholders for prompt")
-                .answer(reply.block().getResult())
+                .prompt("Prompt is managed by Semantic Kernel")
+                .answer(reply.getResult())
                 .sources(sourcesList)
                 .sourcesAsText(sources)
                 .question(question)
