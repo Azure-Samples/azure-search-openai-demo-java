@@ -61,17 +61,16 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        var ragOptions =
-                new RAGOptions.Builder()
-                        .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
-                        .semanticRanker(chatRequest.context().overrides().semantic_ranker())
-                        .semanticCaptions(chatRequest.context().overrides().semantic_captions())
-                        .suggestFollowupQuestions(
-                                chatRequest.context().overrides().suggest_followup_questions())
-                        .excludeCategory(chatRequest.context().overrides().exclude_category())
-                        .promptTemplate(chatRequest.context().overrides().prompt_template())
-                        .top(chatRequest.context().overrides().top())
-                        .build();
+        var ragOptions = new RAGOptions.Builder()
+                .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
+                .semanticRanker(chatRequest.context().overrides().semantic_ranker())
+                .semanticCaptions(chatRequest.context().overrides().semantic_captions())
+                .suggestFollowupQuestions(chatRequest.context().overrides().suggest_followup_questions())
+                .excludeCategory(chatRequest.context().overrides().exclude_category())
+                .promptTemplate(chatRequest.context().overrides().prompt_template())
+                .top(chatRequest.context().overrides().top())
+                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
+                .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =
                 ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
@@ -115,17 +114,16 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        var ragOptions =
-                new RAGOptions.Builder()
-                        .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
-                        .semanticRanker(chatRequest.context().overrides().semantic_ranker())
-                        .semanticCaptions(chatRequest.context().overrides().semantic_captions())
-                        .suggestFollowupQuestions(
-                                chatRequest.context().overrides().suggest_followup_questions())
-                        .excludeCategory(chatRequest.context().overrides().exclude_category())
-                        .promptTemplate(chatRequest.context().overrides().prompt_template())
-                        .top(chatRequest.context().overrides().top())
-                        .build();
+        var ragOptions = new RAGOptions.Builder()
+                .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
+                .semanticRanker(chatRequest.context().overrides().semantic_ranker())
+                .semanticCaptions(chatRequest.context().overrides().semantic_captions())
+                .suggestFollowupQuestions(chatRequest.context().overrides().suggest_followup_questions())
+                .excludeCategory(chatRequest.context().overrides().exclude_category())
+                .promptTemplate(chatRequest.context().overrides().prompt_template())
+                .top(chatRequest.context().overrides().top())
+                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
+                .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =
                 ragApproachFactory.createApproach(chatRequest.approach(), RAGType.CHAT, ragOptions);
