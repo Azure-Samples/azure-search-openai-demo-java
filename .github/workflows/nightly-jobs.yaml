@@ -1,9 +1,11 @@
-name: Validate AZD template
+name: Nightly Jobs
+
 on:
   pull_request:
     branches: [ main ]
   schedule:
     - cron: '0 0 * * *' # Run at midnight every day
+  workflow_dispatch:
 
 jobs:
   infra:
