@@ -16,24 +16,9 @@ foreach ($line in $output) {
 
 Write-Host "Environment variables set."
 
-$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-if (-not $pythonCmd) {
-  # fallback to python3 if python not found
-  $pythonCmd = Get-Command python3 -ErrorAction SilentlyContinue
-}
 
-Write-Host 'Creating python virtual environment "scripts/.venv"'
-Start-Process -FilePath ($pythonCmd).Source -ArgumentList "-m venv ./scripts/.venv" -Wait -NoNewWindow
+Write-Host 'Building java indexer..'
+Start-Process -FilePath "mvn"  -ArgumentList "package -f ./app/indexer/pom.xml" -Wait -NoNewWindow
 
-$venvPythonPath = "./scripts/.venv/scripts/python.exe"
-if (Test-Path -Path "/usr") {
-  # fallback to Linux venv path
-  $venvPythonPath = "./scripts/.venv/bin/python"
-}
-
-Write-Host 'Installing dependencies from "requirements.txt" into virtual environment'
-Start-Process -FilePath $venvPythonPath -ArgumentList "-m pip install -r ./scripts/requirements.txt" -Wait -NoNewWindow
-
-Write-Host 'Running "prepdocs.py"'
-$cwd = (Get-Location)
-Start-Process -FilePath $venvPythonPath -ArgumentList "./scripts/prepdocs.py `"$cwd/data/*`" --storageaccount $env:AZURE_STORAGE_ACCOUNT --container $env:AZURE_STORAGE_CONTAINER --searchservice $env:AZURE_SEARCH_SERVICE --openaihost $env:OPENAI_HOST --openaiservice $env:AZURE_OPENAI_SERVICE --openaikey `"$env:OPENAI_API_KEY`" --openaiorg `"$env:OPENAI_ORGANIZATION`" --openaideployment $env:AZURE_OPENAI_EMB_DEPLOYMENT --openaimodelname $env:AZURE_OPENAI_EMB_MODEL_NAME --index $env:AZURE_SEARCH_INDEX --formrecognizerservice $env:AZURE_FORMRECOGNIZER_SERVICE --tenantid $env:AZURE_TENANT_ID -v" -Wait -NoNewWindow
+Write-Host 'Running the java indexer cli.jar...'
+Start-Process -FilePath "java" -ArgumentList "-jar ./app/indexer/cli/target/cli.jar `"./data`" --storageaccount $env:AZURE_STORAGE_ACCOUNT --container $env:AZURE_STORAGE_CONTAINER --searchservice $env:AZURE_SEARCH_SERVICE --openai-service-name $env:AZURE_OPENAI_SERVICE --openai-emb-deployment $env:AZURE_OPENAI_EMB_DEPLOYMENT --index $env:AZURE_SEARCH_INDEX --formrecognizerservice $env:AZURE_FORMRECOGNIZER_SERVICE --verbose add" -Wait -NoNewWindow

@@ -13,7 +13,9 @@ param appServicePlanName string = ''
 param backendServiceName string = ''
 param resourceGroupName string = ''
 
+param applicationInsightsDashboardName string = ''
 param applicationInsightsName string = ''
+param logAnalyticsName string = ''
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
@@ -22,6 +24,8 @@ param searchServiceLocation string = ''
 @allowed(['basic', 'standard', 'standard2', 'standard3', 'storage_optimized_l1', 'storage_optimized_l2'])
 param searchServiceSkuName string // Set in main.parameters.json
 param searchIndexName string // Set in main.parameters.json
+param searchQueryLanguage string // Set in main.parameters.json
+param searchQuerySpeller string // Set in main.parameters.json
 
 param storageAccountName string = ''
 param storageResourceGroupName string = ''
@@ -35,7 +39,7 @@ param openAiHost string // Set in main.parameters.json
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
 @description('Location for the OpenAI resource group')
-@allowed(['canadaeast', 'eastus', 'eastus2', 'francecentral', 'switzerlandnorth', 'uksouth', 'japaneast', 'northcentralus'])
+@allowed(['canadaeast', 'eastus', 'eastus2', 'francecentral', 'switzerlandnorth', 'uksouth', 'japaneast', 'northcentralus', 'australiaeast', 'swedencentral'])
 @metadata({
   azd: {
     type: 'location'
@@ -57,11 +61,21 @@ param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
 param chatGptDeploymentCapacity int = 30
-param chatGptModelName string // Set in main.parameters.json
-param chatGptModelVersion string
+param chatGptModelName string = 'gpt-35-turbo'
+param chatGptModelVersion string = '0613'
 param embeddingDeploymentName string // Set in main.parameters.json
 param embeddingDeploymentCapacity int = 30
 param embeddingModelName string = 'text-embedding-ada-002'
+
+// Used for the optional login and document level access control system
+param useAuthentication bool = false
+param serverAppId string = ''
+@secure()
+param serverAppSecret string = ''
+param clientAppId string = ''
+
+// Used for optional CORS support for alternate frontends
+param allowedOrigin string = '' // should start with https://, shouldn't end with a /
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
@@ -97,13 +111,14 @@ resource storageResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' ex
 }
 
 // Monitor application with Azure Monitor
-module monitoring './core/monitor/monitoring.bicep' = if (useApplicationInsights) {
+module monitoring 'core/monitor/monitoring.bicep' = if (useApplicationInsights) {
   name: 'monitoring'
   scope: resourceGroup
   params: {
     location: location
     tags: tags
     applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    logAnalyticsName: !empty(logAnalyticsName) ? logAnalyticsName : '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
   }
 }
 
@@ -136,11 +151,14 @@ module backend 'core/host/appservice.bicep' = {
     runtimeVersion: '17-java17'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
+    allowedOrigins: [allowedOrigin]
     appSettings: {
       AZURE_STORAGE_ACCOUNT: storage.outputs.name
       AZURE_STORAGE_CONTAINER: storageContainerName
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
+      AZURE_SEARCH_QUERY_LANGUAGE: searchQueryLanguage
+      AZURE_SEARCH_QUERY_SPELLER: searchQuerySpeller
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       XDT_MicrosoftApplicationInsights_Java: useApplicationInsights ? '1' : '0'
@@ -155,6 +173,14 @@ module backend 'core/host/appservice.bicep' = {
       // Used only with non-Azure OpenAI deployments
       OPENAI_API_KEY: openAiApiKey
       OPENAI_ORGANIZATION: openAiApiOrganization
+      // Optional login and document level access control system
+      AZURE_USE_AUTHENTICATION: useAuthentication
+      AZURE_SERVER_APP_ID: serverAppId
+      AZURE_SERVER_APP_SECRET: serverAppSecret
+      AZURE_CLIENT_APP_ID: clientAppId
+      AZURE_TENANT_ID: tenant().tenantId
+      // CORS support, for frontends on other hosts
+      ALLOWED_ORIGIN: allowedOrigin
     }
   }
 }
@@ -189,7 +215,10 @@ module openAi 'core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
           name: embeddingModelName
           version: '2'
         }
-        capacity: embeddingDeploymentCapacity
+        sku: {
+          name: 'Standard'
+          capacity: embeddingDeploymentCapacity
+        }
       }
     ]
   }
@@ -235,6 +264,7 @@ module storage 'core/storage/storage-account.bicep' = {
     name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
     location: storageResourceGroupLocation
     tags: tags
+    allowBlobPublicAccess: false
     publicNetworkAccess: 'Enabled'
     sku: {
       name: storageSkuName

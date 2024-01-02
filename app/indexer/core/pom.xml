@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+     <parent>
+        <groupId>com.microsoft.openai.samples</groupId>
+        <artifactId>indexer-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+   
+    <artifactId>indexer-core</artifactId>
+
+
+<dependencies>
+        <!-- Azure Core -->
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-core</artifactId>
+</dependency>
+
+<dependency>
+	<groupId>com.azure</groupId>
+	<artifactId>azure-identity</artifactId>
+</dependency>
+
+<!-- Azure Storage Blob -->
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-storage-blob</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-search-documents</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-ai-openai</artifactId>
+    <version>${azure-openai.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-ai-formrecognizer</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>com.knuddels</groupId>
+    <artifactId>jtokkit</artifactId>
+    <version>0.6.1</version>
+</dependency>
+<dependency> 
+    <groupId>com.itextpdf</groupId> 
+    <artifactId>itextpdf</artifactId> 
+    <version>${itextpdf.version}</version>
+</dependency>
+<dependency>
+  <groupId>org.apache.commons</groupId>
+  <artifactId>commons-text</artifactId>
+  <version>${apache.common.text}</version>
+</dependency>
+
+</dependencies>
+
+</project>

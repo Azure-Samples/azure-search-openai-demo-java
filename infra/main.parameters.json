@@ -50,6 +50,12 @@
     "searchServiceSkuName": {
       "value": "${AZURE_SEARCH_SERVICE_SKU=standard}"
     },
+    "searchQueryLanguage": {
+      "value": "${AZURE_SEARCH_QUERY_LANGUAGE=en-us}"
+    },
+    "searchQuerySpeller": {
+      "value": "${AZURE_SEARCH_QUERY_SPELLER=lexicon}"
+    },
     "storageAccountName": {
       "value": "${AZURE_STORAGE_ACCOUNT}"
     },
@@ -82,6 +88,21 @@
     },
     "useApplicationInsights": {
       "value": "${AZURE_USE_APPLICATION_INSIGHTS=true}"
+    },
+    "useAuthentication": {
+      "value": "${AZURE_USE_AUTHENTICATION=false}"
+    },
+    "serverAppId": {
+      "value": "${AZURE_SERVER_APP_ID}"
+    },
+    "serverAppSecret": {
+      "value": "${AZURE_SERVER_APP_SECRET}"
+    },
+    "clientAppId": {
+      "value": "${AZURE_CLIENT_APP_ID}"
+    },
+    "allowedOrigin": {
+      "value": "${ALLOWED_ORIGIN}"
     }
   }
 }

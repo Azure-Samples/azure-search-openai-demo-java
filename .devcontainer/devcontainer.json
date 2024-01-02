@@ -1,11 +1,11 @@
 {
     "name": "Java 17 and maven 3.8.8 DevContainer to build Java RAG example with Azure AI",
-    "image": "mcr.microsoft.com/devcontainers/python:0-3.10",
+    "image": "mcr.microsoft.com/devcontainers/java:1-17-bullseye",
     "features": {
         "azure-cli": "latest",
         "ghcr.io/azure/azure-dev/azd:latest": {},
         "ghcr.io/devcontainers/features/java:1": {
-            "version": "17",
+            "version": "none",
             "installMaven": true,
             "mavenVersion": "3.8.8"
         },
@@ -25,7 +25,6 @@
                 "ms-azuretools.azure-dev",
                 "ms-azuretools.vscode-bicep",
                 "vscjava.vscode-java-pack",
-                "ms-python.python",
                 "amodio.tsl-problem-matcher"
             ]
         }

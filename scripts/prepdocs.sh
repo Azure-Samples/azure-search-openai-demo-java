@@ -11,11 +11,9 @@ done <<EOF
 $(azd env get-values)
 EOF
 
-echo 'Creating python virtual environment "scripts/venv"'
-python3 -m venv scripts/venv
 
-echo 'Installing dependencies from "requirements.txt" into virtual environment'
-./scripts/venv/bin/python -m pip install -r scripts/requirements.txt
+echo 'Building java indexer'
+mvn package -f ./app/indexer/pom.xml
 
-echo 'Running "prepdocs.py"'
-./scripts/venv/bin/python ./scripts/prepdocs.py './data/*' --storageaccount "$AZURE_STORAGE_ACCOUNT" --container "$AZURE_STORAGE_CONTAINER" --searchservice "$AZURE_SEARCH_SERVICE" --openaihost "$OPENAI_HOST" --openaiservice "$AZURE_OPENAI_SERVICE" --openaikey "$OPENAI_API_KEY" --openaiorg "$OPENAI_ORGANIZATION" --openaideployment "$AZURE_OPENAI_EMB_DEPLOYMENT" --openaimodelname "$AZURE_OPENAI_EMB_MODEL_NAME" --index "$AZURE_SEARCH_INDEX" --formrecognizerservice "$AZURE_FORMRECOGNIZER_SERVICE" --tenantid "$AZURE_TENANT_ID" -v
+echo 'Running the java indexer cli.jar'
+java -jar ./app/indexer/cli/target/cli.jar './data' --verbose --storageaccount "$AZURE_STORAGE_ACCOUNT" --container "$AZURE_STORAGE_CONTAINER" --searchservice "$AZURE_SEARCH_SERVICE"  --openai-service-name "$AZURE_OPENAI_SERVICE"  --openai-emb-deployment "$AZURE_OPENAI_EMB_DEPLOYMENT"  --index "$AZURE_SEARCH_INDEX" --formrecognizerservice "$AZURE_FORMRECOGNIZER_SERVICE"  add
