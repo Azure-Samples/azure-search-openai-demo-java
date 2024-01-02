@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
+import com.azure.identity.AzureDeveloperCliCredentialBuilder;
 import com.microsoft.openai.samples.indexer.embeddings.AzureOpenAIEmbeddingService;
 import com.microsoft.openai.samples.indexer.embeddings.TextEmbeddingsService;
 import com.microsoft.openai.samples.indexer.index.AzureSearchClientFactory;
@@ -74,10 +75,12 @@ public class CLI implements Callable<Integer> {
 
     @Command(name = "add")
     public void addCommand() {
-    TokenCredential tokenCredential = new AzureCliCredentialBuilder().build();
-    TextEmbeddingsService textEmbeddingsService = new AzureOpenAIEmbeddingService(openaiServiceName, openaiEmbdeployment, tokenCredential, verbose);
-    AzureSearchClientFactory azureSearchClientFactory = new AzureSearchClientFactory(searchservice, tokenCredential, index, verbose);
-    SearchIndexManager searchIndexManager = new SearchIndexManager(azureSearchClientFactory,searchanalyzername,textEmbeddingsService);
+    TokenCredential tokenCredential = new AzureDeveloperCliCredentialBuilder().build();
+
+    SearchIndexManager searchIndexManager = new SearchIndexManager(
+                            new AzureSearchClientFactory(searchservice, tokenCredential, index, verbose),
+                            searchanalyzername,
+                            new AzureOpenAIEmbeddingService(openaiServiceName, openaiEmbdeployment, tokenCredential, verbose));
     
     searchIndexManager.createIndex();
 

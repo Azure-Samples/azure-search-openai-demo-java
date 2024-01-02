@@ -32,35 +32,35 @@ import org.slf4j.LoggerFactory;
 
 
 public class SearchIndexManager {
-    private AzureSearchClientFactory searchInfo;
+    private AzureSearchClientFactory azureSearchClientFactory;
     private String searchAnalyzerName;
     private boolean useAcls;
     private TextEmbeddingsService embeddingsService;
     private static final Logger logger = LoggerFactory.getLogger(SearchIndexManager.class);
 
-    public SearchIndexManager(AzureSearchClientFactory searchInfo, String searchAnalyzerName, TextEmbeddingsService embeddingsService) {
-        this.searchInfo = searchInfo;
+    public SearchIndexManager(AzureSearchClientFactory azureSearchClientFactory, String searchAnalyzerName, TextEmbeddingsService embeddingsService) {
+        this.azureSearchClientFactory = azureSearchClientFactory;
         this.searchAnalyzerName = searchAnalyzerName;
         this.embeddingsService = embeddingsService;
     }
 
     public void createIndex() {
-        if (searchInfo.isVerbose()) {
-                  logger.debug("Ensuring search index {} exists", searchInfo.getIndexName());
+        if (azureSearchClientFactory.isVerbose()) {
+                  logger.debug("Ensuring search index {} exists", azureSearchClientFactory.getIndexName());
                 }
         
         
-        SearchIndexClient searchIndexClient = searchInfo.createSearchIndexClient();
+        SearchIndexClient searchIndexClient = azureSearchClientFactory.createSearchIndexClient();
         SearchIndex index = null;
         try {
-           index = searchIndexClient.getIndex(searchInfo.getIndexName());
+           index = searchIndexClient.getIndex(azureSearchClientFactory.getIndexName());
         }catch(HttpResponseException httpEx) {
             if (httpEx.getResponse().getStatusCode() == 404) 
-                logger.info("index {} does not exist. Creating..", searchInfo.getIndexName());
+                logger.info("index {} does not exist. Creating..", azureSearchClientFactory.getIndexName());
         }
 
         if ( index != null) {
-            logger.info("index {} already exists. Skipping creation", searchInfo.getIndexName());
+            logger.info("index {} already exists. Skipping creation", azureSearchClientFactory.getIndexName());
             return;
         }
     
@@ -109,7 +109,7 @@ public class SearchIndexManager {
                                 .setFilterable(true));
         }
 
-        index = new SearchIndex(searchInfo.getIndexName(), fields);
+        index = new SearchIndex(azureSearchClientFactory.getIndexName(), fields);
         
         index.setSemanticSearch(new SemanticSearch().setConfigurations(Arrays.asList(new SemanticConfiguration(
             "default", new SemanticPrioritizedFields()
@@ -125,7 +125,7 @@ public class SearchIndexManager {
                                    
           searchIndexClient.createIndex(index);
             
-        logger.info("Created index {}", searchInfo.getIndexName());
+        logger.info("Created index {}", azureSearchClientFactory.getIndexName());
     }
 
     public void updateContent(List<Section> sections) {
@@ -135,7 +135,7 @@ public class SearchIndexManager {
             sectionBatches.add(sections.subList(i, Math.min(i + MAX_BATCH_SIZE, sections.size())));
         }
 
-        SearchClient searchClient = searchInfo.createSearchClient();
+        SearchClient searchClient = azureSearchClientFactory.createSearchClient();
         for (int batchIndex = 0; batchIndex < sectionBatches.size(); batchIndex++) {
             List<Section> sectionBatch = sectionBatches.get(batchIndex);
             List<Map<String, Object>> documents = new ArrayList<>();
