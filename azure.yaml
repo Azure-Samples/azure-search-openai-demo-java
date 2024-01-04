@@ -20,6 +20,22 @@ services:
           run:  cd ../frontend;npm install;npm run build
           interactive: true
           continueOnError: false
+  indexer:
+    project: ./app/indexer/functions
+    language: java
+    host: function
+    hooks:
+      prepackage:
+        windows:
+          shell: pwsh
+          run: cd ..;mvn install -pl :indexer-core
+          interactive: true
+          continueOnError: false
+        posix:
+          shell: sh
+          run: cd ..;mvn install -pl :indexer-core
+          interactive: true
+          continueOnError: false
 hooks:
     postprovision:
       windows:

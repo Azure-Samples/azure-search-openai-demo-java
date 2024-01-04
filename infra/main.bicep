@@ -11,6 +11,7 @@ param location string
 
 param appServicePlanName string = ''
 param backendServiceName string = ''
+param indexServiceName string = ''
 param resourceGroupName string = ''
 
 param applicationInsightsDashboardName string = ''
@@ -180,6 +181,37 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_CLIENT_APP_ID: clientAppId
       AZURE_TENANT_ID: tenant().tenantId
       // CORS support, for frontends on other hosts
+      ALLOWED_ORIGIN: allowedOrigin
+    }
+  }
+}
+
+module indexer 'core/host/functions.bicep' = {
+  name: 'indexer'
+  scope: resourceGroup
+  params: {
+    name: !empty(indexServiceName) ? indexServiceName : '${abbrs.webSitesFunctions}indexer-${resourceToken}'
+    location: location
+    tags: union(tags, { 'azd-service-name': 'indexer' })
+    appServicePlanId: appServicePlan.outputs.id
+    runtimeName: 'java'
+    runtimeVersion: '17'
+    kind:'functionapp,linux'
+    scmDoBuildDuringDeployment: false
+    managedIdentity: true
+    allowedOrigins: [allowedOrigin]
+    storageAccountName: storage.outputs.name
+    appSettings: {
+      AZURE_STORAGE_ACCOUNT: storage.outputs.name
+      AZURE_STORAGE_CONTAINER: storageContainerName
+      AZURE_SEARCH_INDEX: searchIndexName
+      AZURE_SEARCH_SERVICE: searchService.outputs.name
+      AZURE_FORMRECOGNIZER_SERVICE: formRecognizer.outputs.name
+      AZURE_OPENAI_SERVICE: openAiHost == 'azure' ? openAi.outputs.name : ''
+      AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
+      APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
+      XDT_MicrosoftApplicationInsights_Java: useApplicationInsights ? '1' : '0'
       ALLOWED_ORIGIN: allowedOrigin
     }
   }
@@ -364,11 +396,31 @@ module openAiRoleBackend 'core/security/role.bicep' = if (openAiHost == 'azure')
   }
 }
 
+module openAiRoleIndexer 'core/security/role.bicep' = {
+  scope: openAiResourceGroup
+  name: 'openai-role-indexer'
+  params: {
+    principalId: indexer.outputs.identityPrincipalId
+    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+    principalType: 'ServicePrincipal'
+  }
+}
+
 module storageRoleBackend 'core/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-backend'
   params: {
     principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module storageRoleIndexer 'core/security/role.bicep' = {
+  scope: storageResourceGroup
+  name: 'storage-role-indexer'
+  params: {
+    principalId: indexer.outputs.identityPrincipalId
     roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
     principalType: 'ServicePrincipal'
   }
@@ -380,6 +432,26 @@ module searchRoleBackend 'core/security/role.bicep' = {
   params: {
     principalId: backend.outputs.identityPrincipalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module searchRoleIndexer 'core/security/role.bicep' = {
+  scope: searchServiceResourceGroup
+  name: 'search-role-indexer'
+  params: {
+    principalId: indexer.outputs.identityPrincipalId
+    roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+    principalType: 'ServicePrincipal'
+  }
+} 
+
+module formRecognizerRoleIndexer 'core/security/role.bicep' = {
+  scope: formRecognizerResourceGroup
+  name: 'formrecognizer-role-indexer'
+  params: {
+    principalId: indexer.outputs.identityPrincipalId
+    roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
     principalType: 'ServicePrincipal'
   }
 }

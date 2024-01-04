@@ -1,6 +1,9 @@
 package com.microsoft.openai.samples.indexer;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,26 +29,30 @@ public class DocumentProcessor {
         this.textSplitter = textSplitter;
     }
  
-    public void indexDocumentfromFile(String filename, String category){
-        logger.debug("Indexing file {}", filename);
-        File file = new File(filename);
+    public void indexDocumentfromFile(String filepath, String category) throws IOException {
+        byte[] bytes = Files.readAllBytes(Path.of(filepath));
+       indexDocumentFromBytes(filepath, category, bytes);
 
-        List<Page> pages = pdfParser.parse(file);
-        logger.info("Found {} pages in file {}", pages.size(), file.getName());
-        
-       
-        
+    }
+
+    public void indexDocumentFromBytes(String filename, String category, byte[] content){
+        logger.debug("Indexing file {}", filename);
+        List<Page> pages = pdfParser.parse(content);
+        logger.info("Found {} pages in file {}", pages.size(), filename);
+
+
+
         List<SplitPage> splitPages = textSplitter.splitPages(pages);
-        logger.info("file {} splitted in {} sections", file.getName(), splitPages.size());
+        logger.info("file {} splitted in {} sections", filename, splitPages.size());
 
         List<Section> sections = splitPages.stream()
                 .map(splitPage -> {
-                                    return new Section(splitPage, file.getName(), category);
+                                    return new Section(splitPage, filename, category);
                                   })
                 .collect(Collectors.toList());
-       
+
         searchIndexManager.updateContent(sections);
-        logger.info("File {} indexed with {} splitted sections", file.getName(),sections.size()); 
+        logger.info("File {} indexed with {} splitted sections", filename,sections.size());
 
     }
 
