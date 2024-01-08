@@ -13,11 +13,11 @@ products:
 - azure-monitor
 ---
 
-# ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
+# ChatGPT + Enterprise data with Azure OpenAI and Azure AI Search - Java Version
 
 This repo is the Java version of the well known [ChatGPT + Enterprise data code sample](https://github.com/Azure-Samples/azure-search-openai-demo) originally written in python.
 
-It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model `gpt-35-turbo`, and Azure Cognitive Search for data indexing and retrieval.
+It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model `gpt-35-turbo`, and Azure AI Search for data indexing and retrieval.
 
 This repository includes sample data so it's ready to try end to end. In this sample application we use a fictitious company called Contoso Electronics, and the experience allows its employees to ask questions about the benefits, internal policies, as well as job descriptions and roles.
 
@@ -49,7 +49,7 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     * [Existing resource group](#existing-resource-group)
     * [Existing OpenAI resource](#existing-openai-resource)
-    * [Existing Azure Cognitive Search resource](#existing-azure-cognitive-search-resource)
+    * [Existing Azure AI Search resource](#existing-azure-ai-search-resource)
     * [Other existing Azure resources](#other-existing-azure-resources)
     * [Provision remaining resources](#provision-remaining-resources)
   * [Deploying again](#deploying-again)
@@ -79,7 +79,7 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 What this demo application does:
 * Chat and Q&A interfaces
 * Explores various options to help users evaluate the trustworthiness of responses with citations, tracking of source content, etc.
-* Shows possible approaches for data preparation, prompt construction, and orchestration of interaction between model (ChatGPT) and retriever (Cognitive Search)
+* Shows possible approaches for data preparation, prompt construction, and orchestration of interaction between model (ChatGPT) and retriever (AI Search)
 * Shows possible AI orchestration implementation using the plain Java Open AI sdk or the Java Semantic Kernel sdk
 * Settings directly in the UX to tweak the behavior and experiment with options
 
@@ -89,7 +89,7 @@ User interface:
 
 ## Getting Started
 
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/cognitive-search/) to get some free Azure credits to get you started.
+> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
 
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
@@ -114,7 +114,7 @@ All prerequisites are already installed in the container.  You can skip to the [
   * **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
 
->NOTE: The initial cognitive search documents indexing process (triggered as post provision task by azd) is still using the original python scripts. That's why python is still required to run this java example. 
+>NOTE: The initial indexing process of documents for AI search (triggered as post provision task by azd) is still using the original Python scripts. That's why Python is still required to run this java example. 
 
 >NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
 
@@ -137,7 +137,7 @@ Once you have the project available locally, run the following commands if you d
     ```
     
     * This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-    * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
+    * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
 3. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.  
 
@@ -164,9 +164,9 @@ If you already have existing Azure resources, you can re-use those by setting `a
 1. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
 1. Run `azd env set AZURE_OPENAI_EMB_DEPLOYMENT {Name of existing GPT embedding deployment}`. Only needed if your embeddings deployment is not the default 'embedding'.
 
-#### Existing Azure Cognitive Search resource
+#### Existing Azure AI Search resource
 
-1. Run `azd env set AZURE_SEARCH_SERVICE {Name of existing Azure Cognitive Search service}`
+1. Run `azd env set AZURE_SEARCH_SERVICE {Name of existing Azure AI Search service instance}`
 1. Run `azd env set AZURE_SEARCH_SERVICE_RESOURCE_GROUP {Name of existing resource group with ACS service}`
 1. If that resource group is in a different location than the one you'll pick for the `azd up` step,
    then run `azd env set AZURE_SEARCH_SERVICE_LOCATION {Location of existing service}`
@@ -203,7 +203,7 @@ azd env set AZURE_OPENAI_CHATGPT_MODEL "gpt-4" # Change the chatgpt model to gpt
 azd up
 ```
 > NOTE: This sample has been tested with gpt-35-turbo/0613 model version.Using other models or different versions might result in unexpected behavior.
-### Examples of an azd deployment reusing an existing OpenAI and Azure Cognitive Search resources
+### Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources
 
 ```shell
 azd auth login
@@ -284,13 +284,13 @@ Below you can find the list of available implementations.
 
 | Conversational Style | RAG Approach                                                                                                                                                                                                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Java Open AI SDK                                                                               | Java Semantic Kernel  | 
 |:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------|:----------------------|
-| One Shot Ask         | [PlainJavaAskApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/PlainJavaAskApproach.java)                                                     | Use Cognitive Search and Java OpenAI APIs. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer for the user question.Several cognitive search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the question.                                                                                                                                                                                                                                                                                                                                                                                                                                                      | :white_check_mark:                                                                             | :x:                   |
-| Chat                 | [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java)                                                  | Use Cognitive Search and Java OpenAI APIs. It first calls OpenAI to generate a search keyword for the chat history and then answer to the last chat question.Several cognitive search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the chat extracted keywords.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | :white_check_mark:                                                                             | :x:                   |
+| One Shot Ask         | [PlainJavaAskApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/PlainJavaAskApproach.java)                                                     | Use AI Search and Java OpenAI APIs. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer for the user question. Several search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the question.                                                                                                                                                                                                                                                                                                                                                                                                                                                      | :white_check_mark:                                                                             | :x:                   |
+| Chat                 | [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java)                                                  | Use AI Search and Java OpenAI APIs. It first calls OpenAI to generate a search keyword for the chat history and then answer to the last chat question. Several search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the chat extracted keywords.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | :white_check_mark:                                                                             | :x:                   |
 | One Shot Ask         | [JavaSemanticKernelWithMemoryApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelWithMemoryApproach.java)      | Use Java Semantic Kernel framework with built-in MemoryStore for embeddings similarity search. A semantic function [RAG.AnswerQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) is defined to build the prompt using Memory Store vector search results.A customized version of SK built-in [CognitiveSearchMemoryStore](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/memory/CustomAzureCognitiveSearchMemoryStore.java) is used to map index fields populated by the documents ingestion process.                                                                                                             | :x:                                                                                            | :white_check_mark:    |
-| One Shot Ask         | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelChainsApproach.java)              | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/CognitiveSearchPlugin.java) native function and [RAG.AnswerQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) semantic function are called sequentially. Several cognitive search retrieval options are available: Text, Vector, Hybrid.                                                                                                            | :x:                                                                                            | :white_check_mark:    |
-| One Shot Ask         | [JavaSemanticKernelPlannerApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelPlannerApproach.java)            | Use Java Semantic Kernel framework with built-in Planner for functions orchestration. It uses a declarative style for AI orchestration through the built-in SequentialPlanner. SequentialPlanner call OpenAI to generate a plan for answering a question using available skills/plugins: [InformationFinder](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/CognitiveSearchPlugin.java) and [RAG](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json). Several cognitive search retrieval options are available: Text, Vector, Hybrid. ⚠️ This approach is currently disabled within the UI, pending fixes for this feature. | :x:                                                                                            | :white_check_mark:    |              
+| One Shot Ask         | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelChainsApproach.java)              | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/CognitiveSearchPlugin.java) native function and [RAG.AnswerQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) semantic function are called sequentially. Several search retrieval options are available: Text, Vector, Hybrid.                                                                                                            | :x:                                                                                            | :white_check_mark:    |
+| One Shot Ask         | [JavaSemanticKernelPlannerApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelPlannerApproach.java)            | Use Java Semantic Kernel framework with built-in Planner for functions orchestration. It uses a declarative style for AI orchestration through the built-in SequentialPlanner. SequentialPlanner call OpenAI to generate a plan for answering a question using available skills/plugins: [InformationFinder](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/CognitiveSearchPlugin.java) and [RAG](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json). Several search retrieval options are available: Text, Vector, Hybrid. ⚠️ This approach is currently disabled within the UI, pending fixes for this feature. | :x:                                                                                            | :white_check_mark:    |              
 | Chat                 | [JavaSemanticKernelWithMemoryApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelWithMemoryChatApproach.java) | Use Java Semantic Kernel framework with built-in MemoryStore for embeddings similarity search. A semantic function [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) is defined to build the prompt using Memory Store vector search results. A customized version of SK built-in [CognitiveSearchMemoryStore](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/memory/CustomAzureCognitiveSearchMemoryStore.java) is used to map index fields populated by the documents ingestion process.                                                                                                        | :x:                                                                                            | :white_check_mark:    |
-| Chat                 | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelChainsChatApproach.java)         | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/CognitiveSearchPlugin.java) native function and [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerConversation/config.json) semantic function are called sequentially. Several cognitive search retrieval options are available: Text, Vector, Hybrid.                                                                                                | :x:                                                                                            | :white_check_mark:    |
+| Chat                 | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelChainsChatApproach.java)         | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/CognitiveSearchPlugin.java) native function and [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerConversation/config.json) semantic function are called sequentially. Several search retrieval options are available: Text, Vector, Hybrid.                                                                                                | :x:                                                                                            | :white_check_mark:    |
 
 The plain Java Open AI sdk based implementations are stable. Java Semantic Kernel based implementations are still experimental and it will be consolidated as soon as Java Semantic Kernel beta version will be released. Below a brief description of the SK integration status:
 
@@ -348,13 +348,14 @@ You can now either run the pipeline manually or commit to a branch to trigger th
 ![azDoPipeline success](./docs/azDo-pipeline-success.png)
 
 ## Custom Data Ingestion and Indexing
-The repo includes sample pdf documents in the data folder. They are ingested in blob container and indexed in azure cognitive search during infra provisioning by azure developer cli post provision hooks (see line 23 in [azure.yaml](azure.yaml))
+
+The repository includes sample PDF documents in the data folder. They are ingested in a blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks (see line 23 in [azure.yaml](azure.yaml))
 
 If you want to chat with your custom documents you can:
 1. Add your pdf documents in the [data folder](./data).
 2. Open a terminal and cd to repo root folder. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java` 
 3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, cognitive search index have been updated and stored (until you want to manually delete it from your azure cognitive search instance)
+4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, AI search index has been updated and stored (until you want to manually delete it from your Azure AI Search instance)
 5. if ingestion and indexing is completed successfully you should see a message like this
 ![prepdocs success](./docs/prepdocs-success.png)
 
@@ -373,7 +374,7 @@ to production. Here are some things to consider:
 * **Azure Storage**: The default storage account uses the `Standard_LRS` SKU.
   To improve your resiliency, we recommend using `Standard_ZRS` for production deployments,
   which you can specify using the `sku` property under the `storage` module in `infra/main.bicep`.
-* **Azure Cognitive Search**: The default search service uses the `Standard` SKU
+* **Azure AI Search**: The default search service uses the `Standard` SKU
   with the free semantic search option, which gives you 1000 free queries a month.
   Assuming your app will experience more than 1000 questions, you should either change `semanticSearch`
   to "standard" or disable semantic search entirely in the `/app/backend/approaches` files.
@@ -402,7 +403,7 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 - Azure App Service: Basic Tier with 1 CPU core, 1.75 GB RAM. Pricing per hour. [Pricing](https://azure.microsoft.com/pricing/details/app-service/linux/)
 - Azure OpenAI: Standard tier, ChatGPT and Ada models. Pricing per 1K tokens used, and at least 1K tokens are used per question. [Pricing](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/)
 - Form Recognizer: SO (Standard) tier using pre-built layout. Pricing per document page, sample documents have 261 pages total. [Pricing](https://azure.microsoft.com/pricing/details/form-recognizer/)
-- Azure Cognitive Search: Standard tier, 1 replica, free level of semantic search. Pricing per hour.[Pricing](https://azure.microsoft.com/pricing/details/search/)
+- Azure AI Search: Standard tier, 1 replica, free level of semantic search. Pricing per hour.[Pricing](https://azure.microsoft.com/pricing/details/search/)
 - Azure Blob Storage: Standard tier with ZRS (Zone-redundant storage). Pricing per storage and read operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)
 - Azure Monitor: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 
@@ -413,8 +414,8 @@ either by deleting the resource group in the Portal or running `azd down`.
 
 ## Resources
 
-* [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and Cognitive Search](https://aka.ms/entgptsearchblog)
-* [Azure Cognitive Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
+* [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and AI Search](https://aka.ms/entgptsearchblog)
+* [Azure AI Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
 * [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/overview)
 
 ### Note
@@ -424,7 +425,7 @@ either by deleting the resource group in the Portal or running `azd down`.
 ### FAQ
 
 <details>
-<summary>Why do we need to break up the PDFs into chunks when Azure Cognitive Search supports searching large documents?</summary>
+<summary>Why do we need to break up the PDFs into chunks when Azure AI Search supports searching large documents?</summary>
 
 Chunking allows us to limit the amount of information we send to OpenAI due to token limits. By breaking up the content, it allows us to easily find potential chunks of text that we can inject into OpenAI. The method of chunking we use leverages a sliding window of text such that sentences that end one chunk will start the next. This allows us to reduce the chance of losing the context of the text.
 </details>
@@ -447,12 +448,12 @@ In `infra/main.bicep`, change `chatGptModelName` to 'gpt-4' instead of 'gpt-35-t
 The chat tab uses the approach programmed in [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java).
 
 - It uses the ChatGPT API to turn the user question into a good search query.
-- It queries Azure Cognitive Search for search results for that query (optionally using the vector embeddings for that query).
+- It queries Azure AI Search for search results for that query (optionally using the vector embeddings for that query).
 - It then combines the search results and original user question, and asks ChatGPT API to answer the question based on the sources. It includes the last 4K of message history as well (or however many tokens are allowed by the deployed model).
 
 The ask tab uses the approach programmed in [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java).
 
-- It queries Azure Cognitive Search for search results for the user question (optionally using the vector embeddings for that question).
+- It queries Azure AI Search for search results for the user question (optionally using the vector embeddings for that question).
 - It then combines the search results and user question, and asks ChatGPT API to answer the question based on the sources.
 
 There are also three other /ask approaches which are implemented using **Java Semantic Kernel** sdk. Development it's still experimental and it will be consolidated as soon as semantic kernel beta version will be released. Below a brief description of the SK integration status:
@@ -465,7 +466,7 @@ The `azd up` command comes from the [Azure Developer CLI](https://learn.microsof
 
 The `azd up` command uses the `azure.yaml` file combined with the infrastructure-as-code `.bicep` files in the `infra/` folder. The `azure.yaml` file for this project declares several "hooks" for the prepackage step and postprovision steps. The `up` command first runs the `prepackage` hook which installs Node dependencies and builds the React.JS-based JavaScript files. It then packages all the code (both frontend and backend) into a zip file which it will deploy later.
 
-Next, it provisions the resources based on `main.bicep` and `main.parameters.json`. At that point, since there is no default value for the OpenAI resource location, it asks you to pick a location from a short list of available regions. Then it will send requests to Azure to provision all the required resources. With everything provisioned, it runs the `postprovision` hook to process the local data and add it to an Azure Cognitive Search index.
+Next, it provisions the resources based on `main.bicep` and `main.parameters.json`. At that point, since there is no default value for the OpenAI resource location, it asks you to pick a location from a short list of available regions. Then it will send requests to Azure to provision all the required resources. With everything provisioned, it runs the `postprovision` hook to process the local data and add it to an Azure AI Search index.
 
 Finally, it looks at `azure.yaml` to determine the Azure host (appservice, in this case) and uploads the zip to Azure App Service. The `azd up` command is now complete, but it may take another 5-10 minutes for the App Service app to be fully available and working, especially for the initial deploy.
 
