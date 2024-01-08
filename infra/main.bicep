@@ -421,7 +421,7 @@ module storageRoleIndexer 'core/security/role.bicep' = {
   name: 'storage-role-indexer'
   params: {
     principalId: indexer.outputs.identityPrincipalId
-    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+    roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
     principalType: 'ServicePrincipal'
   }
 }
@@ -485,3 +485,4 @@ output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
 output BACKEND_URI string = backend.outputs.uri
+output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name
