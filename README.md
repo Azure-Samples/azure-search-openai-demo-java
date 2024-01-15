@@ -18,8 +18,8 @@ products:
 - azure-monitor
 - azure-pipelines
 urlFragment: azure-search-openai-demo-java
-name: ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
-description: It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. 
+name: ChatGPT + Enterprise data (Java)
+description: A Java sample app that chats with your data using OpenAI and AI Search.
 ---
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
 
