@@ -1,9 +1,14 @@
 ---
 page_type: sample
 languages:
+- azdeveloper
 - java
+- bicep
+- typescript
+- html
 products:
-- azure-openai
+- azure
+- azure-openai-service
 - azure-active-directory
 - azure-cognitive-search
 - azure-app-service
@@ -11,7 +16,12 @@ products:
 - github
 - document-intelligence
 - azure-monitor
+- azure-pipelines
+urlFragment: azure-search-openai-demo-java
+name: ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
+description: It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. 
 ---
+<!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
 
 # ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search - Java Version
 
