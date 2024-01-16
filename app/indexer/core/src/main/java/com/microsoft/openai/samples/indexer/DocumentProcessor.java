@@ -30,8 +30,9 @@ public class DocumentProcessor {
     }
  
     public void indexDocumentfromFile(String filepath, String category) throws IOException {
-        byte[] bytes = Files.readAllBytes(Path.of(filepath));
-       indexDocumentFromBytes(filepath, category, bytes);
+        Path path = Path.of(filepath);
+        byte[] bytes = Files.readAllBytes(path);
+       indexDocumentFromBytes(path.getFileName().toString(), category, bytes);
 
     }
 
