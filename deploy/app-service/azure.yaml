@@ -2,6 +2,7 @@
 
 name: azure-search-openai-demo
 metadata:
+
   template: azure-search-openai-demo-java@1.2.0-alpha
 services:
   backend:
@@ -12,12 +13,12 @@ services:
       prepackage:
         windows:
           shell: pwsh
-          run:  cd ../frontend;npm install;npm run build
+          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
           interactive: true
           continueOnError: false
         posix:
           shell: sh
-          run:  cd ../frontend;npm install;npm run build
+          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
           interactive: true
           continueOnError: false
 
