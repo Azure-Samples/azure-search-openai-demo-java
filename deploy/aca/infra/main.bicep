@@ -10,14 +10,12 @@ param environmentName string
 param location string
 
 
-param indexServiceName string = ''
+
 param resourceGroupName string = ''
 
-param applicationInsightsDashboardName string = ''
 param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 
-param keyVaultName string = ''
 
 
 param searchServiceName string = ''
@@ -63,23 +61,27 @@ param formRecognizerResourceGroupLocation string = location
 param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 30
+param chatGptDeploymentCapacity int = 60
 param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0613'
 param embeddingDeploymentName string // Set in main.parameters.json
-param embeddingDeploymentCapacity int = 30
+param embeddingDeploymentCapacity int = 80
 param embeddingModelName string = 'text-embedding-ada-002'
 
 param servicebusNamespace string = ''
+param serviceBusSkuName string = 'Standard'
 param queueName string = 'documents-queue'
+
 
 param containerAppsEnvironmentName string = ''
 param containerRegistryName string = ''
 
 param apiContainerAppName string = ''
 param webContainerAppName string = ''
+param indexerContainerAppName string = ''
 param apiAppExists bool = false
 param webAppExists bool = false
+param indexerAppExists bool = false
 
 // Used for the optional login and document level access control system
 param useAuthentication bool = false
@@ -97,7 +99,7 @@ param principalId string = ''
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
 
-var abbrs = loadJsonContent('../../abbreviations.json')
+var abbrs = loadJsonContent('../../shared/abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName, 'assignedTo': environmentName }
 
@@ -125,7 +127,7 @@ resource storageResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' ex
 }
 
 // Monitor application with Azure Monitor
-module monitoring '../../core/monitor/monitoring.bicep' = if (useApplicationInsights) {
+module monitoring '../../shared/monitor/monitoring.bicep' = if (useApplicationInsights) {
   name: 'monitoring'
   scope: resourceGroup
   params: {
@@ -136,30 +138,8 @@ module monitoring '../../core/monitor/monitoring.bicep' = if (useApplicationInsi
   }
 }
 
-// Store secrets in a keyvault
-module keyVault '../../core/security/keyvault.bicep' = {
-  name: 'keyvault'
-  scope: resourceGroup
-  params: {
-    name: !empty(keyVaultName) ? keyVaultName : '${abbrs.keyVaultVaults}${resourceToken}'
-    location: location
-    tags: tags
-    principalId: principalId
-  }
-}
 
-module servicebus '../../core/servicebus/servicebus.bicep' = {
-  name: 'servicebus'
-  scope: resourceGroup
-  params: {
-    namespaceName: !empty(servicebusNamespace) ? servicebusNamespace : '${abbrs.serviceBusNamespaces}${resourceToken}'
-    queueName: queueName
-    location: location
-    tags: tags
-  }
-}
-
-module containerApps '../../core/host/container-apps.bicep' = {
+module containerApps '../../shared/host/container-apps.bicep' = {
   name: 'container-apps'
   scope: resourceGroup
   params: {
@@ -185,7 +165,6 @@ module api './app/api.bicep' = {
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     containerAppsEnvironmentName: containerApps.outputs.environmentName
     containerRegistryName: containerApps.outputs.registryName
-    keyVaultName: keyVault.outputs.name
     corsAcaUrl: ''
     exists: apiAppExists
     env: [
@@ -238,6 +217,64 @@ module api './app/api.bicep' = {
   }
 }
 
+// Api backend
+module indexer './app/indexer.bicep' = {
+  name: 'indexer'
+  scope: resourceGroup
+  params: {
+    name: !empty(indexerContainerAppName) ? indexerContainerAppName : '${abbrs.appContainerApps}indexer-${resourceToken}'
+    location: location
+    tags: tags
+    identityName: '${abbrs.managedIdentityUserAssignedIdentities}indexer-${resourceToken}'
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+    containerAppsEnvironmentName: containerApps.outputs.environmentName
+    containerRegistryName: containerApps.outputs.registryName
+    exists: indexerAppExists
+    env: [
+      {
+        name: 'AZURE_STORAGE_ACCOUNT'
+        value: storage.outputs.name
+      }
+      {
+        name: 'AZURE_STORAGE_CONTAINER'
+        value: storageContainerName
+      }
+      {
+        name: 'AZURE_SEARCH_INDEX'
+        value: searchIndexName
+      }
+      {
+        name: 'AZURE_SEARCH_SERVICE'
+        value: searchService.outputs.name
+
+      }
+      {
+        name: 'AZURE_FORMRECOGNIZER_SERVICE'
+        value: formRecognizer.outputs.name
+      }
+     
+      {
+        name: 'AZURE_OPENAI_EMB_MODEL_NAME'
+        value: embeddingModelName
+      }
+     
+      {
+        name: 'AZURE_OPENAI_SERVICE'
+        value: openAiHost == 'azure' ? openAi.outputs.name : ''
+      }
+     
+      {
+        name: 'AZURE_OPENAI_EMB_DEPLOYMENT'
+        value: embeddingDeploymentName
+      }
+      {
+        name: 'AZURE_SERVICEBUS_NAMESPACE'
+        value: servicebusQueue.outputs.name
+      }
+    ]
+  }
+}
+
 module web './app/web.bicep' = {
   name: 'web'
   scope: resourceGroup
@@ -254,82 +291,8 @@ module web './app/web.bicep' = {
   }
 }
 
-/* The application frontend
-module backend 'core/host/appservice.bicep' = {
-  name: 'web'
-  scope: resourceGroup
-  params: {
-    name: !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
-    location: location
-    tags: union(tags, { 'azd-service-name': 'backend' })
-    appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'java'
-    runtimeVersion: '17-java17'
-    scmDoBuildDuringDeployment: true
-    managedIdentity: true
-    allowedOrigins: [allowedOrigin]
-    appSettings: {
 
-      
-      APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
-      ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
-      XDT_MicrosoftApplicationInsights_Java: useApplicationInsights ? '1' : '0'
-      // Shared by all OpenAI deployments
-      OPENAI_HOST: openAiHost
-      
-      
-      // Specific to Azure OpenAI
-      
-      
-      
-      // Used only with non-Azure OpenAI deployments
-      OPENAI_API_KEY: openAiApiKey
-      OPENAI_ORGANIZATION: openAiApiOrganization
-      // Optional login and document level access control system
-      AZURE_USE_AUTHENTICATION: useAuthentication
-      AZURE_SERVER_APP_ID: serverAppId
-      AZURE_SERVER_APP_SECRET: serverAppSecret
-      AZURE_CLIENT_APP_ID: clientAppId
-      AZURE_TENANT_ID: tenant().tenantId
-      // CORS support, for frontends on other hosts
-      ALLOWED_ORIGIN: allowedOrigin
-    }
-  }
-}
-
-
-module indexer '../../core/host/functions.bicep' = {
-  name: 'indexer'
-  scope: resourceGroup
-  params: {
-    name: !empty(indexServiceName) ? indexServiceName : '${abbrs.webSitesFunctions}indexer-${resourceToken}'
-    location: location
-    tags: union(tags, { 'azd-service-name': 'indexer' })
-    appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'java'
-    runtimeVersion: '17'
-    kind:'functionapp,linux'
-    scmDoBuildDuringDeployment: false
-    managedIdentity: true
-    allowedOrigins: [allowedOrigin]
-    storageAccountName: storage.outputs.name
-    appSettings: {
-      AZURE_STORAGE_ACCOUNT: storage.outputs.name
-      AZURE_STORAGE_CONTAINER: storageContainerName
-      AZURE_SEARCH_INDEX: searchIndexName
-      AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_FORMRECOGNIZER_SERVICE: formRecognizer.outputs.name
-      AZURE_OPENAI_SERVICE: openAiHost == 'azure' ? openAi.outputs.name : ''
-      AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
-      APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
-      ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
-      XDT_MicrosoftApplicationInsights_Java: useApplicationInsights ? '1' : '0'
-      ALLOWED_ORIGIN: allowedOrigin
-    }
-  }
-}
-*/
-module openAi '../../core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
+module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
   name: 'openai'
   scope: openAiResourceGroup
   params: {
@@ -368,7 +331,7 @@ module openAi '../../core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure
   }
 }
 
-module formRecognizer '../../core/ai/cognitiveservices.bicep' = {
+module formRecognizer '../../shared/ai/cognitiveservices.bicep' = {
   name: 'formrecognizer'
   scope: formRecognizerResourceGroup
   params: {
@@ -382,7 +345,7 @@ module formRecognizer '../../core/ai/cognitiveservices.bicep' = {
   }
 }
 
-module searchService '../../core/search/search-services.bicep' = {
+module searchService '../../shared/search/search-services.bicep' = {
   name: 'search-service'
   scope: searchServiceResourceGroup
   params: {
@@ -401,7 +364,7 @@ module searchService '../../core/search/search-services.bicep' = {
   }
 }
 
-module storage '../../core/storage/storage-account.bicep' = {
+module storage '../../shared/storage/storage-account.bicep' = {
   name: 'storage'
   scope: storageResourceGroup
   params: {
@@ -426,8 +389,33 @@ module storage '../../core/storage/storage-account.bicep' = {
   }
 }
 
+module servicebusQueue '../../shared/servicebus/servicebus-queue.bicep' = {
+  name: 'servicebusQueue'
+  scope: resourceGroup
+  params: {
+    namespaceName: !empty(servicebusNamespace) ? servicebusNamespace : '${abbrs.serviceBusNamespaces}${resourceToken}'
+    skuName: serviceBusSkuName
+    queueName: queueName
+    location: location
+    tags: tags
+  }
+}
+
+module eventGridSubscription '../../shared/event/eventgrid.bicep' = {
+  name: 'eventGridSubscription'
+  scope: resourceGroup
+  params: {
+    location: location
+    storageAccountName: storage.outputs.name
+    serviceBusNamespaceName: servicebusQueue.outputs.name
+    queueName: servicebusQueue.outputs.queueName
+    subscriptionName: '${abbrs.eventGridEventSubscriptions}blob-uploads-2-servicebus-queue'
+    systemTopicName:'${abbrs.eventGridDomainsTopics}${resourceToken}'
+  }
+}
+
 // USER ROLES
-module openAiRoleUser '../../core/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleUser '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
   name: 'openai-role-user'
   params: {
@@ -437,7 +425,7 @@ module openAiRoleUser '../../core/security/role.bicep' = if (openAiHost == 'azur
   }
 }
 
-module formRecognizerRoleUser '../../core/security/role.bicep' = {
+module formRecognizerRoleUser '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
   name: 'formrecognizer-role-user'
   params: {
@@ -447,7 +435,7 @@ module formRecognizerRoleUser '../../core/security/role.bicep' = {
   }
 }
 
-module storageRoleUser '../../core/security/role.bicep' = {
+module storageRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-user'
   params: {
@@ -457,7 +445,7 @@ module storageRoleUser '../../core/security/role.bicep' = {
   }
 }
 
-module storageContribRoleUser '../../core/security/role.bicep' = {
+module storageContribRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-contribrole-user'
   params: {
@@ -467,7 +455,7 @@ module storageContribRoleUser '../../core/security/role.bicep' = {
   }
 }
 
-module searchRoleUser '../../core/security/role.bicep' = {
+module searchRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-user'
   params: {
@@ -477,7 +465,7 @@ module searchRoleUser '../../core/security/role.bicep' = {
   }
 }
 
-module searchContribRoleUser '../../core/security/role.bicep' = {
+module searchContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-contrib-role-user'
   params: {
@@ -487,7 +475,7 @@ module searchContribRoleUser '../../core/security/role.bicep' = {
   }
 }
 
-module searchSvcContribRoleUser '../../core/security/role.bicep' = {
+module searchSvcContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-svccontrib-role-user'
   params: {
@@ -499,7 +487,7 @@ module searchSvcContribRoleUser '../../core/security/role.bicep' = {
 
 // SYSTEM IDENTITIES
 
-module openAiRoleBackend '../../core/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleBackend '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
   name: 'openai-role-backend'
   params: {
@@ -509,19 +497,19 @@ module openAiRoleBackend '../../core/security/role.bicep' = if (openAiHost == 'a
   }
 }
 
-/*
-module openAiRoleIndexer '../../core/security/role.bicep' = {
+
+module openAiRoleIndexer '../../shared/security/role.bicep' = {
   scope: openAiResourceGroup
   name: 'openai-role-indexer'
   params: {
-    principalId: indexer.outputs.identityPrincipalId
+    principalId: indexer.outputs.SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
     principalType: 'ServicePrincipal'
   }
 }
-*/
 
-module storageRoleBackend '../../core/security/role.bicep' = {
+
+module storageRoleBackend '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-backend'
   params: {
@@ -531,19 +519,19 @@ module storageRoleBackend '../../core/security/role.bicep' = {
   }
 }
 
-/*
-module storageRoleIndexer '../../core/security/role.bicep' = {
+
+module storageRoleIndexer '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-indexer'
   params: {
-    principalId: indexer.outputs.identityPrincipalId
+    principalId: indexer.outputs.SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID
     roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
     principalType: 'ServicePrincipal'
   }
 }
-*/
 
-module searchRoleBackend '../../core/security/role.bicep' = {
+
+module searchRoleBackend '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-backend'
   params: {
@@ -553,29 +541,39 @@ module searchRoleBackend '../../core/security/role.bicep' = {
   }
 }
 
-/*
-module searchRoleIndexer '../../core/security/role.bicep' = {
+
+module searchRoleIndexer '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-indexer'
   params: {
-    principalId: indexer.outputs.identityPrincipalId
+    principalId: indexer.outputs.SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID
     roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
     principalType: 'ServicePrincipal'
   }
 } 
 
 
-module formRecognizerRoleIndexer '../../core/security/role.bicep' = {
+module formRecognizerRoleIndexer '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
   name: 'formrecognizer-role-indexer'
   params: {
-    principalId: indexer.outputs.identityPrincipalId
+    principalId: indexer.outputs.SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID
     roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
     principalType: 'ServicePrincipal'
   }
 }
 
-*/
+module serviceBusRoleIndexer '../../shared/security/role.bicep' = {
+  scope: resourceGroup
+  name: 'serviceBusRole-role-indexer'
+  params: {
+    principalId: indexer.outputs.SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
@@ -584,8 +582,6 @@ output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
 output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
-output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
-output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 
 // Shared by all OpenAI deployments
 output OPENAI_HOST string = openAiHost
@@ -610,6 +606,9 @@ output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.n
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
+
+output AZURE_SERVICEBUS_NAMESPACE string = servicebusQueue.outputs.name
+output AZURE_SERVICEBUS_SKU_NAME string = servicebusQueue.outputs.skuName
 
 // output BACKEND_URI string = backend.outputs.uri
 // output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name

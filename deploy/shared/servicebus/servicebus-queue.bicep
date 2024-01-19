@@ -31,9 +31,14 @@ resource queues 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' =  {
     deadLetterQueue
   ]
   properties: {
+    lockDuration: 'PT3M'
     forwardDeadLetteredMessagesTo: deadLetterQueueName
   }
 }
+
+output name string = serviceBusNamespace.name
+output skuName string = serviceBusNamespace.sku.name
+output queueName string = queues.name
 
 
 

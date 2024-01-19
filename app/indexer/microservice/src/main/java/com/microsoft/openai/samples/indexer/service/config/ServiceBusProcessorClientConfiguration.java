@@ -1,14 +1,9 @@
 package com.microsoft.openai.samples.indexer.service.config;
 
-import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
-import com.azure.spring.cloud.service.servicebus.consumer.ServiceBusErrorHandler;
-import com.azure.spring.cloud.service.servicebus.consumer.ServiceBusRecordMessageListener;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 //@Configuration(proxyBeanMethods = false)
 public class ServiceBusProcessorClientConfiguration {
 
+    /**
     @Bean
     ServiceBusRecordMessageListener processMessage() {
         return context -> {
@@ -25,4 +20,6 @@ public class ServiceBusProcessorClientConfiguration {
                     context.getFullyQualifiedNamespace(), context.getEntityPath());
         };
     }
+
+    **/
 }

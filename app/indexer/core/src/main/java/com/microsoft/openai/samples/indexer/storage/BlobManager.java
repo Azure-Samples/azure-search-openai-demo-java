@@ -1,39 +1,49 @@
 package com.microsoft.openai.samples.indexer.storage;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
 import com.azure.core.credential.TokenCredential;
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.*;
 
 public class BlobManager {
     private String endpoint;
     private String container;
-    private TokenCredential credential;
     private boolean verbose;
     private BlobServiceClient blobServiceClient;
 
-    public BlobManager(String storageAccountName, String container, TokenCredential credential, boolean verbose) {
+    private BlobContainerClient blobcontainerClient;
+
+    public BlobManager(String storageAccountName, String container, TokenCredential tokenCredential, boolean verbose) {
         this.endpoint = "https://%s.blob.core.windows.net".formatted(storageAccountName);
         this.container = container;
-        this.credential = credential;
         this.verbose = verbose;
-        this.blobServiceClient = new BlobServiceClientBuilder().endpoint(endpoint).credential(credential).buildClient();
+        this.blobServiceClient = new BlobServiceClientBuilder().endpoint(endpoint).credential(tokenCredential).buildClient();
+        this.blobcontainerClient =   new BlobContainerClientBuilder().endpoint(endpoint).credential(tokenCredential).containerName(container).buildClient();
     }
 
-    public BlobManager(String storageAccountName, String container, TokenCredential credential, boolean verbose, BlobServiceClient blobServiceClient) {
+    public BlobManager(String storageAccountName, String container, TokenCredential tokenCredential, boolean verbose, BlobServiceClient blobServiceClient) {
         this.endpoint = "https://%s.blob.core.windows.net".formatted(storageAccountName);
         this.container = container;
-        this.credential = credential;
         this.verbose = verbose;
         this.blobServiceClient = blobServiceClient;
+        this.blobcontainerClient =   new BlobContainerClientBuilder().endpoint(endpoint).credential(tokenCredential).containerName(container).buildClient();
     }
 
+    public byte[] getFileAsBytes(String fileName) throws IOException {
+        var blobClient = blobcontainerClient.getBlobClient(fileName);
+        int dataSize = (int) blobClient.getProperties().getBlobSize();
+
+        // There is no need to close ByteArrayOutputStream.
+        // https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(dataSize);
+        blobClient.downloadStream(outputStream);
+
+        return outputStream.toByteArray();
+    }
     
     public void uploadBlob(File file) throws IOException {
         BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(container);
@@ -53,11 +63,8 @@ public class BlobManager {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException("Blob File Path cannot be null or empty");
         }
-
-        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().endpoint(endpoint).credential(credential).buildClient();
-        BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(container);
         
-        if (!containerClient.exists()) {
+        if (!blobcontainerClient.exists()) {
             return;
         }
 
@@ -65,9 +72,9 @@ public class BlobManager {
         File file = new File(path);
         String prefix = file.getName().split("\\.")[0];
         Pattern pattern = Pattern.compile(prefix + "-\\d+\\.pdf");
-        
 
-        containerClient.listBlobs().forEach(blobItem -> {
+
+        blobcontainerClient.listBlobs().forEach(blobItem -> {
             String blobPath = blobItem.getName();
 
             if (prefix != null && !pattern.matcher(blobPath).matches()) {
@@ -82,7 +89,7 @@ public class BlobManager {
                 System.out.println("\tRemoving blob " + blobPath);
             }
 
-            containerClient.getBlobClient(blobPath).delete();
+            blobcontainerClient.getBlobClient(blobPath).delete();
         });
     }
 

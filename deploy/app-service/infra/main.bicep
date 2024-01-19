@@ -84,7 +84,7 @@ param principalId string = ''
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
 
-var abbrs = loadJsonContent('abbreviations.json')
+var abbrs = loadJsonContent('../../shared/abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName, 'assignedTo': environmentName }
 
@@ -112,7 +112,7 @@ resource storageResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' ex
 }
 
 // Monitor application with Azure Monitor
-module monitoring 'core/monitor/monitoring.bicep' = if (useApplicationInsights) {
+module monitoring '../../shared/monitor/monitoring.bicep' = if (useApplicationInsights) {
   name: 'monitoring'
   scope: resourceGroup
   params: {
@@ -124,7 +124,7 @@ module monitoring 'core/monitor/monitoring.bicep' = if (useApplicationInsights) 
 }
 
 // Create an App Service Plan to group applications under the same payment plan and SKU
-module appServicePlan 'core/host/appserviceplan.bicep' = {
+module appServicePlan '../../shared/host/appserviceplan.bicep' = {
   name: 'appserviceplan'
   scope: resourceGroup
   params: {
@@ -140,7 +140,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 }
 
 // The application frontend
-module backend 'core/host/appservice.bicep' = {
+module backend '../../shared/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
   params: {
@@ -186,7 +186,7 @@ module backend 'core/host/appservice.bicep' = {
   }
 }
 
-module indexer 'core/host/functions.bicep' = {
+module indexer '../../shared/host/functions.bicep' = {
   name: 'indexer'
   scope: resourceGroup
   params: {
@@ -217,7 +217,7 @@ module indexer 'core/host/functions.bicep' = {
   }
 }
 
-module openAi 'core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
+module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
   name: 'openai'
   scope: openAiResourceGroup
   params: {
@@ -256,7 +256,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
   }
 }
 
-module formRecognizer 'core/ai/cognitiveservices.bicep' = {
+module formRecognizer '../../shared/ai/cognitiveservices.bicep' = {
   name: 'formrecognizer'
   scope: formRecognizerResourceGroup
   params: {
@@ -270,7 +270,7 @@ module formRecognizer 'core/ai/cognitiveservices.bicep' = {
   }
 }
 
-module searchService 'core/search/search-services.bicep' = {
+module searchService '../../shared/search/search-services.bicep' = {
   name: 'search-service'
   scope: searchServiceResourceGroup
   params: {
@@ -289,7 +289,7 @@ module searchService 'core/search/search-services.bicep' = {
   }
 }
 
-module storage 'core/storage/storage-account.bicep' = {
+module storage '../../shared/storage/storage-account.bicep' = {
   name: 'storage'
   scope: storageResourceGroup
   params: {
@@ -315,7 +315,7 @@ module storage 'core/storage/storage-account.bicep' = {
 }
 
 // USER ROLES
-module openAiRoleUser 'core/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleUser '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
   name: 'openai-role-user'
   params: {
@@ -325,7 +325,7 @@ module openAiRoleUser 'core/security/role.bicep' = if (openAiHost == 'azure') {
   }
 }
 
-module formRecognizerRoleUser 'core/security/role.bicep' = {
+module formRecognizerRoleUser '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
   name: 'formrecognizer-role-user'
   params: {
@@ -335,7 +335,7 @@ module formRecognizerRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module storageRoleUser 'core/security/role.bicep' = {
+module storageRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-user'
   params: {
@@ -345,7 +345,7 @@ module storageRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module storageContribRoleUser 'core/security/role.bicep' = {
+module storageContribRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-contribrole-user'
   params: {
@@ -355,7 +355,7 @@ module storageContribRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleUser 'core/security/role.bicep' = {
+module searchRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-user'
   params: {
@@ -365,7 +365,7 @@ module searchRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module searchContribRoleUser 'core/security/role.bicep' = {
+module searchContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-contrib-role-user'
   params: {
@@ -375,7 +375,7 @@ module searchContribRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module searchSvcContribRoleUser 'core/security/role.bicep' = {
+module searchSvcContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-svccontrib-role-user'
   params: {
@@ -386,7 +386,7 @@ module searchSvcContribRoleUser 'core/security/role.bicep' = {
 }
 
 // SYSTEM IDENTITIES
-module openAiRoleBackend 'core/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleBackend '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
   name: 'openai-role-backend'
   params: {
@@ -396,7 +396,7 @@ module openAiRoleBackend 'core/security/role.bicep' = if (openAiHost == 'azure')
   }
 }
 
-module openAiRoleIndexer 'core/security/role.bicep' = {
+module openAiRoleIndexer '../../shared/security/role.bicep' = {
   scope: openAiResourceGroup
   name: 'openai-role-indexer'
   params: {
@@ -406,7 +406,7 @@ module openAiRoleIndexer 'core/security/role.bicep' = {
   }
 }
 
-module storageRoleBackend 'core/security/role.bicep' = {
+module storageRoleBackend '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-backend'
   params: {
@@ -416,7 +416,7 @@ module storageRoleBackend 'core/security/role.bicep' = {
   }
 }
 
-module storageRoleIndexer 'core/security/role.bicep' = {
+module storageRoleIndexer '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-indexer'
   params: {
@@ -426,7 +426,7 @@ module storageRoleIndexer 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleBackend 'core/security/role.bicep' = {
+module searchRoleBackend '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-backend'
   params: {
@@ -436,7 +436,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleIndexer 'core/security/role.bicep' = {
+module searchRoleIndexer '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-indexer'
   params: {
@@ -446,7 +446,7 @@ module searchRoleIndexer 'core/security/role.bicep' = {
   }
 } 
 
-module formRecognizerRoleIndexer 'core/security/role.bicep' = {
+module formRecognizerRoleIndexer '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
   name: 'formrecognizer-role-indexer'
   params: {

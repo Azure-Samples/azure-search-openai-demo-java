@@ -3,8 +3,20 @@ metadata description = 'Creates an event grid system topic and Azure storage acc
 
 param location string = resourceGroup().location
 param systemTopicName string 
+param subscriptionName string
 param storageAccountName string
+param serviceBusNamespaceName string
+param queueName string
 
+
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
+  name: serviceBusNamespaceName
+}
+
+resource queue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' existing = {
+  name: queueName
+  parent: serviceBusNamespace
+}
 
 resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageAccountName
@@ -19,19 +31,19 @@ resource eventgridSystemTopic 'Microsoft.EventGrid/systemTopics@2023-12-15-previ
   }
 }
 
-resource systemTopics_egt_documents_s24ysc6s4pxb6_name_documents_upload_listener 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2023-12-15-preview' = {
+resource serviceBusEventGridSubscription 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2023-12-15-preview' = {
   parent: eventgridSystemTopic
-  name: 'documents-upload-listener'
+  name: subscriptionName
   properties: {
     destination: {
       properties: {
-        maxEventsPerBatch: 1
-        preferredBatchSizeInKilobytes: 64
+        resourceId: queue.id
       }
-      endpointType: 'WebHook'
+      endpointType: 'ServiceBusQueue'
     }
     filter: {
-      subjectBeginsWith: '/blobServices/default/containers/content'
+      
+      //subjectBeginsWith: '/blobServices/default/containers/content'
       includedEventTypes: [
         'Microsoft.Storage.BlobCreated'
       ]

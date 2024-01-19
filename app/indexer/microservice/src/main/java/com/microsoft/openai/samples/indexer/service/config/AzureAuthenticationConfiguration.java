@@ -25,6 +25,7 @@ public class AzureAuthenticationConfiguration {
 
     @Bean
     @Profile("default")
+    @Primary
     public TokenCredential managedIdentityTokenCredential() {
         if (this.clientId.equals("system-managed-identity"))
             return new ManagedIdentityCredentialBuilder().build();

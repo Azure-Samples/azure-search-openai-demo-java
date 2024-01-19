@@ -3,44 +3,47 @@ param location string = resourceGroup().location
 param tags object = {}
 
 param identityName string
-param apiBaseUrl string
 param applicationInsightsName string
 param containerAppsEnvironmentName string
 param containerRegistryName string
-param serviceName string = 'web'
+param serviceName string = 'indexer'
 param exists bool
 
-resource webIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+@description('The environment variables for the container')
+param env array = []
+
+resource indexerIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: identityName
   location: location
 }
 
-module app '../../../core/host/container-app-upsert.bicep' = {
+module app '../../../shared/host/container-app-upsert.bicep' = {
   name: '${serviceName}-container-app'
   params: {
     name: name
     location: location
     tags: union(tags, { 'azd-service-name': serviceName })
     identityType: 'UserAssigned'
-    identityName: identityName
+    identityName: indexerIdentity.name
     exists: exists
     containerAppsEnvironmentName: containerAppsEnvironmentName
     containerRegistryName: containerRegistryName
-    env: [
+    containerCpuCoreCount: '1.0'
+    containerMemory: '2.0Gi'
+    targetPort: 8080
+    env: union(env, [
       {
-        name: 'REACT_APP_APPLICATIONINSIGHTS_CONNECTION_STRING'
-        value: applicationInsights.properties.ConnectionString
+        name: 'AZURE_CLIENT_ID'
+        value: indexerIdentity.properties.clientId
       }
-      {
-        name: 'REACT_APP_API_BASE_URL'
-        value: apiBaseUrl
-      }
+     
       {
         name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
         value: applicationInsights.properties.ConnectionString
       }
-    ]
-    targetPort: 80
+      
+    ])
+    
   }
 }
 
@@ -48,7 +51,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: applicationInsightsName
 }
 
-output SERVICE_WEB_IDENTITY_PRINCIPAL_ID string = webIdentity.properties.principalId
-output SERVICE_WEB_NAME string = app.outputs.name
-output SERVICE_WEB_URI string = app.outputs.uri
-output SERVICE_WEB_IMAGE_NAME string = app.outputs.imageName
+output SERVICE_INDEXER_IDENTITY_PRINCIPAL_ID string = indexerIdentity.properties.principalId
+output SERVICE_INDEXER_NAME string = app.outputs.name
+output SERVICE_INDEXER_URI string = app.outputs.uri
+output SERVICE_INDEXER_IMAGE_NAME string = app.outputs.imageName
