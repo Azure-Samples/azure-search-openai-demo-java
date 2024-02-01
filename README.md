@@ -8,8 +8,8 @@ languages:
 - html
 products:
 - azure
-- azure-openai-service
-- azure-active-directory
+- azure-openai
+- active-directory
 - azure-cognitive-search
 - azure-app-service
 - azure-sdks
