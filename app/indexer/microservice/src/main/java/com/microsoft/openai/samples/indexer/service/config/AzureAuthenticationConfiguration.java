@@ -3,6 +3,7 @@ package com.microsoft.openai.samples.indexer.service.config;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.identity.AzureCliCredentialBuilder;
+import com.azure.identity.EnvironmentCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,12 @@ public class AzureAuthenticationConfiguration {
         return new AzureCliCredentialBuilder().build();
     }
 
+    @Profile("docker")
+    @Bean
+    @Primary
+    public TokenCredential servicePrincipalTokenCredential() {
+        return new EnvironmentCredentialBuilder().build();
+    }
     @Bean
     @Profile("default")
     @Primary

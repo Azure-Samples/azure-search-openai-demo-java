@@ -1,0 +1,51 @@
+services:
+  frontend:
+    image: ai-chat-reference-java/frontend
+    build: ./frontend
+    environment:
+      REACT_APP_API_BASE_URL: "http://backend:8080"
+    ports:
+      - "80:80"
+  backend:
+    image: ai-chat-reference-java/backend
+    build: ./backend
+    environment:
+      - AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT}
+      - AZURE_STORAGE_CONTAINER=${AZURE_STORAGE_CONTAINER}
+      - AZURE_SEARCH_INDEX=${AZURE_SEARCH_INDEX}
+      - AZURE_SEARCH_SERVICE=${AZURE_SEARCH_SERVICE}
+      - AZURE_SEARCH_QUERY_LANGUAGE=${AZURE_SEARCH_QUERY_LANGUAGE}
+      - AZURE_SEARCH_QUERY_SPELLER=${AZURE_SEARCH_QUERY_SPELLER}
+      - AZURE_OPENAI_EMB_MODEL_NAME=${AZURE_OPENAI_EMB_MODEL_NAME}
+      - AZURE_OPENAI_EMB_DEPLOYMENT=${AZURE_OPENAI_EMB_DEPLOYMENT}
+      - AZURE_OPENAI_CHATGPT_MODEL=${AZURE_OPENAI_CHATGPT_MODEL}
+      - AZURE_OPENAI_SERVICE=${AZURE_OPENAI_SERVICE}
+      - AZURE_OPENAI_CHATGPT_DEPLOYMENT=${AZURE_OPENAI_CHATGPT_DEPLOYMENT}
+      - spring_profiles_active=docker
+      - AZURE_CLIENT_ID=${servicePrincipal}
+      - AZURE_CLIENT_SECRET=${servicePrincipalPassword}
+      - AZURE_TENANT_ID=${servicePrincipalTenant}
+    ports:
+      - "8080:8080"
+  indexer:
+    image: ai-chat-reference-java/indexer
+    build:
+      context: ./indexer
+      dockerfile: microservice/Dockerfile
+    environment:
+      - AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT}
+      - AZURE_STORAGE_CONTAINER=${AZURE_STORAGE_CONTAINER}
+      - AZURE_SEARCH_INDEX=${AZURE_SEARCH_INDEX}
+      - AZURE_SEARCH_SERVICE=${AZURE_SEARCH_SERVICE}
+      - AZURE_FORMRECOGNIZER_SERVICE=${AZURE_FORMRECOGNIZER_SERVICE}
+      - AZURE_SEARCH_QUERY_SPELLER=${AZURE_SEARCH_QUERY_SPELLER}
+      - AZURE_OPENAI_EMB_MODEL_NAME=${AZURE_OPENAI_EMB_MODEL_NAME}
+      - AZURE_OPENAI_EMB_DEPLOYMENT=${AZURE_OPENAI_EMB_DEPLOYMENT}
+      - AZURE_OPENAI_SERVICE=${AZURE_OPENAI_SERVICE}
+      - AZURE_SERVICEBUS_NAMESPACE=${AZURE_SERVICEBUS_NAMESPACE}
+      - spring_profiles_active=docker
+      - SPRING_CONFIG_LOCATION=classpath:/local-dev.properties
+      - AZURE_CLIENT_ID=${servicePrincipal}
+      - AZURE_CLIENT_SECRET=${servicePrincipalPassword}
+      - AZURE_TENANT_ID=${servicePrincipalTenant}
+
