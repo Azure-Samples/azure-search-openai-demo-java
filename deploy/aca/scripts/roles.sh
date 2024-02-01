@@ -8,6 +8,7 @@ done <<< "$output"
 
 echo "Environment variables set."
 
+
 roles=(
     "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
     "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1"

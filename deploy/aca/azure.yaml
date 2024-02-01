@@ -14,7 +14,6 @@ services:
     host: containerapp
     docker:
       path: ./microservice/Dockerfile
-    
   web:
     project: ../../app/frontend
     language: js

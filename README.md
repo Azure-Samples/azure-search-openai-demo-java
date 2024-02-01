@@ -31,6 +31,10 @@ It demonstrates best practices for creating ChatGPT-like experiences over your o
 
 This repository includes sample data so it's ready to try end to end. In this sample application we use a fictitious company called Contoso Electronics, and the experience allows its employees to ask questions about the benefits, internal policies, as well as job descriptions and roles.
 
+> [!NOTE]
+> This sample supports different architectural styles. It can be deployed as standalone app on top of Azure App Service or as a microservice event driven architecture hosted by Azure Container Apps. This page refers to the Azure App Service deployment. For Azure Container Apps deployment, see [here](docs/aca/README-ACA.md).
+
+
 ## TL;DR
 
 Open the project:
@@ -41,6 +45,7 @@ Open the project:
 Open the terminal and run:
 
 ```shell
+cd deploy/app-service
 azd auth login
 azd up
 ```
@@ -115,9 +120,6 @@ All prerequisites are already installed in the container.  You can skip to the [
 * [Java 17](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
 * [Maven 3.8.x](https://maven.apache.org/download.cgi)
 * [Azure Developer CLI](https://aka.ms/azure-dev/install)
-* [Python 3+](https://www.python.org/downloads/)
-  * **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
-  * **Important**: Ensure you can run `python --version` from console. On Ubuntu, you might need to run `sudo apt install python-is-python3` to link `python` to `python3`.
 * [Node.js](https://nodejs.org/en/download/)
 * [Git](https://git-scm.com/downloads)
 * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
@@ -131,6 +133,9 @@ All prerequisites are already installed in the container.  You can skip to the [
 You can clone this repo and change directory to the root of the repo. Or you can run `azd init -t Azure-Samples/azure-search-openai-demo-java`.
 
 Once you have the project available locally, run the following commands if you don't have any pre-existing Azure services and want to start from a fresh deployment.
+
+> [!IMPORTANT]
+> All the commands below assume be run from the `deploy/app-service` folder
 
 1. Run 
 
@@ -360,7 +365,7 @@ The repository includes sample pdf documents in the data folder. They are ingest
 
 If you want to chat with your custom documents you can:
 1. Add your pdf documents in the [data folder](./data).
-2. Open a terminal and cd to repo root folder. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java` 
+2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/app-service` 
 3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
 4. Wait the script to complete. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
 5. if ingestion and indexing is completed successfully you should see a message like this
@@ -414,7 +419,7 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 - Azure Blob Storage: Standard tier with ZRS (Zone-redundant storage). Pricing per storage and read operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)
 - Azure Monitor: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 
-To reduce costs, you can switch to free SKUs for Azure App Service and Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or by removing the postprovision hook in `azure.yaml` that runs the `prepdocs.py` script.
+To reduce costs, you can switch to free SKUs for Azure App Service and Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or by removing the postprovision hook in `azure.yaml` that runs the `indexer java cli`.
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
 either by deleting the resource group in the Portal or running `azd down`.
