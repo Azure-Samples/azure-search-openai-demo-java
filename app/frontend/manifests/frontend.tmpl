@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: { { .Env.SERVICE_WEB_IMAGE_NAME } }
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: azd-env-configmap
+          env:
+            - name: REACT_APP_API_BASE_URL
+              value: "http://backend-service"
+            - name: REACT_APP_APPLICATIONINSIGHTS_CONNECTION_STRING
+              value: { { .Env.REACT_APP_APPLICATIONINSIGHTS_CONNECTION_STRING } }
+...
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: frontend

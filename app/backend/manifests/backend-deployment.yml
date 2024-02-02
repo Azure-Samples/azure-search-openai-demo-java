@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: crz7nmzhah37yks.azurecr.io/azure-search-openai-demo/api-azure-search-openai-demo-aks:azd-deploy-1706893758
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: azd-env-configmap
+          resources:
+            requests:
+              memory: "2Gi"
+
