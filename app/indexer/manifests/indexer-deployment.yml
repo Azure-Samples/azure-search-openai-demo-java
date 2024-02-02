@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-deployment
+  labels:
+    app: indexer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer
+  template:
+    metadata:
+      labels:
+        app: indexer
+    spec:
+      containers:
+        - name: indexer
+          image: crz7nmzhah37yks.azurecr.io/azure-search-openai-demo/indexer-azure-search-openai-demo-aks:azd-deploy-1706893760
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: azd-env-configmap
+          resources:
+            requests:
+              memory: "2Gi"
+
+
