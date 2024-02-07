@@ -276,84 +276,66 @@ module eventGridSubscription '../../shared/event/eventgrid.bicep' = {
   }
 }
 
-// USER ROLES
-module openAiRoleUser '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleAKS '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: openAiResourceGroup
-  name: 'openai-role-user'
+  name: 'openai-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'User'
   }
 }
 
-module formRecognizerRoleUser '../../shared/security/role.bicep' = {
+module formRecognizerRoleAKS '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
-  name: 'formrecognizer-role-user'
+  name: 'formrecognizer-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
-    principalType: 'User'
   }
 }
 
-module storageRoleUser '../../shared/security/role.bicep' = {
+module storageRoleAKS '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
-  name: 'storage-role-user'
+  name: 'storage-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
-    principalType: 'User'
   }
 }
 
-module storageContribRoleUser '../../shared/security/role.bicep' = {
+module storageContribRoleAKS '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
-  name: 'storage-contribrole-user'
+  name: 'storage-contribrole-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-    principalType: 'User'
   }
 }
 
-module searchRoleUser '../../shared/security/role.bicep' = {
+module searchRoleAKS '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
-  name: 'search-role-user'
+  name: 'search-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
-    principalType: 'User'
   }
 }
 
-module searchContribRoleUser '../../shared/security/role.bicep' = {
+module searchContribRoleAKS '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
-  name: 'search-contrib-role-user'
+  name: 'search-contrib-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
-    principalType: 'User'
   }
 }
 
-module searchSvcContribRoleUser '../../shared/security/role.bicep' = {
+module searchSvcContribRoleAKS '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
-  name: 'search-svccontrib-role-user'
+  name: 'search-svccontrib-role-aks'
   params: {
-    principalId: principalId
+    principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
-    principalType: 'User'
-  }
-}
-
-module acrRoleUser '../../shared/security/role.bicep' = {
-  scope: resourceGroup
-  name: 'acr-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec'
-    principalType: 'User'
   }
 }
 
@@ -394,7 +376,7 @@ output AZURE_SERVICEBUS_SKU_NAME string = servicebusQueue.outputs.skuName
 
 // AKS related deployment vars
 output AZURE_AKS_CLUSTER_NAME string = aks.outputs.clusterName
-output AZURE_CLIENT_ID string = principalId
+output AZURE_CLIENT_ID string = aks.outputs.clusterIdentity.clientId //principalId
 output API_ALLOW_ORIGINS string = allowedOrigin
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint

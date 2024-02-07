@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: indexer-deployment
+  namespace: azure-open-ai
   labels:
     app: indexer
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: indexer
-          image: crz7nmzhah37yks.azurecr.io/azure-search-openai-demo/indexer-azure-search-openai-demo-aks:azd-deploy-1706893760
+          image: {{.Env.SERVICE_INDEXER_IMAGE_NAME}}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -26,5 +27,3 @@ spec:
           resources:
             requests:
               memory: "2Gi"
-
-

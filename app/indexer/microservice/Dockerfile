@@ -14,7 +14,7 @@ RUN chmod +x ./mvnw
 # Convert CRLF to LF
 RUN sed -i 's/\r$//' ./mvnw
 # Added -P dev for testing purposes
-RUN ./mvnw package -DskipTests -Pdev
+RUN ./mvnw package -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../../microservice/target/*.jar)
 
 FROM mcr.microsoft.com/openjdk/jdk:17-mariner
@@ -23,8 +23,6 @@ ARG DEPENDENCY=/workspace/app/target/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-
-ENV SPRING_PROFILES_ACTIVE=dev
 
 RUN curl -LJ -o /app/applicationinsights-agent-3.4.19.jar https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.4.19/applicationinsights-agent-3.4.19.jar
 COPY microservice/applicationinsights.json /app
