@@ -2,22 +2,15 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-api
-  namespace: default
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  namespace: azure-open-ai
+#  annotations: 
+#   nginx.ingress.kubernetes.io/use-regex: "true"
+#   nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: webapprouting.kubernetes.azure.com
   rules:
     - http:
         paths:
-          #- path: /api(/|$)(.*)
-          #  pathType: Prefix
-          #  backend:
-          #    service:
-          #      name: backend-service
-          #      port:
-          #        number: 80
           - path: /
             pathType: Prefix
             backend:

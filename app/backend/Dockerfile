@@ -24,4 +24,6 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 RUN curl -LJ -o /app/applicationinsights-agent-3.4.19.jar https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.4.19/applicationinsights-agent-3.4.19.jar
 COPY applicationinsights.json /app
 
+EXPOSE 8080
+
 ENTRYPOINT ["java","-javaagent:/app/applicationinsights-agent-3.4.19.jar","-noverify", "-XX:MaxRAMPercentage=70", "-XX:+UseParallelGC", "-XX:ActiveProcessorCount=2", "-cp","app:app/lib/*","com.microsoft.openai.samples.rag.Application"]

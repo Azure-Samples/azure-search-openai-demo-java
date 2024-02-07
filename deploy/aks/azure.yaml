@@ -9,9 +9,7 @@ services:
     language: java
     host: aks
     k8s:
-      deployment:
-        name: backend-deployment
-      namespace: default
+      namespace: azure-open-ai
   indexer:
     project: ../../app/indexer
     language: java
@@ -19,17 +17,13 @@ services:
     docker:
       path: ./microservice/Dockerfile
     k8s:
-      deployment:
-        name: indexer-deployment
-      namespace: default
-  web:
+      namespace: azure-open-ai
+  frontend:
     project: ../../app/frontend
     language: js
     host: aks
     k8s:
-      deployment:
-        name: frontend-deployment
-      namespace: default
+      namespace: azure-open-ai
 
 infra:
   path: ./infra

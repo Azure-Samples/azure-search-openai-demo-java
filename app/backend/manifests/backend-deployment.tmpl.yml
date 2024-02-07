@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
+  namespace: azure-open-ai
   labels:
     app: backend
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: crz7nmzhah37yks.azurecr.io/azure-search-openai-demo/api-azure-search-openai-demo-aks:azd-deploy-1706893758
+          image: {{.Env.SERVICE_API_IMAGE_NAME}}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -26,4 +27,3 @@ spec:
           resources:
             requests:
               memory: "2Gi"
-
