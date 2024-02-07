@@ -277,7 +277,7 @@ module eventGridSubscription '../../shared/event/eventgrid.bicep' = {
 }
 
 module openAiRoleAKS '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
-  scope: openAiResourceGroup
+  scope: resourceGroup
   name: 'openai-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -286,7 +286,7 @@ module openAiRoleAKS '../../shared/security/role.bicep' = if (openAiHost == 'azu
 }
 
 module formRecognizerRoleAKS '../../shared/security/role.bicep' = {
-  scope: formRecognizerResourceGroup
+  scope: resourceGroup
   name: 'formrecognizer-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -295,7 +295,7 @@ module formRecognizerRoleAKS '../../shared/security/role.bicep' = {
 }
 
 module storageRoleAKS '../../shared/security/role.bicep' = {
-  scope: storageResourceGroup
+  scope: resourceGroup
   name: 'storage-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -304,7 +304,7 @@ module storageRoleAKS '../../shared/security/role.bicep' = {
 }
 
 module storageContribRoleAKS '../../shared/security/role.bicep' = {
-  scope: storageResourceGroup
+  scope: resourceGroup
   name: 'storage-contribrole-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -313,7 +313,7 @@ module storageContribRoleAKS '../../shared/security/role.bicep' = {
 }
 
 module searchRoleAKS '../../shared/security/role.bicep' = {
-  scope: searchServiceResourceGroup
+  scope: resourceGroup
   name: 'search-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -322,7 +322,7 @@ module searchRoleAKS '../../shared/security/role.bicep' = {
 }
 
 module searchContribRoleAKS '../../shared/security/role.bicep' = {
-  scope: searchServiceResourceGroup
+  scope: resourceGroup
   name: 'search-contrib-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
@@ -331,13 +331,33 @@ module searchContribRoleAKS '../../shared/security/role.bicep' = {
 }
 
 module searchSvcContribRoleAKS '../../shared/security/role.bicep' = {
-  scope: searchServiceResourceGroup
+  scope: resourceGroup
   name: 'search-svccontrib-role-aks'
   params: {
     principalId: aks.outputs.clusterIdentity.objectId
     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
   }
 }
+
+module servicesBusDataOwnerRoleAKS '../../shared/security/role.bicep' = {
+  scope: resourceGroup
+  name: 'service-bus-data-owner-role-aks'
+  params: {
+    principalId: aks.outputs.clusterIdentity.objectId
+    roleDefinitionId: '090c5cfd-751d-490a-894a-3ce6f1109419'
+  }
+}
+
+module eventGridContributorRoleAKS '../../shared/security/role.bicep' = {
+  scope: resourceGroup
+  name: 'event-grid-contributor-role-aks'
+  params: {
+    principalId: aks.outputs.clusterIdentity.objectId
+    roleDefinitionId: '1e241071-0855-49ea-94dc-649edcd759de'
+  }
+}
+
+
 
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
