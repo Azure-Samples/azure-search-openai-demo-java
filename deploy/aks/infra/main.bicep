@@ -357,7 +357,15 @@ module eventGridContributorRoleAKS '../../shared/security/role.bicep' = {
   }
 }
 
-
+module storageContribRoleUser '../../shared/security/role.bicep' = {
+  scope: resourceGroup
+  name: 'storage-contribrole-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    principalType: 'User'
+  }
+}
 
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
