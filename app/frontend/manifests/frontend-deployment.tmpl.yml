@@ -24,6 +24,3 @@ spec:
                   envFrom:
                       - configMapRef:
                             name: azd-env-configmap
-                  env:
-                      - name: REACT_APP_API_BASE_URL
-                        value: "http://backend-service"
