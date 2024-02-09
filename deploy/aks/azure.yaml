@@ -24,6 +24,8 @@ services:
     host: aks
     k8s:
       namespace: azure-open-ai
+    docker:
+      path: ./Dockerfile-aks
 
 infra:
   path: ./infra
@@ -35,7 +37,12 @@ hooks:
       run: ./scripts/predeploy.ps1
       interactive: true
       continueOnError: false
-  postprovision:
+    posix:
+      shell: sh
+      run: ./scripts/predeploy.sh
+      interactive: true
+      continueOnError: false
+  postdeploy:
     windows:
       shell: pwsh
       run: ./scripts/prepdocs.ps1
@@ -44,5 +51,17 @@ hooks:
     posix:
       shell: sh
       run: ./scripts/prepdocs.sh
+      interactive: true
+      continueOnError: false
+  postup:
+    windows:
+      shell: pwsh
+      run: ./scripts/easyauth.ps1
+      interactive: true
+      continueOnError: false
+  postdown:
+    windows:
+      shell: pwsh
+      run: ./scripts/easyauth-down.ps1
       interactive: true
       continueOnError: false
