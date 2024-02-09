@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: easyauth-ingress-default
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/easyauth/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/easyauth/login"
+    nginx.ingress.kubernetes.io/auth-response-headers: "x-injected-userinfo,x-injected-name,x-injected-oid,x-injected-preferred-username,x-injected-sub,x-injected-tid,x-injected-email,x-injected-groups,x-injected-scp,x-injected-roles,x-injected-graph"
+    cert-manager.io/cluster-issuer: letsencrypt
+    #nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com
+    secretName: aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com-tls
+  rules:
+  - host: aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80

@@ -76,6 +76,7 @@ All prerequisites are already installed in the container. You can skip to the [S
 - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) or other docker agents
+- [Helm](https://helm.sh/docs/intro/install/)
 - _[K9s](https://k9scli.io/topics/install/) For K8s management - Optional_
 
 > NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
@@ -251,6 +252,10 @@ Under "Trace & Events" panel you can review custom Java informational logs to be
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
 ### Enabling authentication
+
+```shell
+azd env set AZURE_USE_EASY_AUTH true
+```
 
 By default, the deployed apps on AKS will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data.You can require authentication to your Microsoft Entra by following the [Add app authentication](https://learn.microsoft.com/en-us/azure/container-apps/authentication) tutorial and set it up against the deployed web and api apps.
 Furthermore in order to let Web app to access the Api app be sure to configure native client access with [user_impersonation ](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory#native-client-application)
