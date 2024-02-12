@@ -1,10 +1,6 @@
 # Using template from: https://github.com/Azure/EasyAuthForK8s/blob/master/docs/deploy-to-existing-cluster.md
 # Docs ref: https://learn.microsoft.com/en-us/azure/aks/ingress-tls?tabs=azure-cli
 
-Write-Host ""
-Write-Host "Loading azd .env file from current environment"
-Write-Host ""
-
 $output = azd env get-values
 
 foreach ($line in $output) {
@@ -17,9 +13,14 @@ foreach ($line in $output) {
   [Environment]::SetEnvironmentVariable($name, $value)
 }
 
-Write-Host "Environment variables set."
-
-Write-Host "Enabling EasyAuth for the AKS Cluster"
+if($env:AZURE_USE_EASY_AUTH -eq "true"){
+  Write-Host "Enabling EasyAuth for the AKS Cluster"
+  Write-Host "If you want to disable EasyAuth, please set the AZURE_USE_EASY_AUTH environment variable to false"
+} else {
+  Write-Host "EasyAuth is not enabled for the AKS Cluster"
+  Write-Host "If you want to enable EasyAuth, please set the AZURE_USE_EASY_AUTH environment variable to true"
+  exit 1;
+}
 
 $location = $env:AZURE_LOCATION
 
@@ -43,6 +44,14 @@ $nodeRG = az aks show -n $clusterName -g $clusterRG -o json | ConvertFrom-Json |
 Write-Host "AKS Cluster is in resource group: $nodeRG"
 
 $ingressIP=$(kubectl get ingress ingress-api -n azure-open-ai -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+
+if($ingressIP -eq "" -or  $null -eq $ingressIP){
+  Write-Host "Please retry once Ingress Address is assigned to the AKS Cluster"
+  #kubectl apply -f ..\..\app\backend\manifests\ingress.yml
+  exit 1;
+}
+
+
 Write-Host "Found Ingress IP: $ingressIP"
 
 # List public IP resources in the specified resource group and convert JSON output to PowerShell object
@@ -61,8 +70,8 @@ $ingressHost=$(az network public-ip show -g $nodeRG -n $ipName -o json | Convert
 # This should be the same as the $APP_HOSTNAME
 Write-Host "FQDN assigned to the public IP address: $ingressHost"
 if ($ingressHost -ne $appHostName) {
-  Write-Host "FQDN assigned to the public IP address does not match the expected value: $appHostName"
-  exit 1
+Write-Host "FQDN assigned to the public IP address does not match the expected value: $appHostName"
+exit 1
 }
 
 # ---------------------
@@ -80,11 +89,10 @@ $objectId = $appInfo | Select-Object -ExpandProperty id
 Write-Host "Retrieved object ID: $objectId"
 
 # Update the application to disable the first OAuth2Permission
-Write-Host "Disabling the first OAuth2Permission"
-az ad app update --id $appId --set oauth2Permissions[0].isEnabled=false
-
+#Write-Host "Disabling the first OAuth2Permission"
+#az ad app update --id $appId --set oauth2Permissions[0].isEnabled=false
 # Clear the OAuth2Permissions array
-az ad app update --id $appId --set oauth2Permissions=[]
+#az ad app update --id $appId --set oauth2Permissions=[]
 
 # Reset credentials for the Azure AD application to generate a new password
 Write-Host "Resetting credentials for the Azure AD application"
@@ -112,11 +120,11 @@ kubectl label namespace cert-manager cert-manager.io/disable-validation=true
 
 # Install the cert manager
 helm install cert-manager jetstack/cert-manager `
-  --namespace cert-manager `
-  --version v1.14.2 `
-  --set installCRDs=true `
-  --set ingressShim.defaultIssuerName=letsencrypt `
-  --set ingressShim.defaultIssuerKind=ClusterIssuer
+--namespace cert-manager `
+--version v1.14.2 `
+--set installCRDs=true `
+--set ingressShim.defaultIssuerName=letsencrypt `
+--set ingressShim.defaultIssuerKind=ClusterIssuer
 
 kubectl get pods -n cert-manager
 
