@@ -10,6 +10,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
   tls:
   - hosts:
     -  {{ .Values.appHostName }}

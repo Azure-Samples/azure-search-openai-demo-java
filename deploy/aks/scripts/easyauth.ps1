@@ -23,7 +23,7 @@ Write-Host "Enabling EasyAuth for the AKS Cluster"
 
 $location = $env:AZURE_LOCATION
 
-$adAppName = "$env:AZURE_ENV_NAME-easy-auth-proxy"
+$adAppName = "$env:AZURE_ENV_NAME"
 $email = "example@microsoft.com"
 
 $appHostName="$adAppName.$location.cloudapp.azure.com"
@@ -127,7 +127,7 @@ $clientId = $appId
 
 # ---------------------
 # Deploy Easy Auth Proxy
-helm install --set azureAd.tenantId=$azureTenantId --set azureAd.clientId=$clientId --set secret.name=easyauth-proxy-$adAppName-secret --set secret.azureclientsecret=$clientSecret --set appHostName=$appHostName --set tlsSecretName=$tlsSecretName easyauth-proxy-$adAppName ./easyauth/easyauth-proxy
+helm install --set azureAd.tenantId=$azureTenantId --set azureAd.clientId=$clientId --set secret.name=easyauth-proxy-$adAppName-secret --set secret.azureclientsecret=$clientSecret --set appHostName=$appHostName --set tlsSecretName=$tlsSecretName easyauth-proxy ./easyauth/easyauth-proxy
 
 # ---------------------
 # Apply proxy ingress rules
@@ -182,11 +182,9 @@ azd env set "AZURE_AD_APP_NAME" $adAppName
 azd env set "AZURE_AD_APP_ID" $appId
 
 $easyAuthConfig = @"
-${Get-Date -Format "yyyy-MM-dd HH:mm:ss"}
-## EasyAuth Configuration
 EasyAuth for AKS has been configured successfully.
 
-The application is now available at [${homePage}](${homePage})
+The application is now available at:${homePage}
 
 Configuration AD details:
 - Azure AD Application: $adAppName
@@ -205,6 +203,9 @@ Configuration AKS details:
 "@
 
 Write-Host $easyAuthConfig
+
+Start-Process "${homePage}"
+
 
 # Add annotation to ALL ingress
 # kubectl annotate ingress azure-open-ai/cm-acme-http-solver-s9fkg 
