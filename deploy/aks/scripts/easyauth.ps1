@@ -136,7 +136,7 @@ $easyauthIngressYaml = @"
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: easyauth-ingress-default
+  name: easyauth-ingress-router
   annotations:
     nginx.ingress.kubernetes.io/auth-url: "https://`$host/easyauth/auth"
     nginx.ingress.kubernetes.io/auth-signin: "https://`$host/easyauth/login"
@@ -187,30 +187,17 @@ EasyAuth for AKS has been configured successfully.
 The application is now available at:${homePage}
 
 Configuration AD details:
+- App Host Name: $appHostName
 - Azure AD Application: $adAppName
-- Azure AD Application ID: $appId
+- Azure AD Application ID / Client ID: $appId
 - Azure AD Tenant ID: $azureTenantId
 - Client Secret: $clientSecret
 
 Configuration AKS details:
-- Ingress Host: $ingressHost
-- App Host Name: $appHostName
 - AKS Cluster: $clusterName
 - Ingress IP: $ingressIP
 - Public IP Name: $ipName
 - Public AKS Resource Group: $nodeRG
-- TLS Secret Name: $tlsSecretName
 "@
 
-Write-Host $easyAuthConfig
-
-Start-Process "${homePage}"
-
-
-# Add annotation to ALL ingress
-# kubectl annotate ingress azure-open-ai/cm-acme-http-solver-s9fkg 
-# with class webapprouting.kubernetes.azure.com
-# spec-->ingressClassName: webapprouting.kubernetes.azure.com
-# --> investigate http applicaton routing
-# --> ingresses do not map to the host (are not exposed)
- 
+Write-Host $easyAuthConfig 
