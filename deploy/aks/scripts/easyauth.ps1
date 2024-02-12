@@ -123,6 +123,8 @@ kubectl get pods -n cert-manager
 # Deploy the issuer config to the cluster
 kubectl apply -f ./easyauth/cluster-issuer.yaml
 
+$clientId = $appId
+
 # ---------------------
 # Deploy Easy Auth Proxy
 helm install --set azureAd.tenantId=$azureTenantId --set azureAd.clientId=$clientId --set secret.name=easyauth-proxy-$adAppName-secret --set secret.azureclientsecret=$clientSecret --set appHostName=$appHostName --set tlsSecretName=$tlsSecretName easyauth-proxy-$adAppName ./easyauth/easyauth-proxy
@@ -142,7 +144,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     #nginx.ingress.kubernetes.io/rewrite-target: "/`$1"
 spec:
-  ingressClassName: nginx
+  ingressClassName: webapprouting.kubernetes.azure.com
   tls:
   - hosts:
     - ${appHostName}
@@ -174,7 +176,7 @@ $easyauthIngressYaml | Out-File -FilePath ./easyauth/easyauth-ingress.yaml
 kubectl apply -f ./easyauth/easyauth-ingress.yaml
 
 # Remove old ingress without auth
-#kubectl delete ingress ingress-api -n 'azure-open-ai'
+kubectl delete ingress ingress-api -n 'azure-open-ai'
 
 azd env set "AZURE_AD_APP_NAME" $adAppName
 azd env set "AZURE_AD_APP_ID" $appId
@@ -202,4 +204,12 @@ Configuration AKS details:
 - TLS Secret Name: $tlsSecretName
 "@
 
-$easyAuthConfig | Out-File -FilePath ./easyauth/config-output.md
+Write-Host $easyAuthConfig
+
+# Add annotation to ALL ingress
+# kubectl annotate ingress azure-open-ai/cm-acme-http-solver-s9fkg 
+# with class webapprouting.kubernetes.azure.com
+# spec-->ingressClassName: webapprouting.kubernetes.azure.com
+# --> investigate http applicaton routing
+# --> ingresses do not map to the host (are not exposed)
+ 

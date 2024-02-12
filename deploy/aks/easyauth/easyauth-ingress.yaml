@@ -8,15 +8,14 @@ metadata:
     nginx.ingress.kubernetes.io/auth-response-headers: "x-injected-userinfo,x-injected-name,x-injected-oid,x-injected-preferred-username,x-injected-sub,x-injected-tid,x-injected-email,x-injected-groups,x-injected-scp,x-injected-roles,x-injected-graph"
     cert-manager.io/cluster-issuer: letsencrypt
     #nginx.ingress.kubernetes.io/rewrite-target: "/$1"
-    kubernetes.io/ingress.class: "nginx"
 spec:
-  ingressClassName: nginx
+  ingressClassName: webapprouting.kubernetes.azure.com
   tls:
   - hosts:
-    - aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com
-    secretName: aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com-tls
+    - aks-openai-demo-easy-auth-proxy.westeurope.cloudapp.azure.com
+    secretName: aks-openai-demo-easy-auth-proxy.westeurope.cloudapp.azure.com-tls
   rules:
-  - host: aks-openai-easy-auth-proxy.westeurope.cloudapp.azure.com
+  - host: aks-openai-demo-easy-auth-proxy.westeurope.cloudapp.azure.com
     http:
       paths:
       - path: /api
