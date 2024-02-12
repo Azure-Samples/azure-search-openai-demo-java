@@ -11,7 +11,7 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx
+          ingressClassName: webapprouting.kubernetes.azure.com
           podTemplate:
             spec:
               nodeSelector:
