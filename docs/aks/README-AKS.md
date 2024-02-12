@@ -193,27 +193,7 @@ azd env set AZURE_SEARCH_SERVICE_LOCATION "eastus2" # Region of the ACS service
 azd up
 ```
 
-### Running locally
-
-1. Run
-
-   ```shell
-   az login
-   ```
-
-2. Change dir to `app`
-
-   ```shell
-   cd app
-   ```
-
-3. Run the `./start.ps1` (Windows) or `./start.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
-4. Wait for the docker compose to start all the containers (web, api, indexer) and refresh your browser to [http://localhost](http://localhost)
-
 ### UI Navigation
-
-- In Azure: navigate to the Web App deployed by azd. The URL is printed out when azd completes (as "Endpoint"), or you can find it in the Azure portal.
-- Running locally: navigate to localhost:8080
 
 Once in the web app:
 
@@ -236,11 +216,11 @@ If you want to chat with your custom documents you can:
 
 ### Enabling Application Insights
 
-Applications Insights is enabled by default. It allows to investigate each request tracing along with the logging of errors.
+Applications Insights is disabled by default. It allows to investigate each request tracing along with the logging of errors.
 
 If you want to disable it set the `AZURE_USE_APPLICATION_INSIGHTS` variable to false before running `azd up`
 
-1. Run `azd env set AZURE_USE_APPLICATION_INSIGHTS false`
+1. Run `azd env set AZURE_USE_APPLICATION_INSIGHTS true`
 1. Run `azd up`
 
 To see the performance data, go to the Application Insights resource in your resource group, click on the "Investigate -> Performance" blade and navigate to any HTTP request to see the timing data.
@@ -257,8 +237,7 @@ To see any exceptions and server errors, navigate to the "Investigate -> Failure
 azd env set AZURE_USE_EASY_AUTH true
 ```
 
-By default, the deployed apps on AKS will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data.You can require authentication to your Microsoft Entra by following the [Add app authentication](https://learn.microsoft.com/en-us/azure/container-apps/authentication) tutorial and set it up against the deployed web and api apps.
-Furthermore in order to let Web app to access the Api app be sure to configure native client access with [user_impersonation ](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory#native-client-application)
+By default, the deployed apps on AKS will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data. If you enable easy authentication the deployment will use a script based on [EasyAuthForK8s](https://github.com/Azure/EasyAuthForK8s) and using [Cert Manager](https://cert-manager.io/) to manage easy authentication for you using Microsoft Entra.
 
 To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access. Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users
 
