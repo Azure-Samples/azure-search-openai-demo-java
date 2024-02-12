@@ -14,7 +14,6 @@ FROM nginx:alpine
 
 WORKDIR /usr/share/nginx/html
 COPY --from=build /app/build .
-COPY --from=build /app/nginx/default.conf /etc/nginx/conf.d
 
 EXPOSE 80
 
