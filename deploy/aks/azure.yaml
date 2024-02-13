@@ -59,3 +59,9 @@ hooks:
       run: ./scripts/easyauth.ps1
       interactive: true
       continueOnError: false
+  postdown:
+    windows:
+      shell: pwsh
+      run: ./scripts/easyauth-down.ps1
+      interactive: true
+      continueOnError: false
