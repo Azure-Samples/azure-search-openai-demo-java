@@ -83,17 +83,6 @@ $appCreationResult = az ad app create --display-name $adAppName --web-home-page-
 $appId = $appCreationResult | Select-Object -ExpandProperty appId
 Write-Host "Created Azure AD application with appId: $appId"
 
-# Retrieve the object ID of the created application
-$appInfo = az ad app show --id $appId -o json | ConvertFrom-Json
-$objectId = $appInfo | Select-Object -ExpandProperty id
-Write-Host "Retrieved object ID: $objectId"
-
-# Update the application to disable the first OAuth2Permission
-#Write-Host "Disabling the first OAuth2Permission"
-#az ad app update --id $appId --set oauth2Permissions[0].isEnabled=false
-# Clear the OAuth2Permissions array
-#az ad app update --id $appId --set oauth2Permissions=[]
-
 # Reset credentials for the Azure AD application to generate a new password
 Write-Host "Resetting credentials for the Azure AD application"
 $credentialResetResult = az ad app credential reset --id $appId -o json | ConvertFrom-Json
@@ -131,11 +120,9 @@ kubectl get pods -n cert-manager
 # Deploy the issuer config to the cluster
 kubectl apply -f ./easyauth/cluster-issuer.yaml
 
-$clientId = $appId
-
 # ---------------------
 # Deploy Easy Auth Proxy
-helm install --set azureAd.tenantId=$azureTenantId --set azureAd.clientId=$clientId --set secret.name=easyauth-proxy-$adAppName-secret --set secret.azureclientsecret=$clientSecret --set appHostName=$appHostName --set tlsSecretName=$tlsSecretName easyauth-proxy ./easyauth/easyauth-proxy
+helm install --set azureAd.tenantId=$azureTenantId --set azureAd.clientId=$appId --set secret.name=easyauth-proxy-$adAppName-secret --set secret.azureclientsecret=$clientSecret --set appHostName=$appHostName --set tlsSecretName=$tlsSecretName easyauth-proxy ./easyauth/easyauth-proxy
 
 # ---------------------
 # Apply proxy ingress rules
