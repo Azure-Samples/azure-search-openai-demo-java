@@ -36,7 +36,7 @@ while IFS= read -r line; do
 done < "$tempEnvFile"
 
 # Specify the output file path for the ConfigMap
-outputFilePath="../../../app/backend/manifests/azd-env-configmap.yml"
+outputFilePath="../../app/backend/manifests/azd-env-configmap.yml"
 
 # Check if the output file exists and remove it before creating a new one
 if [ -f "$outputFilePath" ]; then
