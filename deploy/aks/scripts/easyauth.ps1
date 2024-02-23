@@ -47,7 +47,6 @@ $ingressIP=$(kubectl get ingress ingress-api -n azure-open-ai -o jsonpath="{.sta
 
 if($ingressIP -eq "" -or  $null -eq $ingressIP){
   Write-Host "Please retry once Ingress Address is assigned to the AKS Cluster"
-  #kubectl apply -f ..\..\app\backend\manifests\ingress.yml
   exit 1;
 }
 
