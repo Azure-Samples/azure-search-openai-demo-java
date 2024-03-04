@@ -1,0 +1,138 @@
+# Default values for easyauth-proxy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+tlsSecretName: ""
+appHostName: ""
+basePath: "/easyauth"
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/azure/easyauthfork8s/easy-auth-proxy
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v1.0.2
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffers: "4"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-max-temp-file-size: "1024m"      
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+secret:
+  name: aad-secret
+  azureclientsecret: clientsecret
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+logging:
+  logLevel: Information
+
+azureAd: 
+  instance: "https://login.microsoftonline.com/"
+  # domain is not required.  including one will set the 
+  # "domain hint" during login, that makes it a little easier
+  # for users to choose the right login account
+  domain: ""
+  # the Azure AD tenant that thould be used
+  tenantId: ""
+  # app Id of the service principal.
+  clientId: ""
+  # configure paths for OIDC middleware
+  # there's no reason to change these unless there is a conflict
+  # such as another easyauth proxy using the same host name
+  callbackPath: "/signin-oidc"
+  signedOutCallbackPath : "/signout-callback-oidc"
+  # Leave this blank if not B2C
+  signUpSignInPolicyId: ""
+
+easyAuthForK8s: 
+  # data protection key ring location
+  dataProtectionFileLocation: "/mnt/dp"
+  # configure paths for EasyAuth middleware
+  # there's no reason to change these unless there is a conflict
+  # such as another easyauth proxy using the same host name
+  signinPath: "/login"
+  authPath: "/auth"
+  # use bearer token as a fall back for cookies
+  # normally for API web applications only
+  allowBearerToken: "false"
+  # fallback path to redirect user after signin if
+  # prior page url cannot be determined
+  defaultRedirectAfterSignin: "/"
+  # Make the cookie payload as small as possible to avoid having to 
+  # increase the allowed nginx header size.  
+  compressCookieClaims: "true"
+  # All informational headers sent to the backend will be prefixed with:
+  responseHeaderPrefix: "x-injected-"
+  # encoding method used for headers extracted from claims
+  # valid values are UrlEncode, Base64, None and NoneWithReject
+  claimEncodingMethod: "UrlEncode"
+  # how to send the headers
+  # Separate = a separate header for each claim
+  # Combined = a single header with a JSON object containing all claims
+  headerFormatOption: "Separate"
+
+claimName: msalproxyazurefilepvclaim
+
+volumeName: msal

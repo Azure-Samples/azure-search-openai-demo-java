@@ -11,6 +11,8 @@ COPY core core
 COPY microservice microservice
 
 RUN chmod +x ./mvnw
+# Convert CRLF to LF
+RUN sed -i 's/\r$//' ./mvnw
 RUN ./mvnw package -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../../microservice/target/*.jar)
 
