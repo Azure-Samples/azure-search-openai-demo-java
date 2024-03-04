@@ -83,18 +83,9 @@ param apiAppExists bool = false
 param webAppExists bool = false
 param indexerAppExists bool = false
 
-// Used for the optional login and document level access control system
-param useAuthentication bool = false
-param serverAppId string = ''
-@secure()
-param serverAppSecret string = ''
-param clientAppId string = ''
 
-// Used for optional CORS support for alternate frontends
-param allowedOrigin string = '' // should start with https://, shouldn't end with a /
-
-@description('Id of the user or app to assign application roles')
-param principalId string = ''
+@description('Id of the user to assign application roles for CLI to ingest documents')
+param userPrincipalId string = ''
 
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
@@ -271,6 +262,10 @@ module indexer './app/indexer.bicep' = {
         name: 'AZURE_SERVICEBUS_NAMESPACE'
         value: servicebusQueue.outputs.name
       }
+      {
+        name: 'AZURE_SERVICEBUS_QUEUE_NAME'
+        value: queueName
+            }
     ]
   }
 }
@@ -419,7 +414,7 @@ module openAiRoleUser '../../shared/security/role.bicep' = if (openAiHost == 'az
   scope: openAiResourceGroup
   name: 'openai-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
     principalType: 'User'
   }
@@ -429,7 +424,7 @@ module formRecognizerRoleUser '../../shared/security/role.bicep' = {
   scope: formRecognizerResourceGroup
   name: 'formrecognizer-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
     principalType: 'User'
   }
@@ -439,7 +434,7 @@ module storageRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
     principalType: 'User'
   }
@@ -449,7 +444,7 @@ module storageContribRoleUser '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-contribrole-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
     principalType: 'User'
   }
@@ -459,7 +454,7 @@ module searchRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
     principalType: 'User'
   }
@@ -469,7 +464,7 @@ module searchContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-contrib-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
     principalType: 'User'
   }
@@ -479,7 +474,7 @@ module searchSvcContribRoleUser '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-svccontrib-role-user'
   params: {
-    principalId: principalId
+    principalId: userPrincipalId
     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
     principalType: 'User'
   }

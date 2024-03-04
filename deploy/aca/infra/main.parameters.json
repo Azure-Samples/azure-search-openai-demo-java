@@ -11,7 +11,7 @@
     "location": {
       "value": "${AZURE_LOCATION}"
     },
-    "principalId": {
+    "userPrincipalId": {
       "value": "${AZURE_PRINCIPAL_ID}"
     },
     "openAiServiceName": {
@@ -77,32 +77,8 @@
     "embeddingDeploymentName": {
       "value": "${AZURE_OPENAI_EMB_DEPLOYMENT=embedding}"
     },
-    "openAiHost":{
-      "value": "${OPENAI_HOST=azure}"
-    },
-    "openAiApiKey": {
-      "value": "${OPENAI_API_KEY}"
-    },
-    "openAiApiOrganization": {
-      "value": "${OPENAI_ORGANIZATION}"
-    },
     "useApplicationInsights": {
       "value": "${AZURE_USE_APPLICATION_INSIGHTS=true}"
-    },
-    "useAuthentication": {
-      "value": "${AZURE_USE_AUTHENTICATION=false}"
-    },
-    "serverAppId": {
-      "value": "${AZURE_SERVER_APP_ID}"
-    },
-    "serverAppSecret": {
-      "value": "${AZURE_SERVER_APP_SECRET}"
-    },
-    "clientAppId": {
-      "value": "${AZURE_CLIENT_APP_ID}"
-    },
-    "allowedOrigin": {
-      "value": "${ALLOWED_ORIGIN}"
     }
   }
 }
