@@ -13,12 +13,12 @@ services:
       prepackage:
         windows:
           shell: pwsh
-          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
+          run:  cd ../frontend;npm install;npm run build; if not exist ./backend/src/main/resources/static mkdir ./backend/src/main/resources/static; cp -r ./build/* ../backend/src/main/resources/static
           interactive: true
           continueOnError: false
         posix:
           shell: sh
-          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
+          run:  cd ../frontend;npm install;npm run build; mkdir -p ../backend/src/main/resources/static; cp -r ./build/* ../backend/src/main/resources/static
           interactive: true
           continueOnError: false
 
