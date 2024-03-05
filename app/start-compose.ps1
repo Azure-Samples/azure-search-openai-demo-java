@@ -53,4 +53,4 @@ Write-Host ""
 Write-Host "Starting solution locally using docker compose."
 Write-Host ""
 
-docker compose -f ../../../app/compose.yaml up
+docker compose -f ./compose.yaml up

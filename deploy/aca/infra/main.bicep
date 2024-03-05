@@ -34,8 +34,7 @@ param storageResourceGroupLocation string = location
 param storageContainerName string = 'content'
 param storageSkuName string // Set in main.parameters.json
 
-@allowed(['azure', 'openai'])
-param openAiHost string // Set in main.parameters.json
+
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
@@ -194,7 +193,7 @@ module api './app/api.bicep' = {
       }
       {
         name: 'AZURE_OPENAI_SERVICE'
-        value: openAiHost == 'azure' ? openAi.outputs.name : ''
+        value:  openAi.outputs.name
       }
       {
         name: 'AZURE_OPENAI_CHATGPT_DEPLOYMENT'
@@ -251,7 +250,7 @@ module indexer './app/indexer.bicep' = {
      
       {
         name: 'AZURE_OPENAI_SERVICE'
-        value: openAiHost == 'azure' ? openAi.outputs.name : ''
+        value: openAi.outputs.name
       }
      
       {
@@ -287,7 +286,7 @@ module web './app/web.bicep' = {
 }
 
 
-module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
+module openAi '../../shared/ai/cognitiveservices.bicep' =  {
   name: 'openai'
   scope: openAiResourceGroup
   params: {
@@ -410,7 +409,7 @@ module eventGridSubscription '../../shared/event/eventgrid.bicep' = {
 }
 
 // USER ROLES
-module openAiRoleUser '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleUser '../../shared/security/role.bicep'  = {
   scope: openAiResourceGroup
   name: 'openai-role-user'
   params: {
@@ -482,7 +481,7 @@ module searchSvcContribRoleUser '../../shared/security/role.bicep' = {
 
 // SYSTEM IDENTITIES
 
-module openAiRoleBackend '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
+module openAiRoleBackend '../../shared/security/role.bicep' =  {
   scope: openAiResourceGroup
   name: 'openai-role-backend'
   params: {
@@ -579,17 +578,17 @@ output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registry
 output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 
 // Shared by all OpenAI deployments
-output OPENAI_HOST string = openAiHost
+
 output AZURE_OPENAI_EMB_MODEL_NAME string = embeddingModelName
 output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
 // Specific to Azure OpenAI
-output AZURE_OPENAI_SERVICE string = (openAiHost == 'azure') ? openAi.outputs.name : ''
-output AZURE_OPENAI_RESOURCE_GROUP string = (openAiHost == 'azure') ? openAiResourceGroup.name : ''
-output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = (openAiHost == 'azure') ? chatGptDeploymentName : ''
-output AZURE_OPENAI_EMB_DEPLOYMENT string = (openAiHost == 'azure') ? embeddingDeploymentName : ''
+output AZURE_OPENAI_SERVICE string =  openAi.outputs.name
+output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name 
+output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
+output AZURE_OPENAI_EMB_DEPLOYMENT string = embeddingDeploymentName
 // Used only with non-Azure OpenAI deployments
-output OPENAI_API_KEY string = (openAiHost == 'openai') ? openAiApiKey : ''
-output OPENAI_ORGANIZATION string = (openAiHost == 'openai') ? openAiApiOrganization : ''
+output OPENAI_API_KEY string = openAiApiKey
+output OPENAI_ORGANIZATION string = openAiApiOrganization
 
 output AZURE_FORMRECOGNIZER_SERVICE string = formRecognizer.outputs.name
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = formRecognizerResourceGroup.name

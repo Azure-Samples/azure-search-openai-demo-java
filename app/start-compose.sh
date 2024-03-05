@@ -60,4 +60,4 @@ echo ""
 echo "Starting solution locally using docker compose. "
 echo ""
 
-docker compose -f ../../../app/compose.yaml up
+docker compose -f ./compose.yaml up

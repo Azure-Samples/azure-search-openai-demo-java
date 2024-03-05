@@ -78,7 +78,7 @@ All prerequisites are already installed in the container.  You can skip to the [
   * **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
 
->NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
+>[!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
 
 ### Starting from scratch
 
@@ -86,7 +86,7 @@ You can clone this repo and change directory to the root of the repo. Or you can
 
 Once you have the project available locally, run the following commands if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 > [!IMPORTANT]
-> All the commands below assume be run from the `deploy/aca` folder
+> All the commands below must be run from the `deploy/aca` folder
 
 1. Run 
 
@@ -103,13 +103,13 @@ Once you have the project available locally, run the following commands if you d
     * This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
     * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
-3. After the application has been successfully deployed you will see a frontend app URL printed to the console.  Click that URL to interact with the application in your browser.  
+3. After the application has been successfully deployed you will see a web app URL printed to the console.  Click that URL to interact with the application in your browser.  
 
 It will look like the following:
 
-!['Output from running azd up'](docs/endpoint.png)
+!['Output from running azd up'](aca-endpoint.png)
 
-> NOTE: It may take a minute for the application to be fully deployed.
+> NOTE: It may take few minutes for the indexer app to consume the pdf ingestion request messages. You can monitor the ingestion process by checking the log stream of the indexer app in the Azure Portal.
 
 ### Deploying with existing Azure resources
 
@@ -159,6 +159,19 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 ```shell
 azd up
 ```
+ > WARNING: when you run `azd up` multiple times to redeploy infrastructure, make sure to set the following parameters in `infra/main.parameters.json` to `true` to avoid container apps images from being overridden with default "mcr.microsoft.com/azuredocs/containerapps-helloworld" image:
+
+```json
+"apiAppExists": {
+    "value": true
+  },
+  "webAppExists": {
+    "value": true
+  },
+  "indexerAppExists": {
+    "value": true
+  }
+```
 
 ### Examples of an azd deployment changing the default chatgpt deployment model
 ```shell
@@ -203,7 +216,7 @@ azd up
     cd app
     ```
 
-3. Run the `./start.ps1` (Windows) or `./start.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
+3. Run the `./start-compose.ps1` (Windows) or `./start-compose.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
 4. Wait for the docker compose to start all the containers (web, api, indexer) and refresh your browser to [http://localhost](http://localhost)
 
 ### UI Navigation
@@ -242,7 +255,7 @@ To see the performance data, go to the Application Insights resource in your res
 To inspect the performance of chat requests, use the "Drill into Samples" button to see end-to-end traces of all the API calls made for any chat request.
 Under "Trace & Events" panel you can review custom Java informational logs to better understand content of OpenAI requests and responses.
 
-![Tracing screenshot](docs/transaction-tracing.png)
+![Tracing screenshot](transaction-tracing.png)
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
@@ -396,12 +409,5 @@ Here are the most common failure scenarios and solutions:
 6. After running `./app/start.ps1` on Windows PowerShell you get `The file C:\path\to\azure-search-openai-demo-java\app\start.ps1 is not digitally signed. You cannot run this script on the current system`. Try to run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and try to re-run `./app/start.ps1`
 
 7. After running `./app/start.ps1` or `./app/start.sh` you get `"Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17"`. It means you are not using JDK 17 but a previous version. Be sure to set the `JAVA_HOME` env variable to your Java 17 installation directory and update your `PATH` env variable to have the Java 17 bin folder as the first occurrence amongst the listed directories. More info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
-8. After running `./app/start.sh` on Ubuntu 16.04 or later, the first time you try to create a virtual environment with Python 3.6, Python 3.7, Python 3.8 or Python 3.9, you'll get the following error `"The virtual environment was not created successfully because ensurepip is not available"`. Just follow the hint provided in the error message and run `apt-get install python3-venv` to install the missing packages. More info [here](https://www.softwarepragmatism.com/cannot-create-a-python-virtual-environment-on-ubuntu-ensurepip-is-not-available)
-9. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
-10. Github App CI pipeline might fail in some scenarios where the provisioned App Service instance doesn't have "Basic Auth Publishing Credentials" enabled in your subscription. To fix it, you can go to your App Service instance in Azure Portal, click on "Settings/Configuration(Panel)->General Settins (Tab)" and flag to ON the "Basic Auth Publishing Credentials" checkbox group. Or you can run the following azd cli commands:
 
-    ``` 
-    az resource update --resource-group <resource-group> --name ftp --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/<site-name> --set properties.allow=true
-    az resource update --resource-group <resource-group> --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/<site-name> --set properties.allow=true
-    ```
-    For more details see this [issue](https://github.com/Azure-Samples/azure-search-openai-demo-java/issues/7).
+8. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
