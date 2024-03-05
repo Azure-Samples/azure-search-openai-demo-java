@@ -85,7 +85,7 @@ You can clone this repo and change directory to the root of the repo. Or you can
 Once you have the project available locally, run the following commands if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
 > [!IMPORTANT]
-> All the commands below assume must be run from the `deploy/app-service` folder
+> All the commands below must be run from the `deploy/app-service` folder
 
 1. Run 
 

@@ -109,7 +109,7 @@ It will look like the following:
 
 !['Output from running azd up'](aca-endpoint.png)
 
-> NOTE: It may take few minutes for the indexer app to consume the pdf ingestion request messages. You can monitor the ingestion process by checking the log stream of the indexer app in the Azure Portal.
+> NOTE: It may take few minutes for the indexer app to consume the pdf ingestion request messages from service bus. You can monitor the ingestion process by checking the log stream of the indexer app in the Azure Portal.
 
 ### Deploying with existing Azure resources
 
@@ -159,7 +159,8 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 ```shell
 azd up
 ```
- > WARNING: when you run `azd up` multiple times to redeploy infrastructure, make sure to set the following parameters in `infra/main.parameters.json` to `true` to avoid container apps images from being overridden with default "mcr.microsoft.com/azuredocs/containerapps-helloworld" image:
+ > [!WARNING]
+ > When you run `azd up` multiple times to redeploy infrastructure, make sure to set the following parameters in `infra/main.parameters.json` to `true` to avoid container apps images from being overridden with default "mcr.microsoft.com/azuredocs/containerapps-helloworld" image:
 
 ```json
 "apiAppExists": {
