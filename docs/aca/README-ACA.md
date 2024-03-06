@@ -268,8 +268,8 @@ To see any exceptions and server errors, navigate to the "Investigate -> Failure
 
 ### Enabling authentication
 
-By default, the deployed apps on ACA will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data.You can require authentication to your Microsoft Entra by following the [Add app authentication](https://learn.microsoft.com/en-us/azure/container-apps/authentication) tutorial and set it up against the deployed web and api apps.
-Furthermore in order to let Web app to access the Api app be sure to configure native client access with [user_impersonation ](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory#native-client-application)
+By default, the web app on ACA will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data.You can require authentication to your Microsoft Entra by following the [Add app authentication](https://learn.microsoft.com/en-us/azure/container-apps/authentication) tutorial and set it up against the deployed web app.
+
 
 To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access.  Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users 
 

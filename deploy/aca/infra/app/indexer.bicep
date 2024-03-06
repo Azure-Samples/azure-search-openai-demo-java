@@ -31,6 +31,7 @@ module app '../../../shared/host/container-app-upsert.bicep' = {
     containerCpuCoreCount: '1.0'
     containerMemory: '2.0Gi'
     targetPort: 8080
+    external:false
     env: union(env, [
       {
         name: 'AZURE_CLIENT_ID'
