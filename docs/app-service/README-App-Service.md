@@ -436,7 +436,7 @@ Here are the most common failure scenarios and solutions:
 
 7. After running `./app/start.ps1` or `./app/start.sh` you get `"Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17"`. It means you are not using JDK 17 but a previous version. Be sure to set the `JAVA_HOME` env variable to your Java 17 installation directory and update your `PATH` env variable to have the Java 17 bin folder as the first occurrence amongst the listed directories. More info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
 
-8. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
+8. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-java/app/backend/mvnw` to fix it and rerun `azd up`.
 9. Github App CI pipeline might fail in some scenarios where the provisioned App Service instance doesn't have "Basic Auth Publishing Credentials" enabled in your subscription. To fix it, you can go to your App Service instance in Azure Portal, click on "Settings/Configuration(Panel)->General Settins (Tab)" and flag to ON the "Basic Auth Publishing Credentials" checkbox group. Or you can run the following azd cli commands:
 
     ``` 
