@@ -16,7 +16,16 @@
         "ghcr.io/devcontainers/features/git:1": {
             "version": "2.39.1"
         },
-        "ghcr.io/devcontainers-contrib/features/typescript:2": {}
+        "ghcr.io/devcontainers-contrib/features/typescript:2": {
+            
+        }
+        ,
+        "docker-in-docker": {
+            "version": "latest",
+            "moby": true,
+            "dockerDashComposeVersion": "v1"
+        }
+    
     },
     "customizations": {
         "vscode": {

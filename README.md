@@ -43,7 +43,7 @@ What this demo application does:
 ![Chat screen](docs/chatscreen.png)
 
 
-## Solution Architecture and deployment Options
+## Solution Architecture and deployment options
 
 ![Microservice RAG Architecture](docs/aks/aks-hla.png)
 
