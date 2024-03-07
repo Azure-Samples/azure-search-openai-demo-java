@@ -58,7 +58,7 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 > **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
 
 > [!CAUTION]
-> At time of writing AZD has introduced a bug in AKS deployment since 1.6.1. version.Monitor this [issue](https://github.com/Azure/azure-dev/issues/3486) to check in which version it will be fixed. In the meantime consider to use azd 1.5.1 to run the aks deployment.
+> At time of writing AZD has introduced a bug in AKS deployment since 1.6.1. version.Monitor this [issue](https://github.com/Azure/azure-dev/issues/3486) to check in which version it will be fixed. In the meantime consider to use azd 1.5.1 to run the aks deployment. You can download it from [here](https://github.com/Azure/azure-dev/releases/download/azure-dev-cli_1.5.1/azd-windows-amd64.msi) or visit the azd [release page](https://github.com/Azure/azure-dev/releases) to download specific os bundle 
 
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
