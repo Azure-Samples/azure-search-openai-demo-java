@@ -17,11 +17,18 @@ public class TextSplitter {
     public TextSplitter(boolean verbose) {
         this.sentenceEndings = new ArrayList<>();
         this.sentenceEndings.add(".");
+        this.sentenceEndings.add("。");
+        this.sentenceEndings.add("．");
         this.sentenceEndings.add("!");
         this.sentenceEndings.add("?");
+        this.sentenceEndings.add("‼");
+        this.sentenceEndings.add("⁇");
+        this.sentenceEndings.add("⁈");
+        this.sentenceEndings.add("⁉");
 
         this.wordBreaks = new ArrayList<>();
         this.wordBreaks.add(",");
+        this.wordBreaks.add("、");
         this.wordBreaks.add(";");
         this.wordBreaks.add(":");
         this.wordBreaks.add(" ");
