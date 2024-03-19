@@ -13,12 +13,12 @@ services:
       prepackage:
         windows:
           shell: pwsh
-          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
+          run:  cd ../frontend;npm install;npm run build; New-Item -ItemType Directory -Path "../backend/src/main/resources/static" -ErrorAction SilentlyContinue; Copy-Item ".\build\*" "..\backend\src\main\resources\static" -Recurse -Force
           interactive: true
           continueOnError: false
         posix:
           shell: sh
-          run:  cd ../frontend;npm install;npm run build; cp -r ./build/* ../backend/src/main/resources/static
+          run:  cd ../frontend;npm install;npm run build; mkdir -p ../backend/src/main/resources/static; cp -r ./build/* ../backend/src/main/resources/static
           interactive: true
           continueOnError: false
 
