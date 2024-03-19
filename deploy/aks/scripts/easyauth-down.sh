@@ -22,7 +22,7 @@ done <<< "$output"
 if [ "$AZURE_USE_EASY_AUTH" == "true" ]; then
   echo "Enabled EasyAuth for the AKS Cluster"
 else
-  exit 1
+  exit 0
 fi
 
 # Deleting Entra App

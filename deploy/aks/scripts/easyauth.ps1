@@ -19,7 +19,7 @@ if($env:AZURE_USE_EASY_AUTH -eq "true"){
 } else {
   Write-Host "EasyAuth is not enabled for the AKS Cluster"
   Write-Host "If you want to enable EasyAuth, please set the AZURE_USE_EASY_AUTH environment variable to true"
-  exit 1;
+  exit 0;
 }
 
 $location = $env:AZURE_LOCATION

@@ -13,7 +13,7 @@ foreach ($line in $output) {
 if($Env:AZURE_USE_EASY_AUTH -eq "true"){
   Write-Host "Enabled EasyAuth for the AKS Cluster"
 } else {
-  exit 1;
+  exit 0;
 }
 
 Write-Host "Deleting Entra App ${Env:adAppName}:${Env:AZURE_AD_APP_ID}"

@@ -37,7 +37,7 @@ if [ "$AZURE_USE_EASY_AUTH" = "true" ]; then
 else
   echo "EasyAuth is not enabled for the AKS Cluster"
   echo "If you want to enable EasyAuth, please set the AZURE_USE_EASY_AUTH environment variable to true"
-  exit 1
+  exit 0
 fi
 
 location=$AZURE_LOCATION
