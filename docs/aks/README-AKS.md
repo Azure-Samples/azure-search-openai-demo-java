@@ -22,21 +22,18 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 ## Table of contents
 
 <!-- TOC -->
-
-- [Open this project](#open-this-project)
-- [Features](#features)
 - [Getting Started](#getting-started)
+  * [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
   - [Prerequisites](#prerequisites)
   - [Starting from scratch](#starting-from-scratch)
   - [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     - [Existing resource group](#existing-resource-group)
     - [Existing OpenAI resource](#existing-openai-resource)
-    - [Existing Azure Azure AI Search resource](#existing-azure-cognitive-search-resource)
+    - [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
     - [Other existing Azure resources](#other-existing-azure-resources)
     - [Provision remaining resources](#provision-remaining-resources)
-  - [Deploying again](#deploying-again)
+  - [Deploying again](#redeploying)
   - [Running locally](#running-locally)
-  - [To Run in GitHub Codespaces or VS Code Dev Containers](#to-run-in-github-codespaces-or-vs-code-dev-containers)
   - [UI Navigation](#ui-navigation)
 - [Enabling optional features](#enabling-optional-features)
   - [Enabling Application Insights](#enabling-application-insights)
@@ -58,7 +55,7 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 > **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
 
 > [!CAUTION]
-> At time of writing AZD has introduced a bug in AKS deployment since 1.6.1. version.Monitor this [issue](https://github.com/Azure/azure-dev/issues/3486) to check in which version it will be fixed. In the meantime consider to use azd 1.5.1 to run the aks deployment. You can download it from [here](https://github.com/Azure/azure-dev/releases/download/azure-dev-cli_1.5.1/azd-windows-amd64.msi) or visit the azd [release page](https://github.com/Azure/azure-dev/releases) to download specific os bundle 
+> Be sure to use AZD version > 1.7.0 
 
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
@@ -73,7 +70,7 @@ All prerequisites are already installed in the container. You can skip to the [S
 
 - [Java 17](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
 - [Maven 3.8.x](https://maven.apache.org/download.cgi)
-- [Azure Developer CLI](https://aka.ms/azure-dev/install)
+- [Azure Developer CLI 1.7.0](https://aka.ms/azure-dev/install)
 - [Node.js](https://nodejs.org/en/download/)
 - [Git](https://git-scm.com/downloads)
 - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
@@ -108,11 +105,11 @@ Once you have the project available locally, run the following commands if you d
    - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
    - For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
-3. After the application has been successfully deployed you will see a frontend app URL printed to the console. Click that URL to interact with the application in your browser.
+3. After the application has been successfully deployed you will see a backend app load balancer IP printed to the console. Click that URL to interact with the application in your browser.
 
 It will look like the following:
 
-!['Output from running azd up'](docs/endpoint.png)
+!['Output from running azd up'](aks-deploy-success.png)
 
 > NOTE: It may take a minute for the application to be fully deployed.
 
@@ -246,7 +243,7 @@ To see the performance data, go to the Application Insights resource in your res
 To inspect the performance of chat requests, use the "Drill into Samples" button to see end-to-end traces of all the API calls made for any chat request.
 Under "Trace & Events" panel you can review custom Java informational logs to better understand content of OpenAI requests and responses.
 
-![Tracing screenshot](docs/transaction-tracing.png)
+![Tracing screenshot](aks-transaction-tracing.png)
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 

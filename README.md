@@ -12,15 +12,15 @@ products:
 - active-directory
 - azure-cognitive-search
 - azure-app-service
-- aks
-- aca
+- azure-container-apps
+- azure-kubernetes-service
 - azure-sdks
 - github
 - document-intelligence
 - azure-monitor
 - azure-pipelines
 urlFragment: azure-search-openai-demo-java
-name: ChatGPT + Enterprise data (Java)
+name: ChatGPT + Enterprise data (Java) on App Service, Azure Container Apps, and Azure Kubernetes Service
 description: A Java sample app that chats with your data using OpenAI and AI Search.
 ---
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->

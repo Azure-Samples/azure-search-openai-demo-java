@@ -28,21 +28,18 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 ## Table of contents
 
 <!-- TOC -->
-
-* [Open this project](#open-this-project)
-* [Features](#features)
 * [Getting Started](#getting-started)
+  * [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers) 
   * [Prerequisites](#prerequisites)
   * [Starting from scratch](#starting-from-scratch)
   * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     * [Existing resource group](#existing-resource-group)
     * [Existing OpenAI resource](#existing-openai-resource)
-    * [Existing Azure Azure AI Search resource](#existing-azure-cognitive-search-resource)
+    * [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
     * [Other existing Azure resources](#other-existing-azure-resources)
     * [Provision remaining resources](#provision-remaining-resources)
-  * [Deploying again](#deploying-again)
+  * [Deploying again](#redeploying)
   * [Running locally](#running-locally)
-  * [To Run in GitHub Codespaces or VS Code Dev Containers](#to-run-in-github-codespaces-or-vs-code-dev-containers)
   * [UI Navigation](#ui-navigation)
 * [Enabling optional features](#enabling-optional-features)
   * [Enabling Application Insights](#enabling-application-insights)

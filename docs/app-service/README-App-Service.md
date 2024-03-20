@@ -23,19 +23,18 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 <!-- TOC -->
 
-* [Open this project](#open-this-project)
 * [Getting Started](#getting-started)
+  * [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
   * [Prerequisites](#prerequisites)
   * [Starting from scratch](#starting-from-scratch)
   * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     * [Existing resource group](#existing-resource-group)
     * [Existing OpenAI resource](#existing-openai-resource)
-    * [Existing Azure Azure AI Search resource](#existing-azure-cognitive-search-resource)
+    * [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
     * [Other existing Azure resources](#other-existing-azure-resources)
     * [Provision remaining resources](#provision-remaining-resources)
-  * [Deploying again](#deploying-again)
+  * [Deploying again](#redeploying)
   * [Running locally](#running-locally)
-  * [To Run in GitHub Codespaces or VS Code Dev Containers](#to-run-in-github-codespaces-or-vs-code-dev-containers)
   * [UI Navigation](#ui-navigation)
 * [Enabling optional features](#enabling-optional-features)
   * [Enabling Application Insights](#enabling-application-insights)
@@ -141,7 +140,7 @@ You can also use existing Form Recognizer and Storage Accounts. See `./infra/mai
 
 #### Provision remaining resources
 
-Now you can run `azd up`, following the steps in [Deploying from scratch](#deploying-from-scratch) above.
+Now you can run `azd up`, following the steps in [Starting from scratch](#starting-from-scratch) above.
 That will both provision resources and deploy the code.
 
 
@@ -280,7 +279,7 @@ Once saved, you will see dev and prod environment got automatically created unde
 
 Connect Azure Devops to Azure:
 1. Add a Service Connection following this [guide](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops) to allow Azure Devops pipeline to connect to your Azure resources /App Service.
-2. Modify `.azdo/pipelines/app-ci.yaml` '<azureSubscriptionServiceConnection>' and replace it with the name of the Service Connection.
+2. Modify `.azdo/pipelines/app-ci.yaml` '&lt;azureSubscriptionServiceConnection&gt;' and replace it with the name of the Service Connection.
 ![location1](pipeline-azure-service-connection1.png)
 ![location2](pipeline-azure-service-connection2.png)
 
