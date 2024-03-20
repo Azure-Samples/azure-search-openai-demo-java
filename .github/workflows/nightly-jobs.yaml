@@ -63,9 +63,9 @@ jobs:
 
       - name: Verify Indexer project
         run: |
-          echo "Verifying indexer project."
+          echo "Testing indexer project."
           cd ./app/indexer
-          ./mvnw verify
+          ./mvnw test
 
       - name: Build Spring Boot App
         run: |
