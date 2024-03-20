@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "infra/**"
+      - "deploy/**"
 
   workflow_dispatch:
 
@@ -16,6 +16,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  security-events: write
 
 jobs:
   validate-bicep:
@@ -24,12 +25,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Build Bicep for linting
+      - name: Filter Changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+            filters: |
+              app-service:
+                - 'deploy/app-service/**'
+              aks:
+                - 'deploy/aks/**'
+              aca:
+                - 'deploy/aca/**'
+      - name: Build App Service Bicep for linting
+        if: steps.changes.outputs.app-service == 'true'
         uses: azure/CLI@v1
         with:
-          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f infra/main.bicep --stdout
-          
+          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/app-service/infra/main.bicep --stdout
+      
+      - name: Build AKS Bicep for linting
+        if: steps.changes.outputs.aks == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aks/infra/main.bicep --stdout
+      
+      - name: Build ACA Bicep for linting
+        if: steps.changes.outputs.aca == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aca/infra/main.bicep --stdout
+     
       - name: Run Microsoft Security DevOps Analysis
         uses: microsoft/security-devops-action@v1
         id: msdo

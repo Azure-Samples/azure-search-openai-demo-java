@@ -1,0 +1,10 @@
+{
+    "azureFunctions.javaBuildTool": "maven",
+    "azureFunctions.deploySubpath": "app/indexer/functions/target/azure-functions/indexer-blob-processor",
+    "azureFunctions.projectLanguage": "Java",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.projectSubpath": "app/indexer/functions",
+    "azureFunctions.preDeployTask": "package (functions)",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

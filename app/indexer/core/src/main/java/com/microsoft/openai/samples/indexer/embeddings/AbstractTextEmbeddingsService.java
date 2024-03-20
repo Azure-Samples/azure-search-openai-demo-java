@@ -70,9 +70,9 @@ public abstract class AbstractTextEmbeddingsService implements TextEmbeddingsSer
                     for (EmbeddingItem data : embResponse.getData()) {
                         embeddings.add(data.getEmbedding());
                     }
-                    if (verbose) {
-                        logger.info("Embedding batch[%d] of [%d] completed. Batch size [%d] Token count [%d]".formatted(batchIndex+1, batches.size(), batch.getTexts().size(), batch.getTokenLength()));
-                    }
+
+                    logger.info("Embedding batch[%d] of [%d] completed. Batch size [%d] Token count [%d]".formatted(batchIndex+1, batches.size(), batch.getTexts().size(), batch.getTokenLength()));
+
                    
             }
         

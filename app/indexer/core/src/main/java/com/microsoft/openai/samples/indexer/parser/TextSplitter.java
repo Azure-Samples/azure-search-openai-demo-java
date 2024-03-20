@@ -17,11 +17,18 @@ public class TextSplitter {
     public TextSplitter(boolean verbose) {
         this.sentenceEndings = new ArrayList<>();
         this.sentenceEndings.add(".");
+        this.sentenceEndings.add("。");
+        this.sentenceEndings.add("．");
         this.sentenceEndings.add("!");
         this.sentenceEndings.add("?");
+        this.sentenceEndings.add("‼");
+        this.sentenceEndings.add("⁇");
+        this.sentenceEndings.add("⁈");
+        this.sentenceEndings.add("⁉");
 
         this.wordBreaks = new ArrayList<>();
         this.wordBreaks.add(",");
+        this.wordBreaks.add("、");
         this.wordBreaks.add(";");
         this.wordBreaks.add(":");
         this.wordBreaks.add(" ");
@@ -49,6 +56,12 @@ public class TextSplitter {
         int length = allText.length();
         int start = 0;
         int end = length;
+
+        if (length <= maxSectionLength) {
+            splitPages.add(new SplitPage(findPage(start, pages), allText.toString()));
+            return splitPages;
+        }
+
         while (start + sectionOverlap < length) {
             int lastWord = -1;
             end = start + maxSectionLength;

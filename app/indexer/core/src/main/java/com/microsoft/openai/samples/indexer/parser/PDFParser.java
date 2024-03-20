@@ -7,4 +7,5 @@ import java.util.List;
 public interface PDFParser {
     
     public List<Page> parse(File file);
+    public List<Page> parse(byte[] content);
 }

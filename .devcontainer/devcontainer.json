@@ -3,7 +3,9 @@
     "image": "mcr.microsoft.com/devcontainers/java:1-17-bullseye",
     "features": {
         "azure-cli": "latest",
-        "ghcr.io/azure/azure-dev/azd:latest": {},
+        "ghcr.io/azure/azure-dev/azd:latest": {
+            "version": "1.7.0"
+        },
         "ghcr.io/devcontainers/features/java:1": {
             "version": "none",
             "installMaven": true,
@@ -16,7 +18,15 @@
         "ghcr.io/devcontainers/features/git:1": {
             "version": "2.39.1"
         },
-        "ghcr.io/devcontainers-contrib/features/typescript:2": {}
+        "ghcr.io/devcontainers-contrib/features/typescript:2": {},
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+            "version": "1.1.8"
+        },
+        "docker-in-docker": {
+            "version": "latest",
+            "moby": true,
+            "dockerDashComposeVersion": "v1"
+        }
     },
     "customizations": {
         "vscode": {
