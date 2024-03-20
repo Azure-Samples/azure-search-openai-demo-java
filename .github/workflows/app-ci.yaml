@@ -44,6 +44,12 @@ jobs:
           npm install
           npm run build
 
+      - name: Verify Indexer project
+        run: |
+          echo "Verifying indexer project."
+          cd ./app/indexer
+          ./mvnw verify
+
       - name: Build Spring Boot App
         run: |
           echo "Building spring boot app. Environment [${{ steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT }}]"
