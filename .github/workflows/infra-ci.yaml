@@ -48,7 +48,7 @@ jobs:
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aks/infra/main.bicep --stdout
       
-      - name: Build AKS Bicep for linting
+      - name: Build ACA Bicep for linting
         if: steps.changes.outputs.aca == 'true'
         uses: azure/CLI@v1
         with:
