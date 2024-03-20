@@ -16,6 +16,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  security-events: write
 
 jobs:
   validate-bicep:
@@ -30,11 +31,11 @@ jobs:
         with:
             filters: |
               app-service:
-                - 'deploy/app-service'
+                - 'deploy/app-service/**'
               aks:
-                - 'deploy/aks'
+                - 'deploy/aks/**'
               aca:
-                - 'deploy/aca'
+                - 'deploy/aca/**'
       - name: Build App Service Bicep for linting
         if: steps.changes.outputs.app-service == 'true'
         uses: azure/CLI@v1
