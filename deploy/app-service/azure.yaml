@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: azure-search-openai-demo
+name: azure-search-openai-demo-java-app-service
 metadata:
 
-  template: azure-search-openai-demo-java@1.2.0-alpha
+  template: azure-search-openai-demo-java-app-service@1.2.0-alpha
 services:
   backend:
     project: ../../app/backend
