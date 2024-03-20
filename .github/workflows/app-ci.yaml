@@ -28,6 +28,7 @@ jobs:
       - name: Set environment for branch
         id: set-deploy-env
         run: |
+          echo "checking branch name [$GITHUB_REF_NAME]"
           if [[ $GITHUB_REF_NAME == 'refs/heads/main' ]]; then
               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF_NAME == *'refs/heads/release'* ]]; then
