@@ -1,4 +1,4 @@
-name: Nightly Jobs
+name: Nightly and CICD Jobs
 
 on:
   pull_request:
@@ -60,6 +60,12 @@ jobs:
           distribution: 'microsoft'
           java-version: '17'
           cache: 'maven'
+
+      - name: Verify Indexer project
+        run: |
+          echo "Verifying indexer project."
+          cd ./app/indexer
+          ./mvnw verify
 
       - name: Build Spring Boot App
         run: |
