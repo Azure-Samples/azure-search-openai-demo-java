@@ -2,7 +2,7 @@
 
 name: azure-search-openai-demo-java-aks
 metadata:
-  template: azure-search-openai-demo-java-aks@1.2.0-alpha
+  template: azure-search-openai-demo-java-aks@1.2.0
 services:
   api:
     project: ../../app/backend

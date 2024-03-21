@@ -443,3 +443,4 @@ Here are the most common failure scenarios and solutions:
     az resource update --resource-group <resource-group> --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/<site-name> --set properties.allow=true
     ```
     For more details see this [issue](https://github.com/Azure-Samples/azure-search-openai-demo-java/issues/7).
+10. When running azd up the first time it successfully complete but the zip file extraction fails on App Service during deployment. You can fix this by running azd deploy after azd up completes. This will only deploy the app code and not provision the resources again.

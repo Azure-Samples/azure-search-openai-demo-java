@@ -6,7 +6,7 @@
 
     <groupId>com.microsoft.openai.samples</groupId>
     <artifactId>indexer-parent</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -25,6 +25,7 @@
         <module>core</module>
         <module>cli</module>
         <module>microservice</module>
+        <module>functions</module>
     </modules>
 
     <dependencyManagement>
