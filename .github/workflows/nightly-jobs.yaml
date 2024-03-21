@@ -74,6 +74,8 @@ jobs:
           cd ./app/frontend
           npm install
           npm run build
+          mkdir -p ../backend/src/main/resources/static
+          cp -r ./build/* ../backend/src/main/resources/static
 
   backend: 
     name: "Backend validation"
