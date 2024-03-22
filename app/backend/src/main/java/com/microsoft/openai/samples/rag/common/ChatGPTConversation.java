@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.common;
 
-import com.azure.ai.openai.models.ChatMessage;
+import com.azure.ai.openai.models.ChatRequestAssistantMessage;
+import com.azure.ai.openai.models.ChatRequestMessage;
+import com.azure.ai.openai.models.ChatRequestSystemMessage;
+import com.azure.ai.openai.models.ChatRequestUserMessage;
+import com.azure.ai.openai.models.ChatRole;
+
 import java.util.List;
 
 public class ChatGPTConversation {
@@ -13,15 +18,22 @@ public class ChatGPTConversation {
         this.messages = messages;
     }
 
-    public List<ChatMessage> toOpenAIChatMessages() {
+    public List<ChatRequestMessage> toOpenAIChatMessages() {
         return this.messages.stream()
                 .map(
                         message -> {
-                            ChatMessage chatMessage =
-                                    new ChatMessage(
-                                            com.azure.ai.openai.models.ChatRole.fromString(
-                                                    message.role().toString()));
-                            chatMessage.setContent(message.content());
+
+                            ChatRole role = ChatRole.fromString(
+                                    message.role().toString());
+                            ChatRequestMessage chatMessage = null;
+
+                            if (role.equals(ChatRole.USER)) {
+                                chatMessage = new ChatRequestUserMessage(message.content());
+                            } else if (role.equals(ChatRole.ASSISTANT)) {
+                                chatMessage = new ChatRequestAssistantMessage(message.content());
+                            } else if (role.equals(ChatRole.SYSTEM)) {
+                                chatMessage = new ChatRequestSystemMessage(message.content());
+                            }
                             return chatMessage;
                         })
                 .toList();

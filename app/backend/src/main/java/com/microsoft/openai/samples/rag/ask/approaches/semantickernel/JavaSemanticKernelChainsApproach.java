@@ -6,22 +6,25 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.semantickernel.Kernel;
-import com.microsoft.semantickernel.SKBuilders;
-import com.microsoft.semantickernel.orchestration.SKContext;
+import com.microsoft.semantickernel.orchestration.FunctionResult;
+import com.microsoft.semantickernel.plugin.KernelPluginFactory;
+import com.microsoft.semantickernel.semanticfunctions.KernelFunctionArguments;
+import com.microsoft.semantickernel.services.chatcompletion.ChatCompletionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 /**
  * Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an
@@ -36,8 +39,8 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
             LoggerFactory.getLogger(JavaSemanticKernelChainsApproach.class);
     private static final String PLAN_PROMPT =
             """
-            Take the input as a question and answer it finding any information needed
-            """;
+                    Take the input as a question and answer it finding any information needed
+                    """;
     private final CognitiveSearchProxy cognitiveSearchProxy;
 
     private final OpenAIProxy openAIProxy;
@@ -69,21 +72,24 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
 
         // STEP 1: Retrieve relevant documents using user question. It reuses the
         // CognitiveSearchRetriever appraoch through the CognitiveSearchPlugin native function.
-        SKContext searchContext =
-                semanticKernel
-                        .runAsync(
-                                question,
-                                semanticKernel
-                                        .getSkill("InformationFinder")
-                                        .getFunction("SearchFromQuestion", null))
-                        .block();
+        FunctionResult<String> searchContext = semanticKernel
+                .getPlugin("InformationFinder")
+                .get("SearchFromQuestion")
+                .invokeAsync(semanticKernel)
+                .withArguments(
+                        KernelFunctionArguments.builder()
+                                .withInput(question)
+                                .build()
+                )
+                .withResultType(String.class)
+                .block();
 
         var sources = formSourcesList(searchContext.getResult());
 
         // STEP 2: Build a SK context with the sources retrieved from the memory store and the user
         // question.
         var answerVariables =
-                SKBuilders.variables()
+                KernelFunctionArguments.builder()
                         .withVariable("sources", searchContext.getResult())
                         .withVariable("input", question)
                         .build();
@@ -93,12 +99,12 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
          * (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
          * Triggering Open AI to get an answerVariables.
          */
-        SKContext answerExecutionContext =
-                semanticKernel
-                        .runAsync(
-                                answerVariables,
-                                semanticKernel.getSkill("RAG").getFunction("AnswerQuestion", null))
-                        .block();
+        FunctionResult<String> answerExecutionContext = semanticKernel
+                .invokeAsync("RAG", "AnswerQuestion")
+                .withArguments(answerVariables)
+                .withResultType(String.class)
+                .block();
+
         return new RAGResponse.Builder()
                 .prompt("Prompt is managed by Semantic Kernel")
                 .answer(answerExecutionContext.getResult())
@@ -144,20 +150,28 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
      * @return
      */
     private Kernel buildSemanticKernel(RAGOptions options) {
-        Kernel kernel =
-                SKBuilders.kernel()
-                        .withDefaultAIService(
-                                SKBuilders.chatCompletion()
-                                        .withModelId(gptChatDeploymentModelId)
-                                        .withOpenAIClient(this.openAIAsyncClient)
-                                        .build())
-                        .build();
-
-        kernel.importSkill(
-                new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
-                "InformationFinder");
-        kernel.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerQuestion", null);
-
-        return kernel;
+        return Kernel.builder()
+                .withAIService(
+                        ChatCompletionService.class,
+                        ChatCompletionService.builder()
+                                .withModelId(gptChatDeploymentModelId)
+                                .withOpenAIAsyncClient(this.openAIAsyncClient)
+                                .build()
+                )
+                .withPlugin(
+                        KernelPluginFactory.createFromObject(
+                                new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
+                                "InformationFinder")
+                )
+                .withPlugin(
+                        KernelPluginFactory.importPluginFromResourcesDirectory(
+                                "semantickernel/Plugins",
+                                "RAG",
+                                "AnswerQuestion",
+                                null,
+                                String.class
+                        )
+                )
+                .build();
     }
 }

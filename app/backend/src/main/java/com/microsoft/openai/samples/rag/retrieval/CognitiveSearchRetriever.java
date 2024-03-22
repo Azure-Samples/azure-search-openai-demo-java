@@ -5,7 +5,12 @@ import com.azure.ai.openai.models.ChatCompletions;
 import com.azure.ai.openai.models.Embeddings;
 import com.azure.core.util.Context;
 import com.azure.search.documents.SearchDocument;
-import com.azure.search.documents.models.*;
+import com.azure.search.documents.models.QueryCaptionType;
+import com.azure.search.documents.models.QueryLanguage;
+import com.azure.search.documents.models.QuerySpellerType;
+import com.azure.search.documents.models.QueryType;
+import com.azure.search.documents.models.SearchOptions;
+import com.azure.search.documents.models.SearchQueryVector;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
@@ -14,12 +19,13 @@ import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Cognitive Search retriever implementation that uses the Cognitive Search API to retrieve
@@ -82,7 +88,7 @@ public class CognitiveSearchRetriever implements Retriever {
      * @param conversation
      * @param ragOptions
      * @return facts retrieved from the search index based on GPT optimized search keywords
-     *     extracted from the chat history
+     * extracted from the chat history
      */
     @Override
     public List<ContentSource> retrieveFromConversation(

@@ -18,8 +18,7 @@
 
 		<spring-cloud-azure.version>4.9.0</spring-cloud-azure.version>
 		<azure-search.version>11.6.0-beta.8</azure-search.version>
-		<azure-openai.version>1.0.0-beta.2</azure-openai.version>
-		<semantic-kernel.version>0.2.9-alpha</semantic-kernel.version>
+		<semantic-kernel.version>1.0.0-rc3-SNAPSHOT</semantic-kernel.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
 		<maven.compiler-plugin.version>3.11.0</maven.compiler-plugin.version>
 
@@ -81,18 +80,24 @@
 		<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-identity</artifactId>
+			<version>1.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-core</artifactId>
+			<version>1.45.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-search-documents</artifactId>
 			<version>${azure-search.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-ai-openai</artifactId>
-			<version>${azure-openai.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.azure</groupId>
+					<artifactId>azure-core-serializer-json-jackson</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -107,22 +112,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-core</artifactId>
-			<!-- TODO: scope should be runtime, but VolatileMemoryStore is an issue -->
-			<!-- <scope>runtime</scope> -->
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-connectors-ai-openai</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-planners</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-connectors-memory-azurecognitivesearch</artifactId>
+			<artifactId>semantickernel-aiservices-openai</artifactId>
 		</dependency>
 		<!-- Semantic Kernel end -->
 	</dependencies>

@@ -1,17 +1,20 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.chat.approaches;
 
-import com.azure.ai.openai.models.ChatMessage;
-import com.azure.ai.openai.models.ChatRole;
+import com.azure.ai.openai.models.ChatRequestAssistantMessage;
+import com.azure.ai.openai.models.ChatRequestMessage;
+import com.azure.ai.openai.models.ChatRequestSystemMessage;
+import com.azure.ai.openai.models.ChatRequestUserMessage;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class SemanticSearchChat {
 
-    private final List<ChatMessage> conversationHistory = new ArrayList<>();
+    private final List<ChatRequestMessage> conversationHistory = new ArrayList<>();
     private final StringBuilder sources = new StringBuilder();
     private final Boolean followUpQuestions;
     private final String customPrompt;
@@ -20,31 +23,31 @@ public class SemanticSearchChat {
 
     private static final String FOLLOW_UP_QUESTIONS_TEMPLATE =
             """
-    After answering question, also generate three very brief follow-up questions that the user would likely ask next.
-    Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
-    Try not to repeat questions that have already been asked.
-    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'
-            """;
+                    After answering question, also generate three very brief follow-up questions that the user would likely ask next.
+                    Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
+                    Try not to repeat questions that have already been asked.
+                    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'
+                            """;
     private static final String SYSTEM_CHAT_MESSAGE_TEMPLATE =
             """
-     Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
-     Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
-     For tabular information return it as an html table. Do not return markdown format.
-     Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
+                      Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
+                      Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
+                      For tabular information return it as an html table. Do not return markdown format.
+                      Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
 
-    %s
-    %s
-   Sources:
-    %s
-    """;
+                     %s
+                     %s
+                    Sources:
+                     %s
+                     """;
 
     /**
-     * @param conversation conversation history
-     * @param sources domain specific sources to be used in the prompt
-     * @param customPrompt custom prompt to be injected in the existing promptTemplate or used to
-     *     replace it
+     * @param conversation  conversation history
+     * @param sources       domain specific sources to be used in the prompt
+     * @param customPrompt  custom prompt to be injected in the existing promptTemplate or used to
+     *                      replace it
      * @param replacePrompt if true, the customPrompt will replace the default promptTemplate,
-     *     otherwise it will be appended to the default promptTemplate in the predefined section
+     *                      otherwise it will be appended to the default promptTemplate in the predefined section
      */
     public SemanticSearchChat(
             ChatGPTConversation conversation,
@@ -86,8 +89,7 @@ public class SemanticSearchChat {
                         this.sources.toString());
 
         // Add system message
-        ChatMessage chatMessage = new ChatMessage(ChatRole.SYSTEM);
-        chatMessage.setContent(systemMessage);
+        ChatRequestSystemMessage chatMessage = new ChatRequestSystemMessage(systemMessage);
         this.conversationHistory.add(chatMessage);
 
         buildConversationHistory(conversation);
@@ -95,17 +97,17 @@ public class SemanticSearchChat {
 
     /**
      * @param conversation conversation history
-     * @param sources domain specific sources to be used in the prompt
+     * @param sources      domain specific sources to be used in the prompt
      */
     public SemanticSearchChat(ChatGPTConversation conversation, List<ContentSource> sources) {
         this(conversation, sources, null, false, false);
     }
 
     /**
-     * @param conversation conversation history
-     * @param sources domain specific sources to be used in the prompt
+     * @param conversation      conversation history
+     * @param sources           domain specific sources to be used in the prompt
      * @param followupQuestions if true, the followup questions prompt will be injected in the
-     *     promptTemplate
+     *                          promptTemplate
      */
     public SemanticSearchChat(
             ChatGPTConversation conversation,
@@ -114,7 +116,7 @@ public class SemanticSearchChat {
         this(conversation, sources, null, false, followupQuestions);
     }
 
-    public List<ChatMessage> getMessages() {
+    public List<ChatRequestMessage> getMessages() {
         return this.conversationHistory;
     }
 
@@ -125,12 +127,10 @@ public class SemanticSearchChat {
                 .forEach(
                         message -> {
                             if (message.role() == ChatGPTMessage.ChatRole.USER) {
-                                ChatMessage chatMessage = new ChatMessage(ChatRole.USER);
-                                chatMessage.setContent(message.content());
+                                ChatRequestMessage chatMessage = new ChatRequestUserMessage(message.content());
                                 this.conversationHistory.add(chatMessage);
                             } else if (message.role() == ChatGPTMessage.ChatRole.ASSISTANT) {
-                                ChatMessage chatMessage = new ChatMessage(ChatRole.ASSISTANT);
-                                chatMessage.setContent(message.content());
+                                ChatRequestMessage chatMessage = new ChatRequestAssistantMessage(message.content());
                                 this.conversationHistory.add(chatMessage);
                             }
                         });

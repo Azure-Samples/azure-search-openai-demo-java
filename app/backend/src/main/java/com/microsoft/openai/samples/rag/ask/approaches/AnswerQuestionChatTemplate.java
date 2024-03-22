@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.ask.approaches;
 
-import com.azure.ai.openai.models.ChatMessage;
-import com.azure.ai.openai.models.ChatRole;
+import com.azure.ai.openai.models.ChatRequestAssistantMessage;
+import com.azure.ai.openai.models.ChatRequestMessage;
+import com.azure.ai.openai.models.ChatRequestSystemMessage;
+import com.azure.ai.openai.models.ChatRequestUserMessage;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class AnswerQuestionChatTemplate {
 
-    private final List<ChatMessage> conversationHistory = new ArrayList<>();
+    private final List<ChatRequestMessage> conversationHistory = new ArrayList<>();
 
     private String customPrompt = "";
     private String systemMessage;
@@ -71,22 +74,19 @@ public class AnswerQuestionChatTemplate {
         }
 
         // Add system message
-        ChatMessage chatSystemMessage = new ChatMessage(ChatRole.SYSTEM);
-        chatSystemMessage.setContent(systemMessage);
+        ChatRequestMessage chatSystemMessage = new ChatRequestSystemMessage(systemMessage);
 
         this.conversationHistory.add(chatSystemMessage);
 
         // Add few shoot learning with chat
-        ChatMessage fewShotUserMessage = new ChatMessage(ChatRole.USER);
-        fewShotUserMessage.setContent(FEW_SHOT_USER_MESSAGE);
+        ChatRequestMessage fewShotUserMessage = new ChatRequestUserMessage(FEW_SHOT_USER_MESSAGE);
         this.conversationHistory.add(fewShotUserMessage);
 
-        ChatMessage fewShotAssistantMessage = new ChatMessage(ChatRole.ASSISTANT);
-        fewShotAssistantMessage.setContent(FEW_SHOT_ASSISTANT_MESSAGE);
+        ChatRequestMessage fewShotAssistantMessage = new ChatRequestAssistantMessage(FEW_SHOT_ASSISTANT_MESSAGE);
         this.conversationHistory.add(fewShotAssistantMessage);
     }
 
-    public List<ChatMessage> getMessages(String question, List<ContentSource> sources) {
+    public List<ChatRequestMessage> getMessages(String question, List<ContentSource> sources) {
         if (sources == null || sources.isEmpty())
             throw new IllegalStateException("sources cannot be null or empty");
         if (question == null || question.isEmpty())
@@ -107,8 +107,7 @@ public class AnswerQuestionChatTemplate {
         String groundedUserQuestion =
                 GROUNDED_USER_QUESTION_TEMPLATE.formatted(
                         question, sourcesStringBuilder.toString());
-        ChatMessage groundedUserMessage = new ChatMessage(ChatRole.USER);
-        groundedUserMessage.setContent(groundedUserQuestion);
+        ChatRequestMessage groundedUserMessage = new ChatRequestUserMessage(groundedUserQuestion);
         this.conversationHistory.add(groundedUserMessage);
 
         return this.conversationHistory;

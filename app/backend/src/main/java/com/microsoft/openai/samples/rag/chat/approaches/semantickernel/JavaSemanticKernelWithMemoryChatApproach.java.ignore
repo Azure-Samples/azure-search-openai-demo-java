@@ -12,21 +12,15 @@ import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.memory.CustomAzureCognitiveSearchMemoryStore;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
-import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.semantickernel.Kernel;
-import com.microsoft.semantickernel.SKBuilders;
-import com.microsoft.semantickernel.ai.embeddings.Embedding;
-import com.microsoft.semantickernel.memory.MemoryQueryResult;
-import com.microsoft.semantickernel.memory.MemoryRecord;
-import com.microsoft.semantickernel.orchestration.SKContext;
-import com.microsoft.semantickernel.orchestration.SKFunction;
+import com.microsoft.semantickernel.orchestration.FunctionResult;
+import com.microsoft.semantickernel.semanticfunctions.KernelFunction;
+import com.microsoft.semantickernel.semanticfunctions.KernelFunctionArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
@@ -58,6 +52,7 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
 
     @Value("${openai.embedding.deployment}")
     private String embeddingDeploymentModelId;
+
     public JavaSemanticKernelWithMemoryChatApproach(TokenCredential tokenCredential, OpenAIAsyncClient openAIAsyncClient, SearchAsyncClient searchAsyncClient, ObjectMapper objectMapper) {
         this.tokenCredential = tokenCredential;
         this.openAIAsyncClient = openAIAsyncClient;
@@ -82,14 +77,17 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         List<ContentSource> sourcesList = buildSources(sourcesResult);
 
         // STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        SKFunction answerConversation = semanticKernel.getFunction("RAG", "AnswerConversation");
-        SKContext skcontext = SKBuilders.context().build()
-                .setVariable("sources", sources)
-                .setVariable("conversation", conversation)
-                .setVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
-                .setVariable("input",  question);
+        KernelFunction<String> answerConversation = semanticKernel.getFunction("RAG", "AnswerConversation");
+        KernelFunctionArguments arguments = KernelFunctionArguments.builder()
+                .withVariable("sources", sources)
+                .withVariable("conversation", conversation)
+                .withVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
+                .withVariable("input", question)
+                .build();
 
-        SKContext reply = (SKContext) answerConversation.invokeAsync(skcontext).block();
+        FunctionResult<String> reply = answerConversation.invokeAsync(semanticKernel)
+                .withArguments(arguments)
+                .block();
 
         return new RAGResponse.Builder()
                 .prompt("Prompt is managed by Semantic Kernel")
@@ -105,12 +103,21 @@ public class JavaSemanticKernelWithMemoryChatApproach implements RAGApproach<Cha
         throw new IllegalStateException("Streaming not supported for this approach");
     }
 
-    private List<MemoryQueryResult> getSourcesFromConversation (String conversation, Kernel kernel, RAGOptions options) {
-        SKFunction extractKeywords = kernel.getFunction("RAG", "ExtractKeywords");
-        SKContext skcontext = SKBuilders.context().build().setVariable("conversation", conversation);
+    private List<MemoryQueryResult> getSourcesFromConversation(String conversation, Kernel kernel, RAGOptions options) {
+        KernelFunction<String> extractKeywords = kernel
+                .getPlugin("RAG")
+                .get("ExtractKeywords");
 
-        Mono<SKContext> result = extractKeywords.invokeAsync(skcontext);
-        String searchQuery = result.block().getResult();
+        KernelFunctionArguments arguments = KernelFunctionArguments.builder()
+                .withVariable("conversation", conversation)
+                .build();
+
+        FunctionResult<String> result = extractKeywords
+                .invokeAsync(kernel)
+                .withArguments(arguments)
+                .block();
+        String searchQuery = result.getResult();
+
 
         /**
          * Use semantic kernel built-in memory.searchAsync. It uses OpenAI to generate embeddings for the provided question.

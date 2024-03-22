@@ -1,8 +1,12 @@
 package com.microsoft.openai.samples.rag.common;
 
 import com.azure.ai.openai.models.ChatCompletionsOptions;
-import com.azure.ai.openai.models.ChatMessage;
-import com.azure.ai.openai.models.ChatRole;
+import com.azure.ai.openai.models.ChatRequestAssistantMessage;
+import com.azure.ai.openai.models.ChatRequestMessage;
+import com.azure.ai.openai.models.ChatRequestSystemMessage;
+import com.azure.ai.openai.models.ChatRequestUserMessage;
+import com.microsoft.semantickernel.services.chatcompletion.AuthorRole;
+import com.microsoft.semantickernel.services.chatcompletion.ChatMessageContent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +14,7 @@ import java.util.List;
 
 public class ChatGPTUtils {
 
-    public static ChatCompletionsOptions buildDefaultChatCompletionsOptions(List<ChatMessage> messages) {
+    public static ChatCompletionsOptions buildDefaultChatCompletionsOptions(List<ChatRequestMessage> messages) {
         ChatCompletionsOptions completionsOptions = new ChatCompletionsOptions(messages);
 
         completionsOptions.setMaxTokens(1024);
@@ -31,34 +35,41 @@ public class ChatGPTUtils {
     private static final String IM_START_ASSISTANT = "<|im_start|>assistant";
     private static final String IM_START_SYSTEM = "<|im_start|>system";
 
-    public static String formatAsChatML(List<ChatMessage> messages) {
+    public static String formatAsChatML(List<ChatRequestMessage> messages) {
         StringBuilder sb = new StringBuilder();
         messages.forEach(message -> {
-            if (message.getRole() == ChatRole.USER) {
+            String content = null;
+            if (message instanceof ChatRequestUserMessage) {
                 sb.append(IM_START_USER).append("\n");
-            } else if (message.getRole() == ChatRole.ASSISTANT) {
-                sb.append(IM_START_ASSISTANT).append("\n");
-            } else {
+                content = ((ChatRequestUserMessage) message).getContent().toString();
+            } else if (message instanceof ChatRequestSystemMessage) {
                 sb.append(IM_START_SYSTEM).append("\n");
+                content = ((ChatRequestSystemMessage) message).getContent();
+            } else if (message instanceof ChatRequestAssistantMessage) {
+                sb.append(IM_START_ASSISTANT).append("\n");
+                content = ((ChatRequestAssistantMessage) message).getContent();
             }
-            sb.append(message.getContent()).append("\n").append("|im_end|").append("\n");
+
+            if (content != null) {
+                sb.append(content).append("\n").append("|im_end|").append("\n");
+            }
         });
         return sb.toString();
     }
 
-    public static List<ChatMessage> parseChatML(String chatML) {
-        List<ChatMessage> messages = new ArrayList<>();
+    public static List<ChatMessageContent> parseChatML(String chatML) {
+        List<ChatMessageContent> messages = new ArrayList<>();
         String[] messageTokens = chatML.split("\\|im_end\\|\\n");
 
         for (String messageToken : messageTokens) {
             String[] lines = messageToken.trim().split("\n");
 
             if (lines.length >= 2) {
-                ChatRole role = ChatRole.SYSTEM;
+                AuthorRole role = AuthorRole.SYSTEM;
                 if (IM_START_USER.equals(lines[0])) {
-                    role = ChatRole.USER;
+                    role = AuthorRole.USER;
                 } else if (IM_START_ASSISTANT.equals(lines[0])) {
-                    role = ChatRole.ASSISTANT;
+                    role = AuthorRole.ASSISTANT;
                 }
 
                 StringBuilder content = new StringBuilder();
@@ -69,7 +80,7 @@ public class ChatGPTUtils {
                     }
                 }
 
-                messages.add(new ChatMessage(role).setContent(content.toString()));
+                messages.add(new ChatMessageContent<>(role, content.toString()));
             }
         }
 

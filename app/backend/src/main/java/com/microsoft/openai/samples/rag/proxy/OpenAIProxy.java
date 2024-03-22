@@ -91,6 +91,8 @@ public class OpenAIProxy {
         try {
             EmbeddingsOptions embeddingsOptions = new EmbeddingsOptions(texts);
             embeddingsOptions.setUser("search-openai-demo-java");
+            embeddingsOptions.setModel(this.embeddingDeploymentModelId);
+            embeddingsOptions.setInputType("query");
             embeddings = client.getEmbeddings(this.embeddingDeploymentModelId, embeddingsOptions);
         } catch (HttpResponseException e) {
             throw new ResponseStatusException(

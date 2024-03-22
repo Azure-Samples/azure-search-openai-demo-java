@@ -4,6 +4,7 @@ package com.microsoft.openai.samples.rag.config;
 import com.azure.ai.openai.OpenAIAsyncClient;
 import com.azure.ai.openai.OpenAIClient;
 import com.azure.ai.openai.OpenAIClientBuilder;
+import com.azure.ai.openai.OpenAIServiceVersion;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.http.policy.HttpLogOptions;
@@ -37,6 +38,7 @@ public class OpenAIConfiguration {
                 .endpoint(endpoint)
                 .credential(tokenCredential)
                 .httpLogOptions(httpLogOptions)
+                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildClient();
     }
 
@@ -47,6 +49,7 @@ public class OpenAIConfiguration {
         return new OpenAIClientBuilder()
                 .endpoint(endpoint)
                 .credential(tokenCredential)
+                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildClient();
     }
 
@@ -63,6 +66,7 @@ public class OpenAIConfiguration {
                 .endpoint(endpoint)
                 .credential(tokenCredential)
                 .httpLogOptions(httpLogOptions)
+                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildAsyncClient();
     }
 
@@ -73,6 +77,7 @@ public class OpenAIConfiguration {
         return new OpenAIClientBuilder()
                 .endpoint(endpoint)
                 .credential(tokenCredential)
+                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildAsyncClient();
     }
 }

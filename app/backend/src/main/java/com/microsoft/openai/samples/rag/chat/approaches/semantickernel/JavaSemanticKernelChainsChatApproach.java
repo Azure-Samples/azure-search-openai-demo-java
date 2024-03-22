@@ -5,15 +5,18 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
 import com.microsoft.semantickernel.Kernel;
-import com.microsoft.semantickernel.SKBuilders;
-import com.microsoft.semantickernel.orchestration.ContextVariables;
-import com.microsoft.semantickernel.orchestration.SKContext;
+import com.microsoft.semantickernel.aiservices.openai.chatcompletion.OpenAIChatCompletion;
+import com.microsoft.semantickernel.orchestration.FunctionResult;
+import com.microsoft.semantickernel.plugin.KernelPlugin;
+import com.microsoft.semantickernel.plugin.KernelPluginFactory;
+import com.microsoft.semantickernel.semanticfunctions.KernelFunctionArguments;
+import com.microsoft.semantickernel.services.chatcompletion.ChatCompletionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -60,18 +63,22 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
         Kernel semanticKernel = buildSemanticKernel(options);
 
         // STEP 1: Retrieve relevant documents using the current conversation. It reuses the
-        // CognitiveSearchRetriever appraoch through the CognitiveSearchPlugin native function.
-        SKContext searchContext =
-                semanticKernel.runAsync(
-                        conversation,
-                        semanticKernel.getSkill("InformationFinder").getFunction("SearchFromConversation", null)).block();
+        // CognitiveSearchRetriever approach through the CognitiveSearchPlugin native function.
+        FunctionResult<String> searchContext = semanticKernel
+                .invokeAsync("InformationFinder", "SearchFromConversation")
+                .withArguments(
+                        KernelFunctionArguments.builder()
+                                .withVariable("conversation", conversation)
+                                .build())
+                .withResultType(String.class)
+                .block();
 
         // STEP 2: Build a SK context with the sources retrieved from the memory store and conversation
-        ContextVariables variables = SKBuilders.variables()
+        KernelFunctionArguments variables = KernelFunctionArguments.builder()
                 .withVariable("sources", searchContext.getResult())
                 .withVariable("conversation", conversation)
                 .withVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
-                .withVariable("input",  question)
+                .withVariable("input", question)
                 .build();
 
         /**
@@ -79,8 +86,11 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
          * (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
          * Triggering Open AI to get a reply.
          */
-        SKContext reply = semanticKernel.runAsync(variables,
-                semanticKernel.getSkill("RAG").getFunction("AnswerConversation", null)).block();
+        FunctionResult<String> reply = semanticKernel
+                .invokeAsync("RAG", "AnswerConversation")
+                .withArguments(variables)
+                .withResultType(String.class)
+                .block();
 
         return new RAGResponse.Builder()
                 .prompt("Prompt is managed by Semantic Kernel")
@@ -129,17 +139,27 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
      * @return
      */
     private Kernel buildSemanticKernel(RAGOptions options) {
-        Kernel kernel = SKBuilders.kernel()
-                .withDefaultAIService(SKBuilders.chatCompletion()
-                        .withModelId(gptChatDeploymentModelId)
-                        .withOpenAIClient(this.openAIAsyncClient)
-                        .build())
+        ChatCompletionService chatCompletion = OpenAIChatCompletion.builder()
+                .withOpenAIAsyncClient(openAIAsyncClient)
+                .withModelId(gptChatDeploymentModelId)
                 .build();
 
-        kernel.importSkill(
+        KernelPlugin searchPlugin = KernelPluginFactory.createFromObject(
                 new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
                 "InformationFinder");
-        kernel.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerConversation", null);
+
+        KernelPlugin answerPlugin = KernelPluginFactory.importPluginFromResourcesDirectory(
+                "semantickernel/Plugins",
+                "RAG",
+                "AnswerConversation",
+                null,
+                String.class);
+
+        Kernel kernel = Kernel.builder()
+                .withAIService(ChatCompletionService.class, chatCompletion)
+                .withPlugin(searchPlugin)
+                .withPlugin(answerPlugin)
+                .build();
 
         return kernel;
     }

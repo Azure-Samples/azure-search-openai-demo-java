@@ -251,10 +251,11 @@ const Chat = () => {
             key: Approaches.JAVA_OPENAI_SDK,
             text: "Java Azure Open AI SDK"
         },
+        /* Pending Semantic Kernel Memory implementation in V1.0.0
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL,
             text: "Java Semantic Kernel - Memory"
-        },
+        },*/
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
             text: "Java Semantic Kernel - Orchestration"
