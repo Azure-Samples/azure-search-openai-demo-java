@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "Testing indexer project."
           cd ./app/indexer
-          ./mvnw test
+          mvn test
 
       - name: Build Spring Boot App
         run: |
