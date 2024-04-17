@@ -18,7 +18,7 @@
 
 		<spring-cloud-azure.version>4.9.0</spring-cloud-azure.version>
 		<azure-search.version>11.6.0-beta.8</azure-search.version>
-		<semantic-kernel.version>1.0.0-rc3-SNAPSHOT</semantic-kernel.version>
+		<semantic-kernel.version>1.0.1</semantic-kernel.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
 		<maven.compiler-plugin.version>3.11.0</maven.compiler-plugin.version>
 
@@ -44,6 +44,13 @@
 				<version>${semantic-kernel.version}</version>
 				<scope>import</scope>
 				<type>pom</type>
+			</dependency>
+
+			<!-- Not sure why the build seems to pick the wrong version for this  -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.13.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
