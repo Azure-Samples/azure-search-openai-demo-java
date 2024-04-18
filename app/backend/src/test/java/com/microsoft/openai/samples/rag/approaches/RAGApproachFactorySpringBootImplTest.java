@@ -38,7 +38,9 @@ class RAGApproachFactorySpringBootImplTest {
 
     @Test
     void testCreateApproachWithJavaSemanticKernelMemory() {
-        RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
+        });
         //assertInstanceOf(JavaSemanticKernelWithMemoryApproach.class, approach);
     }
 
@@ -49,13 +51,13 @@ class RAGApproachFactorySpringBootImplTest {
         assertInstanceOf(JavaSemanticKernelChainsApproach.class, approach);
     }
 
-    @Test
+     @Test
     void testCreateApproachWithJavaSemanticKernelPlanner() {
-        var ragOptions = new RAGOptions.Builder().semanticKernelMode("planner").build();
+    var ragOptions = new RAGOptions.Builder().semanticKernelMode("planner").build();
+    assertThrows(IllegalArgumentException.class, () -> {
         RAGApproach approach = ragApproachFactory.createApproach("jskp", RAGType.ASK, ragOptions);
-//        assertInstanceOf(JavaSemanticKernelPlannerApproach.class, approach);
-    }
-
+    });
+}
     @Test
     void testChatCreateApproachWithChat() {
         RAGApproach approach = ragApproachFactory.createApproach("jos", RAGType.CHAT, null);

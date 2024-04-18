@@ -232,7 +232,18 @@ export function Component(): JSX.Element {
                     defaultSelectedKey={approach}
                     onChange={onApproachChange}
                 />
-
+                {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    <Dropdown
+                        className={styles.oneshotSettingsSeparator}
+                        label="Semantic Kernel mode"
+                        options={[
+                            { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
+                            { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
+                        ]}
+                        required
+                        onChange={onSKModeChange}
+                    />
+                )}
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
                 <TextField
                     className={styles.oneshotSettingsSeparator}
@@ -285,18 +296,7 @@ export function Component(): JSX.Element {
                         onChange={onRetrievalModeChange}
                     />
                 )}
-                {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                    <Dropdown
-                        className={styles.oneshotSettingsSeparator}
-                        label="Semantic Kernel mode"
-                        options={[
-                            { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                            { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
-                        ]}
-                        required
-                        onChange={onSKModeChange}
-                    />
-                )}
+                
                 {useLogin && (
                     <Checkbox
                         className={styles.oneshotSettingsSeparator}

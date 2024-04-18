@@ -38,7 +38,6 @@ public class OpenAIConfiguration {
                 .endpoint(endpoint)
                 .credential(tokenCredential)
                 .httpLogOptions(httpLogOptions)
-                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildClient();
     }
 
@@ -49,7 +48,6 @@ public class OpenAIConfiguration {
         return new OpenAIClientBuilder()
                 .endpoint(endpoint)
                 .credential(tokenCredential)
-                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildClient();
     }
 
@@ -66,7 +64,6 @@ public class OpenAIConfiguration {
                 .endpoint(endpoint)
                 .credential(tokenCredential)
                 .httpLogOptions(httpLogOptions)
-                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildAsyncClient();
     }
 
@@ -77,7 +74,6 @@ public class OpenAIConfiguration {
         return new OpenAIClientBuilder()
                 .endpoint(endpoint)
                 .credential(tokenCredential)
-                .serviceVersion(OpenAIServiceVersion.V2023_05_15)
                 .buildAsyncClient();
     }
 }

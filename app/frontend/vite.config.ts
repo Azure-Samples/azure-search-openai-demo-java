@@ -36,7 +36,11 @@ export default defineConfig({
             "/api/content": {
                 target: 'http://localhost:8080',
                 changeOrigin: true
-            }
+            },
+            "/api/auth_setup": {
+                 target: 'http://localhost:8080',
+                 changeOrigin: true
+                        }
         }
     }
 });
