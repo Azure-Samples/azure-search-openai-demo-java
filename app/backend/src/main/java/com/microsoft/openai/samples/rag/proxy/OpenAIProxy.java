@@ -69,6 +69,7 @@ public class OpenAIProxy {
                     e.getResponse().getStatusCode(),
                     "Error calling OpenAI API:" + e.getMessage(),
                     e);
+             // ((Map)((Map)e.getValue()).get("error")).get("message")
         }
         return chatCompletions;
     }
