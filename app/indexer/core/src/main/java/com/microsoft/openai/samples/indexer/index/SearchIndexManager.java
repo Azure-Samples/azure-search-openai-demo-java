@@ -154,7 +154,7 @@ public class SearchIndexManager {
 
            
             //Create embeddings for sections. 
-            List<List<Double>> embeddings = embeddingsService.createEmbeddingBatch(textsToEmbed);
+            List<List<Float>> embeddings = embeddingsService.createEmbeddingBatch(textsToEmbed);
 
             //Embeddings are assigned back to section using index in batch. Using Array List assure ordering is preserved.
             for (int i = 0; i < documents.size(); i++) {

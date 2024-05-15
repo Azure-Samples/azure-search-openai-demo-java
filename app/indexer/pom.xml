@@ -13,7 +13,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <azure-openai.version>1.0.0-beta.6</azure-openai.version>
+        <azure-openai.version>1.0.0-beta.8</azure-openai.version>
         <azure-document-intelligence.version>4.1.4</azure-document-intelligence.version>
         <itextpdf.version>5.5.13.3</itextpdf.version>
         <apache.common.text>1.11.0</apache.common.text>

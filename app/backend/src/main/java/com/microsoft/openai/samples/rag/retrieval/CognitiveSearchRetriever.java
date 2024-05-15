@@ -65,9 +65,7 @@ public class CognitiveSearchRetriever implements Retriever {
 
             Embeddings response = openAIProxy.getEmbeddings(List.of(question));
             var questionVector =
-                    response.getData().get(0).getEmbedding().stream()
-                            .map(Double::floatValue)
-                            .toList();
+                    response.getData().get(0).getEmbedding();
             if (ragOptions.getRetrievalMode() == RetrievalMode.vectors) {
                 setSearchOptionsForVector(ragOptions, questionVector, searchOptions);
             } else {

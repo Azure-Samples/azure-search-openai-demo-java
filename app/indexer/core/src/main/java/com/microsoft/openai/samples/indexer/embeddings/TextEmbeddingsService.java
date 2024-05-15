@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface TextEmbeddingsService {
     
-    public List<List<Double>> createEmbeddingBatch(List<String> texts);
+    public List<List<Float>> createEmbeddingBatch(List<String> texts);
 }

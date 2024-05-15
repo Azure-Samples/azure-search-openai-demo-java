@@ -43,7 +43,7 @@ What this demo application does:
 ![Chat screen](docs/chatscreen.png)
 
 
-## Solution Architecture and deployment options
+## Solution architecture and deployment options
 
 ![Microservice RAG Architecture](docs/aks/aks-hla.png)
 
@@ -53,7 +53,7 @@ This sample supports different architectural styles. It can be deployed as stand
 - For **Azure Container Apps** deployment, see [here](docs/aca/README-ACA.md).
 - For **Azure Kubernetes Service** deployment, see [here](docs/aks/README-AKS.md).
 
-## RAG Implementation Options
+## RAG implementation options
 This repo is focused to showcase different options to implement **"chat with your private documents"** scenario using RAG patterns with Java, Azure OpenAI and Semantic Kernel.
 Below you can find the list of available implementations.
 
@@ -67,7 +67,7 @@ Below you can find the list of available implementations.
 | Chat                 | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelChainsChatApproach.java)         | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/CognitiveSearchPlugin.java) native function and [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerConversation/config.json) semantic function are called sequentially. Several search retrieval options are available: Text, Vector, Hybrid.                                                                                                | :x:                                                                                            | :white_check_mark:    |
 
 
-## Production Deployment on Azure Application Landing Zones
+## Production deployment on Azure Application Landing Zones
 
 This sample is designed to get you started quickly and let you experiment with Java intelligent Apps RAG architectures on Azure. For production deployment, you can use the [Azure Application Landing Zones (LZA)](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/ready) to deploy the solution maintaining best practices for security, monitoring, networking and operational excellence.
 

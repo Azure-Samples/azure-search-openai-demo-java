@@ -44,9 +44,9 @@ public abstract class AbstractTextEmbeddingsService implements TextEmbeddingsSer
     protected abstract OpenAIAsyncClient createClient();
 
 
-    public List<List<Double>> createEmbeddingBatch(List<String> texts) {
+    public List<List<Float>> createEmbeddingBatch(List<String> texts) {
         List<EmbeddingBatch> batches = splitTextIntoBatches(texts);
-        List<List<Double>> embeddings = new ArrayList<>();
+        List<List<Float>> embeddings = new ArrayList<>();
         OpenAIAsyncClient client = createClient();
         for (int batchIndex =0; batchIndex < batches.size(); batchIndex++) {
                     EmbeddingBatch batch = batches.get(batchIndex);
