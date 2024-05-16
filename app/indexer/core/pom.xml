@@ -32,11 +32,18 @@
     <artifactId>azure-storage-blob</artifactId>
 </dependency>
 
-<dependency>
-    <groupId>com.azure</groupId>
-    <artifactId>azure-search-documents</artifactId>
+ <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-search-documents</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-core-serializer-json-jackson</artifactId>
+            </exclusion>
+        </exclusions>
 </dependency>
-<dependency>
+
+    <dependency>
     <groupId>com.azure</groupId>
     <artifactId>azure-ai-openai</artifactId>
     <version>${azure-openai.version}</version>
