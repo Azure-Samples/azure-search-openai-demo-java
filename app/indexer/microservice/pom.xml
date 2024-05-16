@@ -11,7 +11,7 @@
 
     <groupId>com.microsoft.openai.samples</groupId>
     <artifactId>indexer-microservice</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0-SNAPSHOT</version>
 
 
     <properties>
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.microsoft.openai.samples</groupId>
             <artifactId>indexer-core</artifactId>
-            <version>1.3.0</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
