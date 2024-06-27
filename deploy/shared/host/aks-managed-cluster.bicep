@@ -106,6 +106,7 @@ var aksDiagCategories = [
   'kube-controller-manager'
   'kube-audit-admin'
   'guard'
+  'kube-audit'
 ]
 
 // TODO: Update diagnostics to be its own module
