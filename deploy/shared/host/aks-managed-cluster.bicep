@@ -51,14 +51,7 @@ param disableLocalAccounts bool = false
 param sku string = 'Free'
 
 @description('Configuration of AKS add-ons')
-param addOns object = {     
-  omsagent: {
-    enabled: true
-    config: {
-      logAnalyticsWorkspaceResourceID: workspaceId
-    }
-  }
-}
+param addOns object = {}
 
 @description('The log analytics workspace id used for logging & monitoring')
 param workspaceId string = ''
