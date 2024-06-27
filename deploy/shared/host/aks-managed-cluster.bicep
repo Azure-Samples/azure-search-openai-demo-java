@@ -51,7 +51,14 @@ param disableLocalAccounts bool = false
 param sku string = 'Free'
 
 @description('Configuration of AKS add-ons')
-param addOns object = {}
+param addOns object = {     
+  omsagent: {
+    enabled: true
+    config: {
+      logAnalyticsWorkspaceResourceID: workspaceId
+    }
+  }
+}
 
 @description('The log analytics workspace id used for logging & monitoring')
 param workspaceId string = ''
@@ -62,7 +69,7 @@ param systemPoolConfig object
 @description('The DNS prefix to associate with the AKS cluster')
 param dnsPrefix string = ''
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-03-02-preview' = {
   name: name
   location: location
   tags: tags
