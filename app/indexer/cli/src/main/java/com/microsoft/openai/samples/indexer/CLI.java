@@ -38,7 +38,7 @@ public class CLI implements Callable<Integer> {
     @Option(names = {"--searchservice"}, required = true)
     private String searchservice;
 
-      @Option(names = {"--searchanalyzername"}, required = false, defaultValue = " en.microsoft")
+      @Option(names = {"--searchanalyzername"}, required = false, defaultValue = "en.microsoft")
     private String searchanalyzername;
 
     @Option(names = {"--index"}, required = true)
@@ -69,55 +69,48 @@ public class CLI implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        System.out.println(" use add command");
+        System.out.println(" use add or upload commands");
         return 0;
     }
 
     @Command(name = "add")
     public void addCommand() {
     TokenCredential tokenCredential = new AzureDeveloperCliCredentialBuilder().build();
+    SearchIndexManager searchIndexManager = buildSearchIndexManager(tokenCredential);
 
-    SearchIndexManager searchIndexManager = new SearchIndexManager(
-                            new AzureSearchClientFactory(searchservice, tokenCredential, index, verbose),
-                            searchanalyzername,
-                            new AzureOpenAIEmbeddingService(openaiServiceName, openaiEmbdeployment, tokenCredential, verbose));
-    
-    searchIndexManager.createIndex();
-
-    //DocumentProcessor documentProcessor = new DocumentProcessor(searchIndexManager, new ItextPDFParser(), new TextSplitter(verbose));
-    DocumentProcessor documentProcessor = new DocumentProcessor(searchIndexManager, new DocumentIntelligencePDFParser(formrecognizerservice,tokenCredential,verbose), new TextSplitter(verbose));
-    BlobManager blobManager = new BlobManager(storageaccount, container, tokenCredential, verbose);
-    
-    if(Files.isDirectory(dataFolderPath))
-        processDirectory(documentProcessor, blobManager, dataFolderPath);
-    else 
-        processFile(documentProcessor, blobManager, dataFolderPath);
-    
+    new AddCommand(searchIndexManager,
+                   buildBlobManager(tokenCredential),
+                   buildDocumentProcessor(searchIndexManager, tokenCredential))
+            .run(dataFolderPath,category);
 }
 
-private void processDirectory(DocumentProcessor documentProcessor, BlobManager blobManager, Path directory) {
-    logger.debug("Processing directory {}", directory);
-    try {
-        Files.newDirectoryStream(directory).forEach(path -> { 
-            processFile(documentProcessor, blobManager, path);
-        });
-      logger.debug("All files in directory {} processed", directory.toRealPath().toString());
-    } catch (Exception e) {
-        throw new RuntimeException("Error processing folder ",e);
+    @Command(name = "upload")
+    public void uploadCommand() {
+        TokenCredential tokenCredential = new AzureDeveloperCliCredentialBuilder().build();
+
+        new UploadCommand(buildSearchIndexManager(tokenCredential),
+                          buildBlobManager(tokenCredential))
+                .run(dataFolderPath,category);
+
     }
-}
 
-private void processFile(DocumentProcessor documentProcessor, BlobManager blobManager, Path path) {
-   try {
-        String absoluteFilePath = path.toRealPath().toString();
-        documentProcessor.indexDocumentfromFile(absoluteFilePath,category);
-        logger.debug("file {} indexed", absoluteFilePath);
-        blobManager.uploadBlob(path.toFile());
-        logger.debug("file {} uploaded", absoluteFilePath);
-    } catch (Exception e) {
-                throw new RuntimeException("Error processing file ",e);
-     }
-}
+    private BlobManager buildBlobManager(TokenCredential tokenCredential) {
+        BlobManager blobManager = new BlobManager(storageaccount, container, tokenCredential, verbose);
+        return blobManager;
+    }
+
+    private DocumentProcessor buildDocumentProcessor(SearchIndexManager searchIndexManager, TokenCredential tokenCredential) {
+        DocumentProcessor documentProcessor = new DocumentProcessor(searchIndexManager, new DocumentIntelligencePDFParser(formrecognizerservice, tokenCredential,verbose), new TextSplitter(verbose));
+        return documentProcessor;
+    }
+
+    private SearchIndexManager buildSearchIndexManager(TokenCredential tokenCredential) {
+        SearchIndexManager searchIndexManager = new SearchIndexManager(
+                                new AzureSearchClientFactory(searchservice, tokenCredential, index, verbose),
+                                searchanalyzername,
+                                new AzureOpenAIEmbeddingService(openaiServiceName, openaiEmbdeployment, tokenCredential, verbose));
+        return searchIndexManager;
+    }
 
 
 }

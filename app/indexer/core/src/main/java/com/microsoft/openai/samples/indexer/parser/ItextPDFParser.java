@@ -32,5 +32,30 @@ public class ItextPDFParser implements PDFParser {
         }
         return pages;
     }
+
+    @Override
+    public List<Page> parse(byte[] content) {
+        List<Page> pages = new ArrayList<>();
+        PdfReader reader = null;
+
+        try {
+            reader = new PdfReader(content);
+            Integer offset = 0;
+            for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                String pageText = PdfTextExtractor.getTextFromPage(reader, i);
+                Page page = new Page(i, offset, pageText);
+                offset += pageText.length();
+                pages.add(page);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+        return pages;
+    }
+
 }
     

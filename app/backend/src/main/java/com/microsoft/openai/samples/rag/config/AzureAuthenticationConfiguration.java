@@ -3,12 +3,12 @@ package com.microsoft.openai.samples.rag.config;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.identity.AzureCliCredentialBuilder;
+import com.azure.identity.EnvironmentCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.util.StringUtils;
 
 @Configuration
 public class AzureAuthenticationConfiguration {
@@ -20,6 +20,12 @@ public class AzureAuthenticationConfiguration {
     @Bean
     public TokenCredential localTokenCredential() {
         return new AzureCliCredentialBuilder().build();
+    }
+
+    @Profile("docker")
+    @Bean
+    public TokenCredential servicePrincipalTokenCredential() {
+        return new EnvironmentCredentialBuilder().build();
     }
 
     @Bean

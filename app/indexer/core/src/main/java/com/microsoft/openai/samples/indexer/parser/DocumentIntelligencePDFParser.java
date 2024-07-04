@@ -47,17 +47,26 @@ public class DocumentIntelligencePDFParser implements PDFParser {
         this.verbose = verbose;
     }
 
+
     @Override
     public List<Page> parse(File file) {
-          if (verbose) {
-           logger.info("Extracting text from {} using Azure Document Intelligence",file.getName());
+        if (verbose) {
+            logger.info("Extracting text from {} using Azure Document Intelligence", file.getName());
         }
-
-        List<Page> pages = new ArrayList<>();
 
         Path filePath = file.toPath();
         BinaryData fileData = BinaryData.fromFile(filePath, (int) file.length());
+        return parse(fileData);
+    }
 
+    @Override
+    public List<Page> parse(byte[] content) {
+        BinaryData fileData = BinaryData.fromBytes(content);
+        return parse(fileData);
+    }
+
+    private List<Page> parse(BinaryData fileData) {
+        List<Page> pages = new ArrayList<>();
         SyncPoller<OperationResult, AnalyzeResult> analyzeLayoutResultPoller =
             client.beginAnalyzeDocument(this.modelId, fileData);
 

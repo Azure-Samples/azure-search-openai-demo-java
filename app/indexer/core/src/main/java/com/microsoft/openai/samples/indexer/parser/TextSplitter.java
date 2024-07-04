@@ -56,6 +56,12 @@ public class TextSplitter {
         int length = allText.length();
         int start = 0;
         int end = length;
+
+        if (length <= maxSectionLength) {
+            splitPages.add(new SplitPage(findPage(start, pages), allText.toString()));
+            return splitPages;
+        }
+
         while (start + sectionOverlap < length) {
             int lastWord = -1;
             end = start + maxSectionLength;

@@ -69,6 +69,7 @@ public class OpenAIProxy {
                     e.getResponse().getStatusCode(),
                     "Error calling OpenAI API:" + e.getMessage(),
                     e);
+             // ((Map)((Map)e.getValue()).get("error")).get("message")
         }
         return chatCompletions;
     }
@@ -91,6 +92,8 @@ public class OpenAIProxy {
         try {
             EmbeddingsOptions embeddingsOptions = new EmbeddingsOptions(texts);
             embeddingsOptions.setUser("search-openai-demo-java");
+            embeddingsOptions.setModel(this.embeddingDeploymentModelId);
+            embeddingsOptions.setInputType("query");
             embeddings = client.getEmbeddings(this.embeddingDeploymentModelId, embeddingsOptions);
         } catch (HttpResponseException e) {
             throw new ResponseStatusException(

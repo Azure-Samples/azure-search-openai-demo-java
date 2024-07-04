@@ -6,14 +6,12 @@ import com.microsoft.openai.samples.rag.approaches.RAGApproachFactory;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.approaches.RAGType;
+import com.microsoft.openai.samples.rag.approaches.SemanticKernelMode;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.controller.ChatAppRequest;
 import com.microsoft.openai.samples.rag.controller.ChatResponse;
 import com.microsoft.openai.samples.rag.controller.ResponseMessage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @RestController
 public class ChatController {
@@ -61,6 +63,11 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
+        var semanticKernelMode = chatRequest.context().overrides().semantic_kernel_mode();
+        if (semanticKernelMode == null) {
+            semanticKernelMode = SemanticKernelMode.chains.name();
+        }
+
         var ragOptions = new RAGOptions.Builder()
                 .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
                 .semanticRanker(chatRequest.context().overrides().semantic_ranker())
@@ -69,7 +76,7 @@ public class ChatController {
                 .excludeCategory(chatRequest.context().overrides().exclude_category())
                 .promptTemplate(chatRequest.context().overrides().prompt_template())
                 .top(chatRequest.context().overrides().top())
-                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
+                .semanticKernelMode(semanticKernelMode)
                 .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =
@@ -114,6 +121,11 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
+        var semanticKernelMode = chatRequest.context().overrides().semantic_kernel_mode();
+        if (semanticKernelMode == null) {
+            semanticKernelMode = SemanticKernelMode.chains.name();
+        }
+
         var ragOptions = new RAGOptions.Builder()
                 .retrievialMode(chatRequest.context().overrides().retrieval_mode().name())
                 .semanticRanker(chatRequest.context().overrides().semantic_ranker())
@@ -122,7 +134,7 @@ public class ChatController {
                 .excludeCategory(chatRequest.context().overrides().exclude_category())
                 .promptTemplate(chatRequest.context().overrides().prompt_template())
                 .top(chatRequest.context().overrides().top())
-                .semanticKernelMode(chatRequest.context().overrides().semantic_kernel_mode())
+                .semanticKernelMode(semanticKernelMode)
                 .build();
 
         RAGApproach<ChatGPTConversation, RAGResponse> ragApproach =

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-deployment
+  namespace: azure-open-ai
+  labels:
+    app: indexer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer
+  template:
+    metadata:
+      labels:
+        app: indexer
+    spec:
+      containers:
+        - name: indexer
+          image: {{.Env.SERVICE_INDEXER_IMAGE_NAME}}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: azd-env-configmap
+          resources:
+            requests:
+              memory: "2Gi"

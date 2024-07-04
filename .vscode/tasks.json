@@ -1,20 +1,43 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Start App ",
-            "type": "shell",
-            "command": "${workspaceFolder}/app/start.sh",
-            "windows": {
-                "command": "pwsh ${workspaceFolder}/app/start.ps1"
-            },
-            "presentation": {
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/app"
-            },
-            "problemMatcher": []
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start App ",
+      "type": "shell",
+      "command": "${workspaceFolder}/app/start.sh",
+      "windows": {
+        "command": "pwsh ${workspaceFolder}/app/start.ps1"
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/app"
+      },
+      "problemMatcher": []
+    },
+    {
+      "type": "func",
+      "label": "func: host start",
+      "command": "host start",
+      "problemMatcher": "$func-java-watch",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/app/indexer/functions/target/azure-functions/indexer-blob-processor"
+      },
+      "dependsOn": "package (functions)"
+    },
+    {
+      "label": "package (functions)",
+      "command": "mvn clean package",
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/app/indexer/functions"
+      }
+    }
+  ]
 }

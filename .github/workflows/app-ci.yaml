@@ -28,13 +28,18 @@ jobs:
       - name: Set environment for branch
         id: set-deploy-env
         run: |
-          if [[ $GITHUB_REF_NAME == 'refs/heads/main' ]]; then
+          echo "checking branch name [${{github.ref_name}}]"
+          if [[ ${{github.ref_name}} == 'main' ]]; then
+              echo "main branch detected. Set Development environment"
               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF_NAME == *'refs/heads/release'* ]]; then
+          elif [[ ${{github.ref_name}} == *'release'* ]]; then
+              echo "release branch detected. Set Test environment"
               echo "DEPLOY_ENVIRONMENT=Test" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF_NAME == *'refs/tags/v'* ]]; then
-               echo "DEPLOY_ENVIRONMENT=Production" >> "$GITHUB_OUTPUT"
+          elif [[ ${{github.ref_name}} == *'v'* ]]; then
+              echo "tag detected. Set Production environment" 
+              echo "DEPLOY_ENVIRONMENT=Production" >> "$GITHUB_OUTPUT"
           else
+              echo "branch not detected. Set Development environment as default"
               echo "DEPLOY_ENVIRONMENT=Development" >> "$GITHUB_OUTPUT"
           fi
       - name: Build React Frontend
@@ -43,6 +48,14 @@ jobs:
           cd ./app/frontend
           npm install
           npm run build
+          mkdir -p ../backend/src/main/resources/static
+          cp -r ./build/* ../backend/src/main/resources/static
+      
+      - name: Verify Indexer project
+        run: |
+          echo "Testing indexer project."
+          cd ./app/indexer
+          mvn test
 
       - name: Build Spring Boot App
         run: |

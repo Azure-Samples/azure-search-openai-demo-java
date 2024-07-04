@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.openai.samples.rag.approaches;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.azure.ai.openai.OpenAIAsyncClient;
 import com.azure.core.credential.TokenCredential;
 import com.azure.search.documents.SearchAsyncClient;
 import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelPlannerApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithMemoryApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
 import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
 import org.junit.jupiter.api.Test;
@@ -18,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -40,8 +38,10 @@ class RAGApproachFactorySpringBootImplTest {
 
     @Test
     void testCreateApproachWithJavaSemanticKernelMemory() {
-        RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
-        assertInstanceOf(JavaSemanticKernelWithMemoryApproach.class, approach);
+        assertThrows(IllegalArgumentException.class, () -> {
+            RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
+        });
+        //assertInstanceOf(JavaSemanticKernelWithMemoryApproach.class, approach);
     }
 
     @Test
@@ -51,13 +51,13 @@ class RAGApproachFactorySpringBootImplTest {
         assertInstanceOf(JavaSemanticKernelChainsApproach.class, approach);
     }
 
-    @Test
+     @Test
     void testCreateApproachWithJavaSemanticKernelPlanner() {
-        var ragOptions = new RAGOptions.Builder().semanticKernelMode("planner").build();
+    var ragOptions = new RAGOptions.Builder().semanticKernelMode("planner").build();
+    assertThrows(IllegalArgumentException.class, () -> {
         RAGApproach approach = ragApproachFactory.createApproach("jskp", RAGType.ASK, ragOptions);
-        assertInstanceOf(JavaSemanticKernelPlannerApproach.class, approach);
-    }
-
+    });
+}
     @Test
     void testChatCreateApproachWithChat() {
         RAGApproach approach = ragApproachFactory.createApproach("jos", RAGType.CHAT, null);

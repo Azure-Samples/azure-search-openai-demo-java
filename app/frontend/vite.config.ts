@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
     plugins: [react()],
     build: {
-        outDir: "../backend/src/main/resources/static",
+        outDir: "./build",
         emptyOutDir: true,
         sourcemap: true,
         rollupOptions: {
@@ -36,7 +36,11 @@ export default defineConfig({
             "/api/content": {
                 target: 'http://localhost:8080',
                 changeOrigin: true
-            }
+            },
+            "/api/auth_setup": {
+                 target: 'http://localhost:8080',
+                 changeOrigin: true
+                        }
         }
     }
 });

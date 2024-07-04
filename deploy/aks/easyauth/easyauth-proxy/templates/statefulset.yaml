@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "easyauth-proxy.fullname" . }}
+  labels:
+    {{- include "easyauth-proxy.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  serviceName: {{ include "easyauth-proxy.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "easyauth-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "easyauth-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "easyauth-proxy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: {{ .Values.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.claimName }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+             -  name: Logging__LogLevel__Default
+                value: "{{ .Values.logging.logLevel }}"
+             -  name: EasyAuthForK8s__DataProtectionFileLocation
+                value: "{{ .Values.easyAuthForK8s.dataProtectionFileLocation }}"           
+             -  name: EasyAuthForK8s__SigninPath
+                value: "{{ .Values.basePath }}{{ .Values.easyAuthForK8s.signinPath }}"
+             -  name: EasyAuthForK8s__AuthPath
+                value: "{{ .Values.basePath }}{{ .Values.easyAuthForK8s.authPath }}"
+             -  name: EasyAuthForK8s__AllowBearerToken
+                value: "{{ .Values.easyAuthForK8s.allowBearerToken }}"
+             -  name: EasyAuthForK8s__DefaultRedirectAfterSignin
+                value: "{{ .Values.easyAuthForK8s.defaultRedirectAfterSignin }}"
+                name: EasyAuthForK8s__CompressCookieClaims
+                value: "{{ .Values.easyAuthForK8s.compressCookieClaims }}"
+             -  name: EasyAuthForK8s__ResponseHeaderPrefix
+                value: "{{ .Values.easyAuthForK8s.responseHeaderPrefix }}"
+             -  name: EasyAuthForK8s__ClaimEncodingMethod
+                value: "{{ .Values.easyAuthForK8s.claimEncodingMethod }}"
+             -  name: EasyAuthForK8s__HeaderFormatOption
+                value: "{{ .Values.easyAuthForK8s.headerFormatOption }}"                
+             -  name: AzureAd__Instance
+                value: "{{ .Values.azureAd.instance }}"
+             -  name: AzureAd__Domain
+                value: "{{ .Values.azureAd.domain }}"
+             -  name: AzureAd__TenantId
+                value: "{{ .Values.azureAd.tenantId }}"
+             -  name: AzureAd__ClientId
+                value: "{{ .Values.azureAd.clientId }}"
+             -  name: AzureAd__CallbackPath
+                value: "{{ .Values.basePath }}{{ .Values.azureAd.callbackPath }}"
+             -  name: AzureAd__SignedOutCallbackPath
+                value: "{{ .Values.basePath }}{{ .Values.azureAd.signedOutCallbackPath }}"
+             -  name: AzureAd__SignUpSignInPolicyId
+                value: "{{ .Values.azureAd.signUpSignInPolicyId }}"   
+             -  name: AzureAd__ClientSecret
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.secret.name }}
+                    key: CLIENT_SECRET
+          volumeMounts:
+          - mountPath: {{ .Values.easyAuthForK8s.dataProtectionFileLocation }}
+            name: {{ .Values.volumeName }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

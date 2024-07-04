@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: azure-search-openai-demo-java-aca
+metadata:
+  template: azure-search-openai-demo-java-aca@1.4.0-alpha
+services:
+  api:
+    project: ../../app/backend
+    language: java
+    host: containerapp
+  indexer:
+    project: ../../app/indexer
+    language: java
+    host: containerapp
+    docker:
+      path: ./microservice/Dockerfile
+  web:
+    project: ../../app/frontend
+    language: js
+    host: containerapp
+
+
+hooks:
+    postprovision:
+      windows:
+        shell: pwsh
+        run: ./scripts/prepdocs.ps1
+        interactive: true
+        continueOnError: false
+      posix:
+        shell: sh
+        run: ./scripts/prepdocs.sh
+        interactive: true
+        continueOnError: false
