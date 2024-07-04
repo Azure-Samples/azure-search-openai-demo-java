@@ -63,48 +63,51 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
     httpsOnly: true
   }
 
-  resource ftpsPublishingCredentials 'basicPublishingCredentialsPolicies' = {
-    name: 'ftp'
-    kind: 'ftp'
-    properties: {
-      allow: true
-    }
-  }
-
-  resource scmPublishingCredentials 'basicPublishingCredentialsPolicies' = {
-    name: 'scm'
-    kind: 'scm'
-    properties: {
-      allow: true
-    }
-  }
-
   identity: { type: managedIdentity ? 'SystemAssigned' : 'None' }
 
-  resource configAppSettings 'config' = {
-    name: 'appsettings'
-    properties: union(appSettings,
+  resource basicPublishingCredentialsPoliciesFtp 'basicPublishingCredentialsPolicies' = {
+    name: 'ftp'
+    properties: {
+      allow: false
+    }
+  }
+
+  resource basicPublishingCredentialsPoliciesScm 'basicPublishingCredentialsPolicies' = {
+    name: 'scm'
+    properties: {
+      allow: false
+    }
+  }
+}
+
+// Updates to the single Microsoft.sites/web/config resources that need to be performed sequentially
+// sites/web/config 'appsettings'
+module configAppSettings 'appservice-appsettings.bicep' = {
+  name: '${name}-appSettings'
+  params: {
+    name: appService.name
+    appSettings: union(appSettings,
       {
         SCM_DO_BUILD_DURING_DEPLOYMENT: string(scmDoBuildDuringDeployment)
         ENABLE_ORYX_BUILD: string(enableOryxBuild)
       },
-      runtimeName == 'python' ? { PYTHON_ENABLE_GUNICORN_MULTIWORKERS: 'true'} : {},
+      runtimeName == 'python' && appCommandLine == '' ? { PYTHON_ENABLE_GUNICORN_MULTIWORKERS: 'true'} : {},
       !empty(applicationInsightsName) ? { APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString } : {},
       !empty(keyVaultName) ? { AZURE_KEY_VAULT_ENDPOINT: keyVault.properties.vaultUri } : {})
   }
+}
 
-  resource configLogs 'config' = {
-    name: 'logs'
-    properties: {
-      applicationLogs: { fileSystem: { level: 'Verbose' } }
-      detailedErrorMessages: { enabled: true }
-      failedRequestsTracing: { enabled: true }
-      httpLogs: { fileSystem: { enabled: true, retentionInDays: 1, retentionInMb: 35 } }
-    }
-    dependsOn: [
-      configAppSettings
-    ]
+// sites/web/config 'logs'
+resource configLogs 'Microsoft.Web/sites/config@2022-03-01' = {
+  name: 'logs'
+  parent: appService
+  properties: {
+    applicationLogs: { fileSystem: { level: 'Verbose' } }
+    detailedErrorMessages: { enabled: true }
+    failedRequestsTracing: { enabled: true }
+    httpLogs: { fileSystem: { enabled: true, retentionInDays: 1, retentionInMb: 35 } }
   }
+  dependsOn: [configAppSettings]
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = if (!(empty(keyVaultName))) {
