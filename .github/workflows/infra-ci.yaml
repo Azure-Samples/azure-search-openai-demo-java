@@ -54,12 +54,12 @@ jobs:
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aca/infra/main.bicep --stdout
           
-      - name: Run PSRule analysis
+      - name: Run PSRule analysis on App Service deployment
         uses: microsoft/ps-rule@v2.9.0
         with:
           modules: PSRule.Rules.Azure
           baseline: Azure.Pillar.Security
-          inputPath: infra/*.test.bicep
+          inputPath: deploy/app-service/infra/*.test.bicep
           outputFormat: Sarif
           outputPath: reports/ps-rule-results.sarif
           summary: true
