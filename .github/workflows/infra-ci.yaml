@@ -47,7 +47,7 @@ jobs:
 
       - name: Upload results to security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: github.repository == 'Azure-Samples/azure-search-openai-demo'
+        if: github.repository == 'Azure-Samples/azure-search-openai-demo-java'
         with:
           sarif_file: reports/ps-rule-results.sarif
 
