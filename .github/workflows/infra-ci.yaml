@@ -53,20 +53,27 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aca/infra/main.bicep --stdout
-     
-      - name: Run Microsoft Security DevOps Analysis
-        uses: microsoft/security-devops-action@v1
-        id: msdo
-        continue-on-error: true
+          
+      - name: Run PSRule analysis on App Service deployment
+        uses: microsoft/ps-rule@v2.9.0
         with:
-          tools: templateanalyzer
+          modules: PSRule.Rules.Azure
+          baseline: Azure.Pillar.Security
+          inputPath: deploy/app-service/infra/*.test.bicep
+          outputFormat: Sarif
+          outputPath: reports/ps-rule-results.sarif
+          summary: true
+        continue-on-error: true
+          
+        env:
+          PSRULE_CONFIGURATION_AZURE_BICEP_FILE_EXPANSION: 'true'
+          PSRULE_CONFIGURATION_AZURE_BICEP_FILE_EXPANSION_TIMEOUT: '30'
 
-      - name: Upload alerts to Security tab
-        uses: github/codeql-action/upload-sarif@v2
+      - name: Upload results to security tab
+        uses: github/codeql-action/upload-sarif@v3
         if: github.repository == 'Azure-Samples/azure-search-openai-demo-java'
         with:
-          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
-
+          sarif_file: reports/ps-rule-results.sarif
 
 #   deploy:
 #     name: "Deploy Infra and App using azd"
