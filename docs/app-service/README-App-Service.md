@@ -36,17 +36,15 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Deploying again](#redeploying)
   * [Running locally](#running-locally)
   * [UI Navigation](#ui-navigation)
-* [Enabling optional features](#enabling-optional-features)
+* [Guidance](#guidance)
   * [Enabling Application Insights](#enabling-application-insights)
   * [Enabling authentication](#enabling-authentication)
-* [RAG Implementation Options](#rag-implementation-options)
-* [App Continuous Integration](#app-continuous-integration)
+  * [App Continuous Integration](#app-continuous-integration)
   * [GitHub](#github)
   * [Azure DevOps](#azure-devops)
-* [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
-* [Productionizing](#productionizing)
-* [Cost estimation](#cost-estimation)
-* [Resources](#resources)
+  * [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
+  * [Productionizing](#productionizing)
+  * [Cost estimation](#cost-estimation)
   * [Note](#note)
   * [FAQ](#faq)
   * [Troubleshooting](#troubleshooting)
@@ -215,7 +213,7 @@ Once in the web app:
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
 
-## Enabling optional features
+## Guidance
 
 ### Enabling Application Insights
 
@@ -240,9 +238,9 @@ By default, the deployed Azure web app will have no authentication or access res
 
 To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access.  Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users unless they are specifically granted ('assigned') access to the application.-
 
-## App Continuous Integration
+### App Continuous Integration
 
-### GitHub
+#### GitHub
 if you don't want to use azd to build and deploy the app, a GitHub automated CI pipeline is provided in `.github/workflows/app-ci.yml`. Some notes about the CI pipeline design:
 - It uses a "branch per environment approach". The deploy environment name is computed at 'runtime' based on a git branch. You can check branch/env-name mapping logic in the "set environment for branch" step (line 29). The current implemented logic maps everything to a dev like environment. Therefore, on each git push on the `main branch` the pipeline is triggered trying to deploy to an environment called `Development`. For more info about GitHub environments and how to set specific env variables and secrets read [here](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment).
 - GitHub's environment variables and secrets are used to configure development environment specific configuration. They need to be configured manually in GitHub repository settings:
@@ -260,7 +258,7 @@ To properly configure automated build and deploy for both backend and frontend c
 
 ![pipeline success](github-actions-pipeline-success.png)
 
-### Azure DevOps
+#### Azure DevOps
 Azure Devops can also be used to build and deploy the app.  Azure Devops automated CICD pipeline is provided in `.azdo/pipelines/app-ci.yaml`.  Some notes about the CI/CD pipeline design:
 - Similar to GitHub action above, this pipeline uses branch per environment approach as well.
 - Azure Devops library variable groups and variables are used to configure environment specific configuration.  They need to be configured manually in Azure Devops Pipeline Library.
@@ -286,7 +284,7 @@ Connect Azure Devops to Azure:
 You can now either run the pipeline manually or commit to a branch to trigger the pipeline.
 ![azDoPipeline success](azDo-pipeline-success.png)
 
-## Custom Data Ingestion and Indexing
+### Custom Data Ingestion and Indexing
 The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks (see line 23 in [azure.yaml](azure.yaml))
 
 If you want to chat with your custom documents you can:
@@ -297,7 +295,7 @@ If you want to chat with your custom documents you can:
 5. if ingestion and indexing is completed successfully you should see a message like this
 ![prepdocs success](prepdocs-success.png)
 
-## Productionizing
+### Productionizing
 
 This sample is designed to be a starting point for your own production application,
 but you should do a thorough review of the security and performance before deploying
@@ -350,11 +348,6 @@ To reduce costs, you can switch to free SKUs for Azure App Service and Form Reco
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
 either by deleting the resource group in the Portal or running `azd down`.
 
-## Resources
-
-* [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and AI Search](https://aka.ms/entgptsearchblog)
-* [Azure AI Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
-* [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/overview)
 
 ### Note
 

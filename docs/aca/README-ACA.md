@@ -41,16 +41,15 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Deploying again](#redeploying)
   * [Running locally](#running-locally)
   * [UI Navigation](#ui-navigation)
-* [Enabling optional features](#enabling-optional-features)
+* [Guidance](#guidance)
   * [Enabling Application Insights](#enabling-application-insights)
   * [Enabling authentication](#enabling-authentication)
-* [App Continuous Integration](#app-continuous-integration)
-  * [GitHub](#github)
-  * [Azure DevOps](#azure-devops)
-* [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
-* [Productionizing](#productionizing)
-* [Cost estimation](#cost-estimation)
-* [Resources](#resources)
+  * [App Continuous Integration](#app-continuous-integration)
+    * [GitHub](#github)
+    * [Azure DevOps](#azure-devops)
+  * [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
+  * [Productionizing](#productionizing)
+  * [Cost estimation](#cost-estimation)
   * [Note](#note)
   * [FAQ](#faq)
   * [Troubleshooting](#troubleshooting)
@@ -234,17 +233,8 @@ Once in the web app:
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
 
-## Custom Data Ingestion and Indexing
-The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
 
-If you want to chat with your custom documents you can:
-1. Add your pdf documents in the [data folder](./data).
-2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aca` 
-3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
-
-
-## Enabling optional features
+## Guidance
 
 ### Enabling Application Insights
 
@@ -270,10 +260,19 @@ By default, the web app on ACA will have no authentication or access restriction
 
 To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access.  Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users 
 
-## App Continuous Integration
+### App Continuous Integration
 :sunny: :cloud: :construction_worker_man: WIP
 
-## Productionizing
+### Custom Data Ingestion and Indexing
+The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
+
+If you want to chat with your custom documents you can:
+1. Add your pdf documents in the [data folder](./data).
+2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aca` 
+3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
+4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
+
+### Productionizing
 
 This sample is designed to be a starting point for your own production application,
 but you should do a thorough review of the security and performance before deploying
@@ -328,12 +327,6 @@ The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
 either by deleting the resource group in the Portal or running `azd down`.
-
-## Resources
-
-* [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and AI Search](https://aka.ms/entgptsearchblog)
-* [Azure AI Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
-* [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/overview)
 
 ### Note
 
