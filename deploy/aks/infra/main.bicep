@@ -149,7 +149,7 @@ module aks '../../shared/host/aks.bicep' = {
     tags: tags
     name: !empty(clusterName) ? clusterName : '${abbrs.containerServiceManagedClusters}${resourceToken}'
     containerRegistryName: !empty(containerRegistryName) ? containerRegistryName : '${abbrs.containerRegistryRegistries}${resourceToken}'
-    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+    logAnalyticsName: monitoring.outputs.logAnalyticsWorkspaceName
     keyVaultName: keyVault.outputs.name
   }
 }
