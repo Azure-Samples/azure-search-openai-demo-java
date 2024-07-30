@@ -82,6 +82,8 @@ param keyVaultName string = ''
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
+@description('Type of the principal. Valid values: User,ServicePrincipal')
+param principalType string = 'User'
 
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
@@ -363,7 +365,7 @@ module storageContribRoleUser '../../shared/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-    principalType: 'User'
+    principalType: principalType
   }
 }
 
