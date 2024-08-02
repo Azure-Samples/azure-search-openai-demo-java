@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CognitiveSearchConfiguration {
+public class AzureAISearchConfiguration {
 
     @Value("${cognitive.search.service}")
     String searchServiceName;
@@ -23,7 +23,7 @@ public class CognitiveSearchConfiguration {
 
     final TokenCredential tokenCredential;
 
-    public CognitiveSearchConfiguration(TokenCredential tokenCredential) {
+    public AzureAISearchConfiguration(TokenCredential tokenCredential) {
         this.tokenCredential = tokenCredential;
     }
 

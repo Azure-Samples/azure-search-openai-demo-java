@@ -22,11 +22,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * Use Cognitive Search and Java OpenAI APIs. It first retrieves top documents from search and use
+ * Use Azure AI Search and Java OpenAI APIs. It first retrieves top documents from search and use
  * them to build a prompt. Then, it uses OpenAI to generate an answer for the user question. Several
- * cognitive search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector
+ * azure search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector
  * are selected an additional call to OpenAI is required to generate embeddings vector for the
- * question.
+ * user question.
  */
 @Component
 public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
@@ -73,12 +73,12 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
             customPrompt = customPrompt.substring(1);
         }
 
-        // STEP 2: Build a prompt using RAG options to see if prompt should be replaced or extended.
+        // STEP 2: Build a prompt using RAG options to see if prompt should be replaced or extended. This is still not grounded with relevant facts
         var answerQuestionChatTemplate =
-                new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
+                new AnswerQuestionPromptTemplate(customPrompt, replacePrompt,sources);
 
         // STEP 3: Build the chat conversation with grounded messages using the retrieved facts
-        var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
+        var groundedChatMessages = answerQuestionChatTemplate.getMessages(question);
         var chatCompletionsOptions =
                 ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
@@ -100,6 +100,12 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
                 .build();
     }
 
+    /**
+     * This is the run streaming version which is implemented as new line delimited json. for more info see https://en.wikipedia.org/wiki/JSON_streaming
+     * @param question
+     * @param options
+     * @param outputStream
+     */
     @Override
     public void runStreaming(String question, RAGOptions options, OutputStream outputStream) {
         // Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
@@ -122,15 +128,19 @@ public class PlainJavaAskApproach implements RAGApproach<String, RAGResponse> {
         }
 
         var answerQuestionChatTemplate =
-                new AnswerQuestionChatTemplate(customPrompt, replacePrompt);
+                new AnswerQuestionPromptTemplate(customPrompt, replacePrompt,sources);
 
-        var groundedChatMessages = answerQuestionChatTemplate.getMessages(question, sources);
+        var groundedChatMessages = answerQuestionChatTemplate.getMessages(question);
         var chatCompletionsOptions =
                 ChatGPTUtils.buildDefaultChatCompletionsOptions(groundedChatMessages);
 
         IterableStream<ChatCompletions> completions =
                 openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
         int index = 0;
+
+        /**
+         * For each chat message, generate a response and write it to the output stream provided by the caller.
+         */
         for (ChatCompletions completion : completions) {
 
             LOGGER.info(

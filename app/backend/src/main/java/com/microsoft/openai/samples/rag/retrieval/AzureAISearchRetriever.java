@@ -17,7 +17,7 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RetrievalMode;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +34,14 @@ import java.util.Optional;
  * specific to cognitive search feature which fuses the best of text search and vector search.
  */
 @Component
-public class CognitiveSearchRetriever implements Retriever {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CognitiveSearchRetriever.class);
-    private final CognitiveSearchProxy cognitiveSearchProxy;
+public class AzureAISearchRetriever implements Retriever {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureAISearchRetriever.class);
+    private final AzureAISearchProxy azureAISearchProxy;
     private final OpenAIProxy openAIProxy;
 
-    public CognitiveSearchRetriever(
-            CognitiveSearchProxy cognitiveSearchProxy, OpenAIProxy openAIProxy) {
-        this.cognitiveSearchProxy = cognitiveSearchProxy;
+    public AzureAISearchRetriever(
+            AzureAISearchProxy azureAISearchProxy, OpenAIProxy openAIProxy) {
+        this.azureAISearchProxy = azureAISearchProxy;
         this.openAIProxy = openAIProxy;
     }
 
@@ -52,10 +52,11 @@ public class CognitiveSearchRetriever implements Retriever {
      */
     @Override
     public List<ContentSource> retrieveFromQuestion(String question, RAGOptions ragOptions) {
-        // step 1. Convert the user's query text to an embedding
         SearchOptions searchOptions = new SearchOptions();
         String searchText = null;
 
+        // If the retrieval mode is set to vectors or hybrid, convert the user's query text to an
+        // embeddings vector. The embeddings vector is passed as search options to Azure AI Search index
         if (ragOptions.getRetrievalMode() == RetrievalMode.vectors
                 || ragOptions.getRetrievalMode() == RetrievalMode.hybrid) {
             LOGGER.info(
@@ -78,7 +79,7 @@ public class CognitiveSearchRetriever implements Retriever {
         }
 
         SearchPagedIterable searchResults =
-                cognitiveSearchProxy.search(searchText, searchOptions, Context.NONE);
+                azureAISearchProxy.search(searchText, searchOptions, Context.NONE);
         return buildSourcesFromSearchResults(ragOptions, searchResults);
     }
 
@@ -161,6 +162,7 @@ public class CognitiveSearchRetriever implements Retriever {
         Optional.ofNullable(options.getTop())
                 .ifPresentOrElse(searchOptions::setTop, () -> searchOptions.setTop(3));
 
+        // "embedding" is the field name in the index where the embeddings are stored.
         searchOptions.setVectors(
                 new SearchQueryVector()
                         .setValue(questionVector)

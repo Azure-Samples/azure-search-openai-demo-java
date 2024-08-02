@@ -11,8 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * This class is a proxy to the OpenAI API to simplify cross-cutting concerns management (security,
- * load balancing, monitoring, resiliency). It is responsible for: - calling the OpenAI API -
+ * This is proxy for the OpenAI client to simplify cross-cutting concerns management (security,
+ * load balancing, monitoring, resiliency). It is responsible for:
+ * calling the OpenAI API
  * handling errors and retry strategy - load balance requests across open AI instances - add
  * monitoring points - add circuit breaker with exponential backoff
  *

@@ -5,8 +5,8 @@ import com.azure.ai.openai.OpenAIAsyncClient;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchPlugin;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
@@ -36,7 +36,7 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
             """
             Take the input as a question and answer it finding any information needed
             """;
-    private final CognitiveSearchProxy cognitiveSearchProxy;
+    private final CognitiveSearchProxy azureAISearchProxy;
 
     private final OpenAIProxy openAIProxy;
 
@@ -46,10 +46,10 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
     private String gptChatDeploymentModelId;
 
     public JavaSemanticKernelPlannerApproach(
-            CognitiveSearchProxy cognitiveSearchProxy,
+            CognitiveSearchProxy azureAISearchProxy,
             OpenAIAsyncClient openAIAsyncClient,
             OpenAIProxy openAIProxy) {
-        this.cognitiveSearchProxy = cognitiveSearchProxy;
+        this.azureAISearchProxy = azureAISearchProxy;
         this.openAIAsyncClient = openAIAsyncClient;
         this.openAIProxy = openAIProxy;
     }
@@ -115,7 +115,7 @@ public class JavaSemanticKernelPlannerApproach implements RAGApproach<String, RA
                         .build();
 
         kernel.importSkill(
-                new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
+                new CognitiveSearchPlugin(this.azureAISearchProxy, this.openAIProxy, options),
                 "InformationFinder");
 
         kernel.importSkillFromResources("semantickernel/Plugins", "RAG", "AnswerQuestion", null);

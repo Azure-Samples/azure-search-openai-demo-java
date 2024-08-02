@@ -7,7 +7,7 @@ import com.azure.search.documents.SearchAsyncClient;
 import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 class RAGApproachFactorySpringBootImplTest {
 
-    @MockBean private CognitiveSearchProxy cognitiveSearchProxyMock;
+    @MockBean private AzureAISearchProxy azureAISearchProxyMock;
 
     @MockBean private TokenCredential tokenCredential;
 

@@ -6,10 +6,11 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.CognitiveSearchPlugin;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchPlugin;
 import com.microsoft.semantickernel.Kernel;
+import com.microsoft.semantickernel.aiservices.openai.chatcompletion.OpenAIChatCompletion;
 import com.microsoft.semantickernel.orchestration.FunctionResult;
 import com.microsoft.semantickernel.plugin.KernelPluginFactory;
 import com.microsoft.semantickernel.semanticfunctions.KernelFunctionArguments;
@@ -28,9 +29,9 @@ import java.util.stream.Collectors;
 
 /**
  * Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an
- * imperative style for AI orchestration through semantic kernel functions chaining.
+ * imperative style for AI orchestration through sequentially call semantic kernel functions.
  * InformationFinder.SearchFromQuestion native function and RAG.AnswerQuestion semantic function are called
- * sequentially. Several cognitive search retrieval options are available: Text, Vector, Hybrid.
+ * sequentially. Several Azure AI Search retrieval options are available: Text, Vector, Hybrid.
  */
 @Component
 public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAGResponse> {
@@ -41,7 +42,7 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
             """
                     Take the input as a question and answer it finding any information needed
                     """;
-    private final CognitiveSearchProxy cognitiveSearchProxy;
+    private final AzureAISearchProxy azureAISearchProxy;
 
     private final OpenAIProxy openAIProxy;
 
@@ -51,10 +52,10 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
     private String gptChatDeploymentModelId;
 
     public JavaSemanticKernelChainsApproach(
-            CognitiveSearchProxy cognitiveSearchProxy,
+            AzureAISearchProxy azureAISearchProxy,
             OpenAIAsyncClient openAIAsyncClient,
             OpenAIProxy openAIProxy) {
-        this.cognitiveSearchProxy = cognitiveSearchProxy;
+        this.azureAISearchProxy = azureAISearchProxy;
         this.openAIAsyncClient = openAIAsyncClient;
         this.openAIProxy = openAIProxy;
     }
@@ -71,7 +72,7 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
         Kernel semanticKernel = buildSemanticKernel(options);
 
         // STEP 1: Retrieve relevant documents using user question. It reuses the
-        // CognitiveSearchRetriever appraoch through the CognitiveSearchPlugin native function.
+        // AzureAISearchRetriever appraoch through the AzureAISearchPlugin native function.
         FunctionResult<String> searchContext = semanticKernel
                 .getPlugin("InformationFinder")
                 .get("SearchFromQuestion")
@@ -144,7 +145,7 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
      * Build semantic kernel context with AnswerQuestion semantic function and
      * InformationFinder.SearchFromQuestion native function. AnswerQuestion is imported from
      * src/main/resources/semantickernel/Plugins. InformationFinder.SearchFromQuestion is implemented in a
-     * traditional Java class method: CognitiveSearchPlugin.searchFromConversation
+     * traditional Java class method: AzureAISearchPlugin.searchFromConversation
      *
      * @param options
      * @return
@@ -153,14 +154,14 @@ public class JavaSemanticKernelChainsApproach implements RAGApproach<String, RAG
         return Kernel.builder()
                 .withAIService(
                         ChatCompletionService.class,
-                        ChatCompletionService.builder()
+                        OpenAIChatCompletion.builder()
                                 .withModelId(gptChatDeploymentModelId)
                                 .withOpenAIAsyncClient(this.openAIAsyncClient)
                                 .build()
                 )
                 .withPlugin(
                         KernelPluginFactory.createFromObject(
-                                new CognitiveSearchPlugin(this.cognitiveSearchProxy, this.openAIProxy, options),
+                                new AzureAISearchPlugin(this.azureAISearchProxy, this.openAIProxy, options),
                                 "InformationFinder")
                 )
                 .withPlugin(

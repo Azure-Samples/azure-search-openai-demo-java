@@ -9,6 +9,10 @@ import com.azure.ai.openai.models.ChatRole;
 
 import java.util.List;
 
+/**
+ * Simple class to represent the chat history.
+ * It also has utility methods to convert the chat history to OpenAI chat messages.
+ */
 public class ChatGPTConversation {
 
     private List<ChatGPTMessage> messages;

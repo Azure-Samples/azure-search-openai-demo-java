@@ -16,7 +16,7 @@ public class ExtractKeywordsChatTemplate {
     private String customPrompt = "";
     private Boolean replacePrompt = false;
 
-    private static final String USER_CHAT_MESSAGE_TEMPLATE =
+    private static final String EXTRACT_KEYWORDS_USER_PROMPT_TEMPLATE =
             """
                     Generate a search query for the below conversation.
                     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
@@ -26,28 +26,13 @@ public class ExtractKeywordsChatTemplate {
                     %s
                     """;
 
-    /**
-     * @param conversation conversation history
-     * @param sources domain specific sources to be used in the prompt
-     * @param customPrompt custom prompt to be injected in the existing promptTemplate or used to
-     * replace it
-     * @param replacePrompt if true, the customPrompt will replace the default promptTemplate,
-     * otherwise it will be appended to the default promptTemplate in the predefined section
-     */
-    private static final String GROUNDED_USER_QUESTION_TEMPLATE =
-            """
-                    %s
-                    Sources:
-                    %s
-                    """;
-
     public ExtractKeywordsChatTemplate(ChatGPTConversation conversation) {
         if (conversation == null || conversation.getMessages().isEmpty())
             throw new IllegalStateException("conversation cannot be null or empty");
 
         String chatHistory = ChatGPTUtils.formatAsChatML(conversation.toOpenAIChatMessages());
         // Add user message
-        ChatRequestUserMessage chatUserMessage = new ChatRequestUserMessage(USER_CHAT_MESSAGE_TEMPLATE.formatted(chatHistory));
+        ChatRequestUserMessage chatUserMessage = new ChatRequestUserMessage(EXTRACT_KEYWORDS_USER_PROMPT_TEMPLATE.formatted(chatHistory));
 
         this.conversationHistory.add(chatUserMessage);
 

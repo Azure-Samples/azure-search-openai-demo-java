@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+/**
+ * Controller providing the api for one shot ask to the RAG model.The APPLICATION_NDJSON_VALUE based API is used for streaming the response.
+ * Streaming works only with RAG implementation based on plain java Open AI client sdk. Semantic Kernel doesn't support streaming yet
+ */
 @RestController
 public class AskController {
 

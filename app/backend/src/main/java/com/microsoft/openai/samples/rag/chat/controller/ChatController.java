@@ -28,6 +28,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Controller providing the api to chat with the RAG model.The APPLICATION_NDJSON_VALUE based API is used for streaming the response.
+ * Streaming works only with RAG implementation based on plain java Open AI client sdk. Semantic Kernel doesn't support streaming yet
+ */
 @RestController
 public class ChatController {
 

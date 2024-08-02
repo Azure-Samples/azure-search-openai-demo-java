@@ -13,6 +13,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ *  Open AI client configuration. If openai.tracing.enabled is true in springboot application.properties file,
+ *  Open AI requests and response are written to the log.
+ */
 @Configuration
 public class OpenAIConfiguration {
 

@@ -67,7 +67,7 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
         // STEP 2: Build a grounded prompt using the retrieved documents. RAG options is used to
         // configure additional prompt extension like 'suggesting follow up questions' option.
         var semanticSearchChat =
-                new SemanticSearchChat(
+                new AnswerQuestionChatPromptTemplate(
                         questionOrConversation,
                         sources,
                         options.getPromptTemplate(),
@@ -107,7 +107,7 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
 
         // Replace whole prompt is not supported yet
         var semanticSearchChat =
-                new SemanticSearchChat(
+                new AnswerQuestionChatPromptTemplate(
                         questionOrConversation,
                         sources,
                         options.getPromptTemplate(),

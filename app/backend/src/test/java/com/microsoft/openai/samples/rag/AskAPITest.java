@@ -14,7 +14,7 @@ import com.azure.search.documents.SearchDocument;
 import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.models.SearchResult;
 import com.azure.search.documents.util.SearchPagedIterable;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.test.utils.CognitiveSearchUnitTestUtils;
 import com.microsoft.openai.samples.rag.test.utils.OpenAIUnitTestUtils;
@@ -37,7 +37,7 @@ import org.springframework.test.context.ActiveProfiles;
 class AskAPITest {
 
     @Autowired private TestRestTemplate restTemplate;
-    @MockBean private CognitiveSearchProxy cognitiveSearchProxyMock;
+    @MockBean private AzureAISearchProxy azureAISearchProxyMock;
 
     @MockBean private OpenAIProxy openAIProxyMock;
 
@@ -63,7 +63,7 @@ class AskAPITest {
      */
     private void prepareMocks() {
         SearchPagedIterable searchPagedIterable = buildSearchPagedIterableWithDocs();
-        when(cognitiveSearchProxyMock.search(
+        when(azureAISearchProxyMock.search(
                         eq("What does a Product Manager do?"),
                         any(SearchOptions.class),
                         eq(Context.NONE)))

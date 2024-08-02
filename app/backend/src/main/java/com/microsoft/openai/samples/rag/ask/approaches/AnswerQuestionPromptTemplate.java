@@ -10,13 +10,23 @@ import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnswerQuestionChatTemplate {
+/**
+ * This class represents a prompt for a one shot generate response request.
+ * It uses a naive templating system based on simple java string formatting.
+ * The prompt is built by injecting the domain specific sources and the user question into the prompt template. Specifically
+ *  1. System prompt has instructions for the assistant.
+ *  2. Few shot examples are added as user/assistant messages in the messages list (not in the system prompt).
+ *  3. User question is grounded with the domain specific sources and added as last message.
+ * It doesn't account for the whole conversation history, only the last user message is used. See @AnswerQuestionChatPromptTemplate for an example that uses the whole conversation history.
+ * It doesn't account for the maximum token limit of the OpenAI API.
+ */
+public class AnswerQuestionPromptTemplate {
 
-    private final List<ChatRequestMessage> conversationHistory = new ArrayList<>();
-
+    private final List<ChatRequestMessage> messages = new ArrayList<>();
     private String customPrompt = "";
-    private String systemMessage;
+    final private String systemMessage;
     private Boolean replacePrompt = false;
+    private List<ContentSource> sources;
 
     private static final String SYSTEM_CHAT_MESSAGE_TEMPLATE =
             """
@@ -58,37 +68,47 @@ public class AnswerQuestionChatTemplate {
     %s
     """;
 
-    public AnswerQuestionChatTemplate(String customPrompt, Boolean replacePrompt) {
+    public AnswerQuestionPromptTemplate(String customPrompt, Boolean replacePrompt, List<ContentSource> sources) {
 
         if (replacePrompt && (customPrompt == null || customPrompt.isEmpty()))
             throw new IllegalStateException(
                     "customPrompt cannot be null or empty when replacePrompt is true");
 
+        if (sources == null || sources.isEmpty())
+            throw new IllegalStateException("sources cannot be null or empty");
+
         this.replacePrompt = replacePrompt;
         this.customPrompt = customPrompt == null ? "" : customPrompt;
 
         if (this.replacePrompt) {
+           //custom prompt is used to replace the whole system message
             this.systemMessage = customPrompt;
         } else {
+           //custom prompt is used to extend the internal system message
             this.systemMessage = SYSTEM_CHAT_MESSAGE_TEMPLATE.formatted(this.customPrompt);
         }
 
+        this.sources = sources;
         // Add system message
         ChatRequestMessage chatSystemMessage = new ChatRequestSystemMessage(systemMessage);
 
-        this.conversationHistory.add(chatSystemMessage);
+        this.messages.add(chatSystemMessage);
 
-        // Add few shoot learning with chat
+        // Add few shoot learning as chat user messages
         ChatRequestMessage fewShotUserMessage = new ChatRequestUserMessage(FEW_SHOT_USER_MESSAGE);
-        this.conversationHistory.add(fewShotUserMessage);
+        this.messages.add(fewShotUserMessage);
 
         ChatRequestMessage fewShotAssistantMessage = new ChatRequestAssistantMessage(FEW_SHOT_ASSISTANT_MESSAGE);
-        this.conversationHistory.add(fewShotAssistantMessage);
+        this.messages.add(fewShotAssistantMessage);
     }
 
-    public List<ChatRequestMessage> getMessages(String question, List<ContentSource> sources) {
-        if (sources == null || sources.isEmpty())
-            throw new IllegalStateException("sources cannot be null or empty");
+    /**
+     * Get the grounded messages
+     * @param question
+     * @return
+     */
+    public List<ChatRequestMessage> getMessages(String question) {
+
         if (question == null || question.isEmpty())
             throw new IllegalStateException("question cannot be null");
 
@@ -108,8 +128,8 @@ public class AnswerQuestionChatTemplate {
                 GROUNDED_USER_QUESTION_TEMPLATE.formatted(
                         question, sourcesStringBuilder.toString());
         ChatRequestMessage groundedUserMessage = new ChatRequestUserMessage(groundedUserQuestion);
-        this.conversationHistory.add(groundedUserMessage);
+        this.messages.add(groundedUserMessage);
 
-        return this.conversationHistory;
+        return this.messages;
     }
 }

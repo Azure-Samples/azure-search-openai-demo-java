@@ -6,9 +6,9 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTMessage;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
-import com.microsoft.openai.samples.rag.proxy.CognitiveSearchProxy;
+import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
-import com.microsoft.openai.samples.rag.retrieval.CognitiveSearchRetriever;
+import com.microsoft.openai.samples.rag.retrieval.AzureAISearchRetriever;
 import com.microsoft.semantickernel.semanticfunctions.annotations.DefineKernelFunction;
 import com.microsoft.semantickernel.semanticfunctions.annotations.KernelFunctionParameter;
 import org.slf4j.Logger;
@@ -17,21 +17,27 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public class CognitiveSearchPlugin {
+/**
+ * This class is Semantic Kernel plugin that provides a kernel semantic function to search information relevant to answering a given query.
+ * It uses Azure AI Search to retrieve information from the search index. The implementation simply delegates to the common AzureAISearchRetriever class which is also used
+ * by the RAG approach based on java plain open ai client sdk.
+ */
+public class AzureAISearchPlugin {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CognitiveSearchPlugin.class);
-    private final CognitiveSearchProxy cognitiveSearchProxy;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureAISearchPlugin.class);
+    private final AzureAISearchProxy azureAISearchProxy;
     private final OpenAIProxy openAIProxy;
     private final RAGOptions options;
 
-    public CognitiveSearchPlugin(
-            CognitiveSearchProxy cognitiveSearchProxy,
+    public AzureAISearchPlugin(
+            AzureAISearchProxy azureAISearchProxy,
             OpenAIProxy openAIProxy,
             RAGOptions options) {
-        this.cognitiveSearchProxy = cognitiveSearchProxy;
+        this.azureAISearchProxy = azureAISearchProxy;
         this.options = options;
         this.openAIProxy = openAIProxy;
     }
+
 
     @DefineKernelFunction(
             name = "SearchFromQuestion",
@@ -43,12 +49,12 @@ public class CognitiveSearchPlugin {
                     name = "query")
             String query) {
 
-        CognitiveSearchRetriever retriever =
-                new CognitiveSearchRetriever(this.cognitiveSearchProxy, this.openAIProxy);
+        AzureAISearchRetriever retriever =
+                new AzureAISearchRetriever(this.azureAISearchProxy, this.openAIProxy);
         List<ContentSource> sources = retriever.retrieveFromQuestion(query, this.options);
 
         LOGGER.info(
-                "Total {} sources found in cognitive search for keyword search query[{}]",
+                "Total {} sources found in Azure AI search index for keyword search query[{}]",
                 sources.size(),
                 query);
 
@@ -69,12 +75,12 @@ public class CognitiveSearchPlugin {
                 new ChatGPTMessage(ChatGPTMessage.ChatRole.fromString(message.getAuthorRole().toString()), message.getContent())
         ).toList();
 
-        CognitiveSearchRetriever retriever =
-                new CognitiveSearchRetriever(this.cognitiveSearchProxy, this.openAIProxy);
+        AzureAISearchRetriever retriever =
+                new AzureAISearchRetriever(this.azureAISearchProxy, this.openAIProxy);
         List<ContentSource> sources = retriever.retrieveFromConversation(new ChatGPTConversation(chatMessages), this.options);
 
         LOGGER.info(
-                "Total {} sources found in cognitive search",
+                "Total {} sources found in Azure AI search",
                 sources.size());
 
         return Mono.just(buildSources(sources));
