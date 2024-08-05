@@ -6,6 +6,11 @@ import java.util.List;
 import com.microsoft.openai.samples.indexer.SplitPage;
 
 
+/**
+ * It's responsible for splitting the text content of a list of pages into smaller sections.
+ * It does this by identifying sentence endings and word breaks, and then using these to determine where to split the text.
+ * The class also has a maximum section length, a sentence search limit, and a section overlap, which are used to fine-tune the splitting process.
+ */
 public class TextSplitter {
     private List<String> sentenceEndings;
     private List<String> wordBreaks;
@@ -15,6 +20,10 @@ public class TextSplitter {
     private boolean verbose;
 
     public TextSplitter(boolean verbose) {
+        this(true,1000,100,100)
+    }
+
+    public TextSplitter(boolean verbose, int maxSectionLength, int sentenceSearchLimit, int sectionOverlap) {
         this.sentenceEndings = new ArrayList<>();
         this.sentenceEndings.add(".");
         this.sentenceEndings.add("。");
@@ -41,12 +50,11 @@ public class TextSplitter {
         this.wordBreaks.add("\t");
         this.wordBreaks.add("\n");
 
-        this.maxSectionLength = 1000;
-        this.sentenceSearchLimit = 100;
-        this.sectionOverlap = 100;
+        this.maxSectionLength = maxSectionLength;
+        this.sentenceSearchLimit = sentenceSearchLimit;
+        this.sectionOverlap = sectionOverlap;
         this.verbose = verbose;
     }
-
     public List<SplitPage> splitPages(List<Page> pages) {
         List<SplitPage> splitPages = new ArrayList<>();
         StringBuilder allText = new StringBuilder();

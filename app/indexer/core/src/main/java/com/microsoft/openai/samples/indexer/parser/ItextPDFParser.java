@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ *  This is an implementation of a PDF parser using open source iText library.
+ *  It can only handle text within pdf.
+ *  Can't extract data from tables within images. See @DocumentIntelligencePDFParser for that.
+ */
 public class ItextPDFParser implements PDFParser {
     @Override
     public List<Page> parse(File file) {

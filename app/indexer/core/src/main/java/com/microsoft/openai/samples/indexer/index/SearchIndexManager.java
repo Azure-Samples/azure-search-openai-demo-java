@@ -31,6 +31,11 @@ import org.slf4j.LoggerFactory;
 
 
 
+/**
+ * The SearchIndexManager class is responsible for managing the Azure Search Index.
+ * It provides functionalities to create an index, update the content of the index,
+ * and manage the embeddings of the sections.
+ */
 public class SearchIndexManager {
     private AzureSearchClientFactory azureSearchClientFactory;
     private String searchAnalyzerName;
@@ -44,6 +49,12 @@ public class SearchIndexManager {
         this.embeddingsService = embeddingsService;
     }
 
+    /**
+     *  It creates a new index with specific fields and configurations. It also sets up semantic search and vector search
+     *  configurations for the index.
+     *  This is in general not used during runtime, but only during env setup.
+     *  However, it's idempotent as it checks if the index already exists. If not it creates it.
+     */
     public void createIndex() {
         if (azureSearchClientFactory.isVerbose()) {
                   logger.debug("Ensuring search index {} exists", azureSearchClientFactory.getIndexName());
@@ -128,6 +139,12 @@ public class SearchIndexManager {
         logger.info("Created index {}", azureSearchClientFactory.getIndexName());
     }
 
+    /**
+     *  It updates the content of the index. It divides the sections into batches and for each batch, it creates a list of documents. Each document
+     *  is a map containing the section details.
+     *  It also creates embeddings for each section and adds them to the corresponding document. Finally, it uploads the documents to the search client.
+     * @param sections
+     */
     public void updateContent(List<Section> sections) {
         int MAX_BATCH_SIZE = 1000;
         List<List<Section>> sectionBatches = new ArrayList<>();
@@ -161,7 +178,7 @@ public class SearchIndexManager {
                 documents.get(i).put("embedding", embeddings.get(i));
             }
         
-
+            //Finally updated the document to the index including embeddings vector as well
             searchClient.uploadDocuments(documents);
         }
         
@@ -200,8 +217,14 @@ public class SearchIndexManager {
     }
 
     */
- 
- 
+
+
+    /**
+     *
+     * @param filename
+     * @param page
+     * @return the source page from the file page. If the file is a PDF, it appends the page number to the filename. Otherwise,it just returns the filename.
+     */
         private  String getSourcePageFromFilePage(String filename, int page) {
             if (filename.toLowerCase().endsWith(".pdf")) {
                 return filename + "#page=" + (page + 1);

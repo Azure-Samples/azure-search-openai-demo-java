@@ -14,6 +14,15 @@ import com.microsoft.openai.samples.indexer.parser.TextSplitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The DocumentProcessor class is responsible for processing and indexing documents.
+ * It takes a document as input, either as a file or as a byte array, and processes it for indexing.
+ * The processing involves
+ * 1. parsing the document into pages
+ * 2. splitting the pages into sections
+ * 3. Indexing these sections in Azure AI Search also adding embeddings so that semantic similarity search can be used.
+ * The class uses a SearchIndexManager to manage the indexing, a PDFParser to parse the document into pages, and a TextSplitter to split the pages into sections.
+ */
 public class DocumentProcessor {
     
     private static final Logger logger = LoggerFactory.getLogger(DocumentProcessor.class);
@@ -38,6 +47,7 @@ public class DocumentProcessor {
 
     public void indexDocumentFromBytes(String filename, String category, byte[] content){
         logger.debug("Indexing file {}", filename);
+        //TODO add support for other file types (docx, pptx, txt, md, html, etc)
         List<Page> pages = pdfParser.parse(content);
         logger.info("Found {} pages in file {}", pages.size(), filename);
 

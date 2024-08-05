@@ -20,6 +20,13 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.ModelType;
 import reactor.util.retry.Retry;
 
+
+/**
+ * This class  provides a base implementation for creating text embeddings which are then stored in vector databases during batch indexing process.
+ * It creates embedding batch and split text into batches for performance reasons.
+ * It also includes fields for configuring batch size, token limit, and other configurations.
+ * The class uses OpenAI client to create the embeddings and handles retries in case of HTTP response exceptions.
+ */
 public abstract class AbstractTextEmbeddingsService implements TextEmbeddingsService{
     protected String openAiDeploymentName;
     protected boolean disableBatch;
