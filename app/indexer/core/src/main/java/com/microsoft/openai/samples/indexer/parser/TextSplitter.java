@@ -20,7 +20,7 @@ public class TextSplitter {
     private boolean verbose;
 
     public TextSplitter(boolean verbose) {
-        this(true,1000,100,100)
+        this(true,1000,100,100);
     }
 
     public TextSplitter(boolean verbose, int maxSectionLength, int sentenceSearchLimit, int sectionOverlap) {
