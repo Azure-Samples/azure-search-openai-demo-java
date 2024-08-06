@@ -17,6 +17,7 @@ param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 
 
+param kubernetesVersion string = '1.27.16'
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
@@ -153,6 +154,7 @@ module aks '../../shared/host/aks.bicep' = {
     containerRegistryName: !empty(containerRegistryName) ? containerRegistryName : '${abbrs.containerRegistryRegistries}${resourceToken}'
     logAnalyticsName: monitoring.outputs.logAnalyticsWorkspaceName
     keyVaultName: keyVault.outputs.name
+    kubernetesVersion: kubernetesVersion
   }
 }
 
