@@ -213,10 +213,10 @@ azd up
     az login
     ```
 
-2. Change dir to `app`
+2. Change dir to `deploy/aca`
 
     ```shell
-    cd app
+    cd deploy/aca
     ```
 
 3. Run the `./start-compose.ps1` (Windows) or `./start-compose.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.

@@ -1,4 +1,4 @@
-$output = azd -C ..\deploy\aca env get-values
+$output = azd env get-values
 
 foreach ($line in $output) {
   $name, $value = $line.Split("=")
