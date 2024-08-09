@@ -4,9 +4,9 @@
     {
       "label": "Start App ",
       "type": "shell",
-      "command": "${workspaceFolder}/app/start.sh",
+      "command": "${workspaceFolder}/deploy/app-service/start.sh",
       "windows": {
-        "command": "pwsh ${workspaceFolder}/app/start.ps1"
+        "command": "pwsh ${workspaceFolder}/deploy/app-service/start.ps1"
       },
       "presentation": {
         "reveal": "always"

@@ -21,7 +21,7 @@ echo ""
 echo "Restoring frontend npm packages"
 echo ""
 
-cd ./frontend
+cd ../../app/frontend
 npm install
 if [ $? -ne 0 ]; then
     echo "Failed to restore frontend npm packages"
@@ -37,6 +37,12 @@ if [ $? -ne 0 ]; then
     echo "Failed to build frontend"
     exit $?
 fi
+
+# Create static folder if it doesn't exist
+mkdir -p ../backend/src/main/resources/static
+
+# Copy files from build folder to static folder
+cp -r build/* ../backend/src/main/resources/static/
 
 echo ""
 echo "Starting spring boot api backend and react spa from backend/public static content"

@@ -193,7 +193,7 @@ azd up
     az login
     ```
 
-2. Change dir to `app`
+2. Change dir to `deploy\app-service`
 
     ```shell
     cd app

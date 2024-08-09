@@ -19,7 +19,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 Write-Host "Restoring frontend npm packages"
 Write-Host ""
-Set-Location ./frontend
+Set-Location ../../app/frontend
 npm install
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to restore frontend npm packages"
@@ -36,10 +36,19 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
+Write-Host "Copying build files to backend static resources"
+Write-Host ""
+$staticPath = "../backend/src/main/resources/static"
+if (-Not (Test-Path -Path $staticPath)) {
+    New-Item -ItemType Directory -Path $staticPath
+}
+Copy-Item -Path "./build/*" -Destination $staticPath -Recurse -Force
+
+Write-Host ""
 Write-Host "Starting spring boot api backend and react spa from backend/public static content"
 Write-Host ""
 Set-Location ../backend
-Start-Process http://localhost:8080
+#Start-Process http://localhost:8080
 
 Start-Process -FilePath "./mvnw.cmd" -ArgumentList "spring-boot:run -Dspring-boot.run.profiles=dev" -Wait -NoNewWindow
 
