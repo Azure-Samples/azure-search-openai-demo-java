@@ -1,0 +1,25 @@
+name: ExtractKeywords
+description: Extract keywords from a conversation to form a search query.
+template: |
+  <message role="system">
+      Generate a search query for the below conversation.
+      Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
+      Do not include any text inside [] or &lt;&lt;&gt;&gt; in the search query terms.
+      Do not enclose the search query in quotes or double quotes.
+  </message>
+  
+  {{#each conversation}}
+      <message role="{{role}}">{{content}}</message>
+  {{/each}}
+template_format: handlebars
+input_variables:
+  - name: conversation
+    description: Chat conversation
+    is_required: true
+execution_settings:
+  default:
+    max_tokens: 1024
+    temperature: 0.2
+    top_p: 1
+    presence_penalty: 0.0
+    frequency_penalty: 0.0
