@@ -1,9 +1,6 @@
 package com.microsoft.openai.samples.rag.chat.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
-import com.azure.ai.openai.models.ChatCompletionsOptions;
-import com.azure.ai.openai.models.ChatRequestMessage;
-import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
@@ -14,21 +11,23 @@ import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchPlugin;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.aiservices.openai.chatcompletion.OpenAIChatCompletion;
-import com.microsoft.semantickernel.hooks.KernelHook;
+import com.microsoft.semantickernel.implementation.EmbeddedResourceLoader;
 import com.microsoft.semantickernel.orchestration.FunctionResult;
 import com.microsoft.semantickernel.plugin.KernelPlugin;
 import com.microsoft.semantickernel.plugin.KernelPluginFactory;
+import com.microsoft.semantickernel.semanticfunctions.HandlebarsPromptTemplateFactory;
 import com.microsoft.semantickernel.semanticfunctions.KernelFunctionArguments;
+import com.microsoft.semantickernel.semanticfunctions.KernelFunctionYaml;
 import com.microsoft.semantickernel.services.chatcompletion.ChatCompletionService;
+import com.microsoft.semantickernel.services.chatcompletion.ChatHistory;
+import com.microsoft.semantickernel.services.chatcompletion.ChatMessageContent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an
@@ -55,38 +54,33 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
         this.openAIProxy = openAIProxy;
     }
 
-    /**
-     * @param questionOrConversation
-     * @param options
-     * @return
-     */
     @Override
     public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
-        String question = ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages());
-        String conversation = ChatGPTUtils.formatAsChatML(questionOrConversation.toOpenAIChatMessages());
+        ChatHistory conversation = questionOrConversation.toSKChatHistory();
+        ChatMessageContent<?> question = conversation.getLastMessage().get();
 
         Kernel semanticKernel = buildSemanticKernel(options);
 
         // STEP 1: Retrieve relevant documents using the current conversation. It reuses the
         // AzureAISearchRetriever approach through the AzureAISearchPlugin native function.
-        FunctionResult<String> searchContext = semanticKernel
+        FunctionResult<List> searchContext = semanticKernel
                 .invokeAsync("InformationFinder", "SearchFromConversation")
                 .withArguments(
                         KernelFunctionArguments.builder()
                                 .withVariable("conversation", conversation)
                                 .build())
-                .withResultType(String.class)
+                .withResultType(List.class)
                 .block();
 
         // STEP 2: Build a SK context with the sources retrieved from the memory store and conversation
         KernelFunctionArguments variables = KernelFunctionArguments.builder()
                 .withVariable("sources", searchContext.getResult())
-                .withVariable("conversation", conversation)
-                .withVariable("suggestions", String.valueOf(options.isSuggestFollowupQuestions()))
-                .withVariable("input", question)
+                .withVariable("conversation", removeLastMessage(conversation))
+                .withVariable("suggestions", options.isSuggestFollowupQuestions())
+                .withVariable("input", question.getContent())
                 .build();
 
-        /**
+        /*
          * STEP 3: Get a reference of the semantic function [AnswerConversation] of the [RAG] plugin
          * (a.k.a. skill) from the SK skills registry and provide it with the pre-built context.
          * Triggering Open AI to get a reply.
@@ -97,14 +91,19 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
                 .withResultType(String.class)
                 .block();
 
-
         return new RAGResponse.Builder()
                 .prompt(renderedConversation)
                 .answer(reply.getResult())
-                .sources(formSourcesList(searchContext.getResult()))
-                .sourcesAsText(searchContext.getResult())
-                .question(question)
+                .sources(searchContext.getResult())
+                .sourcesAsText(searchContext.getResult().get(0).toString())
+                .question(question.getContent())
                 .build();
+    }
+
+    private ChatHistory removeLastMessage(ChatHistory conversation) {
+        ArrayList<ChatMessageContent<?>> messages = new ArrayList<>(conversation.getMessages());
+        messages.remove(conversation.getMessages().size() - 1);
+        return new ChatHistory(messages);
     }
 
     @Override
@@ -113,26 +112,6 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
             RAGOptions options,
             OutputStream outputStream) {
         throw new IllegalStateException("Streaming not supported for this approach");
-    }
-
-    private List<ContentSource> formSourcesList(String result) {
-        if (result == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(result
-                        .split("\n"))
-                .map(source -> {
-                    String[] split = source.split(":", 2);
-                    if (split.length >= 2) {
-                        var sourceName = split[0].trim();
-                        var sourceContent = split[1].trim();
-                        return new ContentSource(sourceName, sourceContent);
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     /**
@@ -154,12 +133,24 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
                 new AzureAISearchPlugin(this.azureAISearchProxy, this.openAIProxy, options),
                 "InformationFinder");
 
-        KernelPlugin answerPlugin = KernelPluginFactory.importPluginFromResourcesDirectory(
-                "semantickernel/Plugins",
-                "RAG",
-                "AnswerConversation",
-                null,
-                String.class);
+        KernelPlugin answerPlugin;
+        try {
+            answerPlugin = KernelPluginFactory.createFromFunctions(
+                    "RAG",
+                    "AnswerConversation",
+                    List.of(
+                            KernelFunctionYaml.fromPromptYaml(
+                                    EmbeddedResourceLoader.readFile(
+                                            "semantickernel/Plugins/RAG/AnswerConversation/answerConversation.prompt.yaml",
+                                            JavaSemanticKernelChainsChatApproach.class,
+                                            EmbeddedResourceLoader.ResourceLocation.CLASSPATH_ROOT
+                                    ),
+                                    new HandlebarsPromptTemplateFactory())
+                    )
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         Kernel kernel = Kernel.builder()
                 .withAIService(ChatCompletionService.class, chatCompletion)
@@ -169,7 +160,8 @@ public class JavaSemanticKernelChainsChatApproach implements RAGApproach<ChatGPT
 
         kernel.getGlobalKernelHooks().addPreChatCompletionHook(event -> {
             this.renderedConversation = ChatGPTUtils.formatAsChatML(event.getOptions().getMessages());
-            return event;});
+            return event;
+        });
         return kernel;
     }
 
