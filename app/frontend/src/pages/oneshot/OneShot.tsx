@@ -232,7 +232,9 @@ export function Component(): JSX.Element {
                     defaultSelectedKey={approach}
                     onChange={onApproachChange}
                 />
-                {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                {//pending implementation of vector stores
+                    /*
+                (approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                     <Dropdown
                         className={styles.oneshotSettingsSeparator}
                         label="Semantic Kernel mode"
@@ -243,7 +245,7 @@ export function Component(): JSX.Element {
                         required
                         onChange={onSKModeChange}
                     />
-                )}
+                )*/}
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
                 <TextField
                     className={styles.oneshotSettingsSeparator}

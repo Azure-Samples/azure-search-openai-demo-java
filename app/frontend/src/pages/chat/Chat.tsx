@@ -258,7 +258,7 @@ const Chat = () => {
         },*/
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
-            text: "Java Semantic Kernel - Orchestration"
+            text: "Java Semantic Kernel"
         }
     ];
 
@@ -385,7 +385,9 @@ const Chat = () => {
                             onChange={onPromptTemplateChange}
                         />
                     )}
-                    {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                    
+                    { //pending implementation of vector stores
+                    /*(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                         <Dropdown
                             className={styles.oneshotSettingsSeparator}
                             label="Semantic Kernel mode"
@@ -396,7 +398,7 @@ const Chat = () => {
                             required
                             onChange={onSKModeChange}
                         />
-                    )}
+                    )*/}
 
                     <SpinButton
                         className={styles.chatSettingsSeparator}
