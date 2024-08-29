@@ -1,6 +1,7 @@
 package com.microsoft.openai.samples.indexer.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.microsoft.openai.samples.indexer.SplitPage;
@@ -24,31 +25,8 @@ public class TextSplitter {
     }
 
     public TextSplitter(boolean verbose, int maxSectionLength, int sentenceSearchLimit, int sectionOverlap) {
-        this.sentenceEndings = new ArrayList<>();
-        this.sentenceEndings.add(".");
-        this.sentenceEndings.add("。");
-        this.sentenceEndings.add("．");
-        this.sentenceEndings.add("!");
-        this.sentenceEndings.add("?");
-        this.sentenceEndings.add("‼");
-        this.sentenceEndings.add("⁇");
-        this.sentenceEndings.add("⁈");
-        this.sentenceEndings.add("⁉");
-
-        this.wordBreaks = new ArrayList<>();
-        this.wordBreaks.add(",");
-        this.wordBreaks.add("、");
-        this.wordBreaks.add(";");
-        this.wordBreaks.add(":");
-        this.wordBreaks.add(" ");
-        this.wordBreaks.add("(");
-        this.wordBreaks.add(")");
-        this.wordBreaks.add("[");
-        this.wordBreaks.add("]");
-        this.wordBreaks.add("{");
-        this.wordBreaks.add("}");
-        this.wordBreaks.add("\t");
-        this.wordBreaks.add("\n");
+        this.sentenceEndings = Arrays.asList(".", "。", "．", "!", "?", "‼", "⁇", "⁈", "⁉");
+        this.wordBreaks = Arrays.asList(",", "、", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n");
 
         this.maxSectionLength = maxSectionLength;
         this.sentenceSearchLimit = sentenceSearchLimit;
