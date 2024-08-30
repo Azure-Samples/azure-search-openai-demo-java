@@ -17,7 +17,7 @@ param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 
 
-param kubernetesVersion string = '1.27.16'
+param kubernetesVersion string = '1.29.7'
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
