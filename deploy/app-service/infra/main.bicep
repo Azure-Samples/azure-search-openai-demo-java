@@ -62,6 +62,7 @@ param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
 param chatGptDeploymentCapacity int = 60
+param chatGptDeploymentSkuName string= 'Standard'
 param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0613'
 param embeddingDeploymentName string // Set in main.parameters.json
@@ -238,7 +239,7 @@ module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azu
           version: chatGptModelVersion
         }
         sku: {
-          name: 'Standard'
+          name: chatGptDeploymentSkuName
           capacity: chatGptDeploymentCapacity
         }
       }

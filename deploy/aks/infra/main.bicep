@@ -67,6 +67,7 @@ param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0613'
 param embeddingDeploymentName string // Set in main.parameters.json
 param embeddingDeploymentCapacity int = 80
+param chatGptDeploymentSkuName string= 'Standard'
 param embeddingModelName string = 'text-embedding-ada-002'
 
 param servicebusNamespace string = ''
@@ -177,7 +178,7 @@ module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azu
           version: chatGptModelVersion
         }
         sku: {
-          name: 'Standard'
+          name: chatGptDeploymentSkuName
           capacity: chatGptDeploymentCapacity
         }
       }
