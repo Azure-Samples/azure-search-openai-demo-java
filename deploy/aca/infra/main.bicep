@@ -60,13 +60,15 @@ param formRecognizerResourceGroupLocation string = location
 param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 60
-param chatGptModelName string = 'gpt-35-turbo'
-param chatGptModelVersion string = '0613'
-param embeddingDeploymentName string // Set in main.parameters.json
-param embeddingDeploymentCapacity int = 60
+param chatGptDeploymentCapacity int = 80
 param chatGptDeploymentSkuName string= 'Standard'
-param embeddingModelName string = 'text-embedding-ada-002'
+param chatGptModelName string = 'gpt-4o-mini'
+param chatGptModelVersion string = '2024-07-18'
+param embeddingDeploymentName string // Set in main.parameters.json
+param embeddingDeploymentCapacity int = 120
+
+param embeddingModelName string = 'text-embedding-3-small'
+param embeddingModelVersion string = '1'
 
 param servicebusNamespace string = ''
 param serviceBusSkuName string = 'Standard'
@@ -317,7 +319,7 @@ module openAi '../../shared/ai/cognitiveservices.bicep' =  {
         model: {
           format: 'OpenAI'
           name: embeddingModelName
-          version: '2'
+          version: embeddingModelVersion
         }
         sku: {
           name: 'Standard'
