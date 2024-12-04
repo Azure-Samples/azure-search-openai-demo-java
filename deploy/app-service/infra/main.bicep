@@ -11,7 +11,7 @@ param location string
 
 param appServicePlanName string = ''
 param backendServiceName string = ''
-param indexServiceName string = ''
+//param indexServiceName string = ''
 param resourceGroupName string = ''
 
 param applicationInsightsDashboardName string = ''
@@ -39,8 +39,8 @@ param openAiHost string // Set in main.parameters.json
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
-@description('Location for the OpenAI resource group')
-@allowed(['canadaeast', 'eastus', 'eastus2', 'francecentral', 'switzerlandnorth', 'uksouth', 'japaneast', 'northcentralus', 'australiaeast', 'swedencentral'])
+@description('Location for the OpenAI resource group. Options are constrained by text-embedding-3-small limited deployments regions')
+@allowed(['canadaeast', 'eastus', 'eastus2', 'japaneast'])
 @metadata({
   azd: {
     type: 'location'
@@ -61,12 +61,14 @@ param formRecognizerResourceGroupLocation string = location
 param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 60
-param chatGptModelName string = 'gpt-35-turbo'
-param chatGptModelVersion string = '0613'
+param chatGptDeploymentCapacity int = 80
+param chatGptDeploymentSkuName string= 'Standard'
+param chatGptModelName string = 'gpt-4o-mini'
+param chatGptModelVersion string = '2024-07-18'
 param embeddingDeploymentName string // Set in main.parameters.json
-param embeddingDeploymentCapacity int = 80
-param embeddingModelName string = 'text-embedding-ada-002'
+param embeddingDeploymentCapacity int = 120
+param embeddingModelName string = 'text-embedding-3-small'
+param embeddingModelVersion string = '1'
 
 // Used for the optional login and document level access control system
 param useAuthentication bool = false
@@ -188,6 +190,7 @@ module backend '../../shared/host/appservice.bicep' = {
   }
 }
 
+/*
 module indexer '../../shared/host/functions.bicep' = {
   name: 'indexer'
   scope: resourceGroup
@@ -219,6 +222,7 @@ module indexer '../../shared/host/functions.bicep' = {
   }
 }
 
+*/
 module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
   name: 'openai'
   scope: openAiResourceGroup
@@ -238,7 +242,7 @@ module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azu
           version: chatGptModelVersion
         }
         sku: {
-          name: 'Standard'
+          name: chatGptDeploymentSkuName
           capacity: chatGptDeploymentCapacity
         }
       }
@@ -247,7 +251,7 @@ module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azu
         model: {
           format: 'OpenAI'
           name: embeddingModelName
-          version: '2'
+          version: embeddingModelVersion
         }
         sku: {
           name: 'Standard'
@@ -398,6 +402,7 @@ module openAiRoleBackend '../../shared/security/role.bicep' = if (openAiHost == 
   }
 }
 
+/*
 module openAiRoleIndexer '../../shared/security/role.bicep' = {
   scope: openAiResourceGroup
   name: 'openai-role-indexer'
@@ -407,6 +412,7 @@ module openAiRoleIndexer '../../shared/security/role.bicep' = {
     principalType: 'ServicePrincipal'
   }
 }
+*/
 
 module storageRoleBackend '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
@@ -418,6 +424,7 @@ module storageRoleBackend '../../shared/security/role.bicep' = {
   }
 }
 
+/*
 module storageRoleIndexer '../../shared/security/role.bicep' = {
   scope: storageResourceGroup
   name: 'storage-role-indexer'
@@ -427,6 +434,8 @@ module storageRoleIndexer '../../shared/security/role.bicep' = {
     principalType: 'ServicePrincipal'
   }
 }
+
+*/
 
 module searchRoleBackend '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
@@ -438,6 +447,7 @@ module searchRoleBackend '../../shared/security/role.bicep' = {
   }
 }
 
+/*
 module searchRoleIndexer '../../shared/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-indexer'
@@ -457,6 +467,7 @@ module formRecognizerRoleIndexer '../../shared/security/role.bicep' = {
     principalType: 'ServicePrincipal'
   }
 }
+*/
 
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
@@ -487,4 +498,4 @@ output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
 output BACKEND_URI string = backend.outputs.uri
-output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name
+//output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name

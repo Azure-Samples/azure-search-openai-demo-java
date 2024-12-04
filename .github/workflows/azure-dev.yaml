@@ -70,7 +70,7 @@ jobs:
           mv ./target/$originaljarname ./target/app.jar
 
       - name: Upload artifacts for backend deployment jobs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: spring-boot-app
           path: |
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Download backend artifact from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: spring-boot-app
           path: ./backend

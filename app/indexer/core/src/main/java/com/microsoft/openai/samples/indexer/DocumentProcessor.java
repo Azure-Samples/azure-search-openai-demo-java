@@ -1,18 +1,17 @@
 package com.microsoft.openai.samples.indexer;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.microsoft.openai.samples.indexer.index.SearchIndexManager;
 import com.microsoft.openai.samples.indexer.parser.PDFParser;
 import com.microsoft.openai.samples.indexer.parser.Page;
 import com.microsoft.openai.samples.indexer.parser.TextSplitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The DocumentProcessor class is responsible for processing and indexing documents.
@@ -47,6 +46,7 @@ public class DocumentProcessor {
 
     public void indexDocumentFromBytes(String filename, String category, byte[] content){
         logger.debug("Indexing file {}", filename);
+
         //TODO add support for other file types (docx, pptx, txt, md, html, etc)
         List<Page> pages = pdfParser.parse(content);
         logger.info("Found {} pages in file {}", pages.size(), filename);
