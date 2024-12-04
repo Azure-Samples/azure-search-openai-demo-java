@@ -251,15 +251,14 @@ const Chat = () => {
             key: Approaches.JAVA_OPENAI_SDK,
             text: "Java Azure Open AI SDK"
         },
-        /* Pending Semantic Kernel Memory implementation in V1.0.0
-        {
-            key: Approaches.JAVA_SEMANTIC_KERNEL,
-            text: "Java Semantic Kernel - Memory"
-        },*/
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
             text: "Java Semantic Kernel"
-        }
+        },
+        {
+            key: Approaches.JAVA_SEMANTIC_KERNEL,
+            text: "Java Semantic Kernel - Vector Store"
+        },
     ];
 
     return (
@@ -375,7 +374,7 @@ const Chat = () => {
                         onChange={onApproachChange}
                     />
 
-                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
+                    {(approach === Approaches.JAVA_OPENAI_SDK) && (
                         <TextField
                             className={styles.chatSettingsSeparator}
                             defaultValue={promptTemplate}
@@ -415,13 +414,15 @@ const Chat = () => {
                         label="Use semantic ranker for retrieval"
                         onChange={onUseSemanticRankerChange}
                     />
-                    <Checkbox
-                        className={styles.chatSettingsSeparator}
-                        checked={useSemanticCaptions}
-                        label="Use query-contextual summaries instead of whole documents"
-                        onChange={onUseSemanticCaptionsChange}
-                        disabled={!useSemanticRanker}
-                    />
+                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
+                        <Checkbox
+                            className={styles.chatSettingsSeparator}
+                            checked={useSemanticCaptions}
+                            label="Use query-contextual summaries instead of whole documents"
+                            onChange={onUseSemanticCaptionsChange}
+                            disabled={!useSemanticRanker}
+                        />
+                    )}
                     <Checkbox
                         className={styles.chatSettingsSeparator}
                         checked={useSuggestFollowupQuestions}

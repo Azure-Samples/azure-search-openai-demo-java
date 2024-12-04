@@ -17,8 +17,8 @@
 		<java.version>17</java.version>
 
 		<spring-cloud-azure.version>5.14.0</spring-cloud-azure.version>
-		<azure-search.version>11.6.0-beta.8</azure-search.version>
-		<semantic-kernel.version>1.2.2</semantic-kernel.version>
+		<azure-search.version>11.7.2</azure-search.version>
+		<semantic-kernel.version>1.4.1</semantic-kernel.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
 		<maven.compiler-plugin.version>3.11.0</maven.compiler-plugin.version>
 
@@ -122,6 +122,10 @@
 		<dependency>
 			<groupId>com.microsoft.semantic-kernel</groupId>
 			<artifactId>semantickernel-aiservices-openai</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.semantic-kernel</groupId>
+			<artifactId>semantickernel-data-azureaisearch</artifactId>
 		</dependency>
 		<!-- Semantic Kernel end -->
 	</dependencies>
