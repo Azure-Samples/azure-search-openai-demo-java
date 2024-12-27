@@ -97,6 +97,6 @@ Check the [chat-with-your-data-lza-app-accelerator](https://github.com/dantelmom
 * [📖 Azure OpenAI client library for Java](https://learn.microsoft.com/en-us/java/api/overview/azure/ai-openai-readme?view=azure-java-preview)
 * [📖 Semantic Kernel for Java 1.0](https://devblogs.microsoft.com/semantic-kernel/java-1-0-release-candidate-for-semantic-kernel-now-available/)
 * [📖 Evaluating a RAG chat App](https://github.com/Azure-Samples/ai-rag-chat-evaluator)
-* [📖 Well Architected Framework on Azure Open AI Service](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-openai)
+* [📖 Well Architected Framework on Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-openai)
 * [📺 Chat with your data using Java and Azure Open AI](https://www.youtube.com/watch?v=mcftrg6L8Fs&t=57s)
 * [📺 Vector Search, RAG, And Azure AI Search](https://www.youtube.com/watch?v=vuOA13Y_Qzk)
