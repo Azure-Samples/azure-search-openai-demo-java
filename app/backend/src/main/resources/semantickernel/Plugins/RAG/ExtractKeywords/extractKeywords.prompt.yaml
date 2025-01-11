@@ -4,8 +4,9 @@ template: |
   <message role="system">
       Generate a search query for the below conversation.
       Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
-      Do not include any text inside [] or &lt;&lt;&gt;&gt; in the search query terms.
+      Do not include any text inside [] or <<>> in the search query terms.
       Do not enclose the search query in quotes or double quotes.
+      conversation:
   </message>
   
   {{#each conversation}}
