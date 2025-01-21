@@ -2,16 +2,13 @@
 package com.microsoft.openai.samples.rag.ask.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
-import com.azure.core.credential.TokenCredential;
-import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.indexes.SearchIndexAsyncClient;
-import com.azure.search.documents.indexes.SearchIndexClientBuilder;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.chat.approaches.semantickernel.JavaSemanticKernelWithVectorStoreChatApproach;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreApproach;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreUtils;
 import com.microsoft.semantickernel.Kernel;
 
 import com.microsoft.semantickernel.aiservices.openai.chatcompletion.OpenAIChatCompletion;
@@ -38,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreApproach.MemoryRecord;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreUtils.DocumentRecord;
 
 /**
  * Use Java Semantic Kernel framework with built-in VectorStores for embeddings similarity search. A
@@ -51,15 +48,9 @@ import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVe
 public class JavaSemanticKernelWithVectorStoreApproach implements RAGApproach<String, RAGResponse> {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(JavaSemanticKernelWithVectorStoreApproach.class);
-    private final TokenCredential tokenCredential;
     private final OpenAIAsyncClient openAIAsyncClient;
+    private final SearchIndexAsyncClient searchAsyncClient;
 
-    private final SearchAsyncClient searchAsyncClient;
-
-    private final String EMBEDDING_FIELD_NAME = "embedding";
-
-    @Value("${cognitive.search.service}")
-    String searchServiceName;
 
     @Value("${cognitive.search.index}")
     String indexName;
@@ -71,10 +62,8 @@ public class JavaSemanticKernelWithVectorStoreApproach implements RAGApproach<St
     private String embeddingDeploymentModelId;
 
     public JavaSemanticKernelWithVectorStoreApproach(
-            TokenCredential tokenCredential,
             OpenAIAsyncClient openAIAsyncClient,
-            SearchAsyncClient searchAsyncClient) {
-        this.tokenCredential = tokenCredential;
+            SearchIndexAsyncClient searchAsyncClient) {
         this.openAIAsyncClient = openAIAsyncClient;
         this.searchAsyncClient = searchAsyncClient;
     }
@@ -90,29 +79,23 @@ public class JavaSemanticKernelWithVectorStoreApproach implements RAGApproach<St
         // skill is imported from src/main/resources/semantickernel/Plugins.
         Kernel semanticKernel = buildSemanticKernel(options);
 
-        // STEP 1: Create Azure AI Search client
-        SearchIndexAsyncClient client = new SearchIndexClientBuilder()
-                .endpoint("https://%s.search.windows.net".formatted(searchServiceName))
-                .credential(tokenCredential)
-                .buildAsyncClient();
-
-        // STEP 2: Build Vector Record Collection
-        AzureAISearchVectorStoreRecordCollection<MemoryRecord> recordCollection = new AzureAISearchVectorStoreRecordCollection<>(
-                client,
+        // STEP 1: Build Vector Record Collection
+        AzureAISearchVectorStoreRecordCollection<DocumentRecord> recordCollection = new AzureAISearchVectorStoreRecordCollection<>(
+                searchAsyncClient,
                 indexName,
-                AzureAISearchVectorStoreRecordCollectionOptions.<MemoryRecord>builder()
-                        .withRecordClass(MemoryRecord.class)
+                AzureAISearchVectorStoreRecordCollectionOptions.<DocumentRecord>builder()
+                        .withRecordClass(DocumentRecord.class)
                         .build()
         );
 
-        // STEP 3: Retrieve relevant documents using user question.
-        List<MemoryRecord> memoryResult = AzureAISearchVectorStoreApproach.searchAsync(
+        // STEP 2: Retrieve relevant documents using user question.
+        List<DocumentRecord> memoryResult = AzureAISearchVectorStoreUtils.searchAsync(
                 question, semanticKernel, recordCollection, options);
 
-        String sources = AzureAISearchVectorStoreApproach.buildSourcesText(memoryResult);
-        List<ContentSource> sourcesList = AzureAISearchVectorStoreApproach.buildSources(memoryResult);
+        String sources = AzureAISearchVectorStoreUtils.buildSourcesText(memoryResult);
+        List<ContentSource> sourcesList = AzureAISearchVectorStoreUtils.buildSources(memoryResult);
 
-        // STEP 4: Generate a contextual and content specific answer using the search results and question
+        // STEP 3: Generate a contextual and content specific answer using the search results and question
         KernelFunction<String> answerQuestion = semanticKernel.getFunction("RAG", "AnswerQuestion");
         KernelFunctionArguments arguments = KernelFunctionArguments.builder()
                 .withVariable("sources", sourcesList)

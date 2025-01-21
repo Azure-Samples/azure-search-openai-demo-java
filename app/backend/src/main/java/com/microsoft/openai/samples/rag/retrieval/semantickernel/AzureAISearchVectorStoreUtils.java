@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class AzureAISearchVectorStoreApproach {
+public class AzureAISearchVectorStoreUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AzureAISearchVectorStoreApproach.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AzureAISearchVectorStoreUtils.class);
 
     private static final String EMBEDDING_FIELD_NAME = "embedding";
 
-    public static class MemoryRecord {
+    public static class DocumentRecord {
         @VectorStoreRecordKey
         private final String id;
         @VectorStoreRecordData
@@ -49,7 +49,7 @@ public class AzureAISearchVectorStoreApproach {
         @VectorStoreRecordData
         private final String sourceFile;
 
-        public MemoryRecord(
+        public DocumentRecord(
                 @JsonProperty("id") String id,
                 @JsonProperty("content") String content,
                 @JsonProperty("embedding") List<Float> embedding,
@@ -90,10 +90,10 @@ public class AzureAISearchVectorStoreApproach {
     }
 
 
-    public static List<MemoryRecord> searchAsync(String searchQuery,
-                                                 Kernel kernel,
-                                                 AzureAISearchVectorStoreRecordCollection<MemoryRecord> recordCollection,
-                                                 RAGOptions ragOptions) {
+    public static List<DocumentRecord> searchAsync(String searchQuery,
+                                                   Kernel kernel,
+                                                   AzureAISearchVectorStoreRecordCollection<DocumentRecord> recordCollection,
+                                                   RAGOptions ragOptions) {
         // Create VectorSearch options
         VectorSearchOptions vectorSearchOptions = VectorSearchOptions.builder()
                 .withTop(ragOptions.getTop())
@@ -126,7 +126,7 @@ public class AzureAISearchVectorStoreApproach {
         }
 
         // Search the vector store for the relevant documents with the generated embeddings
-        VectorSearchResults<MemoryRecord> memoryResult = recordCollection.hybridSearchAsync(searchQuery, questionVector, vectorSearchOptions, searchOptions)
+        VectorSearchResults<DocumentRecord> memoryResult = recordCollection.hybridSearchAsync(searchQuery, questionVector, vectorSearchOptions, searchOptions)
                 .block();
 
         // Remove the score from the result
@@ -134,7 +134,7 @@ public class AzureAISearchVectorStoreApproach {
     }
 
 
-    public static List<ContentSource> buildSources(List<MemoryRecord> memoryResult) {
+    public static List<ContentSource> buildSources(List<DocumentRecord> memoryResult) {
         return memoryResult
                 .stream()
                 .map(result -> {
@@ -147,7 +147,7 @@ public class AzureAISearchVectorStoreApproach {
     }
 
 
-    public static String buildSourcesText(List<MemoryRecord> memoryResult) {
+    public static String buildSourcesText(List<DocumentRecord> memoryResult) {
         StringBuilder sourcesContentBuffer = new StringBuilder();
         memoryResult.stream().forEach(memory -> {
             sourcesContentBuffer.append(memory.getSourceFile())

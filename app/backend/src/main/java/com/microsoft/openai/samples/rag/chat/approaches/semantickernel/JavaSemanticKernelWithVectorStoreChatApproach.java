@@ -1,16 +1,14 @@
 package com.microsoft.openai.samples.rag.chat.approaches.semantickernel;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
-import com.azure.core.credential.TokenCredential;
 import com.azure.search.documents.indexes.SearchIndexAsyncClient;
-import com.azure.search.documents.indexes.SearchIndexClientBuilder;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGApproach;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreApproach;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreUtils;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.aiservices.openai.chatcompletion.OpenAIChatCompletion;
 import com.microsoft.semantickernel.aiservices.openai.textembedding.OpenAITextEmbeddingGenerationService;
@@ -38,7 +36,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreApproach.MemoryRecord;
+import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVectorStoreUtils.DocumentRecord;
 
 /**
  * Use Java Semantic Kernel framework with built-in VectorStores for embeddings similarity search. A
@@ -50,12 +48,10 @@ import com.microsoft.openai.samples.rag.retrieval.semantickernel.AzureAISearchVe
 @Component
 public class JavaSemanticKernelWithVectorStoreChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaSemanticKernelWithVectorStoreChatApproach.class);
-    private final TokenCredential tokenCredential;
     private final OpenAIAsyncClient openAIAsyncClient;
+    private final SearchIndexAsyncClient searchAsyncClient;
     private String renderedConversation;
 
-    @Value("${cognitive.search.service}")
-    String searchServiceName;
     @Value("${cognitive.search.index}")
     String indexName;
     @Value("${openai.chatgpt.deployment}")
@@ -63,9 +59,9 @@ public class JavaSemanticKernelWithVectorStoreChatApproach implements RAGApproac
     @Value("${openai.embedding.deployment}")
     private String embeddingDeploymentModelId;
 
-    public JavaSemanticKernelWithVectorStoreChatApproach(TokenCredential tokenCredential, OpenAIAsyncClient openAIAsyncClient) {
-        this.tokenCredential = tokenCredential;
+    public JavaSemanticKernelWithVectorStoreChatApproach(OpenAIAsyncClient openAIAsyncClient, SearchIndexAsyncClient searchAsyncClient) {
         this.openAIAsyncClient = openAIAsyncClient;
+        this.searchAsyncClient = searchAsyncClient;
     }
 
     @Override
@@ -76,29 +72,23 @@ public class JavaSemanticKernelWithVectorStoreChatApproach implements RAGApproac
         // Build semantic kernel context with AnswerConversation and ExtractKeywords plugins, EmbeddingGenerationService and ChatCompletionService.
         Kernel semanticKernel = buildSemanticKernel();
 
-        // STEP 1: Create Azure AI Search client
-        SearchIndexAsyncClient client = new SearchIndexClientBuilder()
-                .endpoint("https://%s.search.windows.net".formatted(searchServiceName))
-                .credential(tokenCredential)
-                .buildAsyncClient();
-
-        // STEP 2: Build Vector Record Collection
-        AzureAISearchVectorStoreRecordCollection<AzureAISearchVectorStoreApproach.MemoryRecord> recordCollection = new AzureAISearchVectorStoreRecordCollection<>(
-                client,
+        // STEP 1: Build Vector Record Collection
+        AzureAISearchVectorStoreRecordCollection<DocumentRecord> recordCollection = new AzureAISearchVectorStoreRecordCollection<>(
+                searchAsyncClient,
                 indexName,
-                AzureAISearchVectorStoreRecordCollectionOptions.<MemoryRecord>builder()
-                        .withRecordClass(AzureAISearchVectorStoreApproach.MemoryRecord.class)
+                AzureAISearchVectorStoreRecordCollectionOptions.<DocumentRecord>builder()
+                        .withRecordClass(DocumentRecord.class)
                         .build()
         );
 
-        // STEP 3: Retrieve relevant documents using keywords extracted from the chat history
+        // STEP 2: Retrieve relevant documents using keywords extracted from the chat history
         String conversationString = ChatGPTUtils.formatAsChatML(questionOrConversation.toOpenAIChatMessages());
-        List<AzureAISearchVectorStoreApproach.MemoryRecord> sourcesResult = getSourcesFromConversation(conversationString, semanticKernel, recordCollection, options);
+        List<DocumentRecord> sourcesResult = getSourcesFromConversation(conversationString, semanticKernel, recordCollection, options);
 
         LOGGER.info("Total {} sources found in cognitive vector store for search query[{}]", sourcesResult.size(), question);
 
-        String sources = AzureAISearchVectorStoreApproach.buildSourcesText(sourcesResult);
-        List<ContentSource> sourcesList = AzureAISearchVectorStoreApproach.buildSources(sourcesResult);
+        String sources = AzureAISearchVectorStoreUtils.buildSourcesText(sourcesResult);
+        List<ContentSource> sourcesList = AzureAISearchVectorStoreUtils.buildSources(sourcesResult);
 
         // STEP 3: Generate a contextual and content specific answer using the search results and chat history
         KernelFunction<String> answerConversation = semanticKernel.getFunction("RAG", "AnswerConversation");
@@ -133,10 +123,10 @@ public class JavaSemanticKernelWithVectorStoreChatApproach implements RAGApproac
         return new ChatHistory(messages);
     }
 
-    private List<MemoryRecord> getSourcesFromConversation(String conversation,
-                                                          Kernel kernel,
-                                                          AzureAISearchVectorStoreRecordCollection<MemoryRecord> recordCollection,
-                                                          RAGOptions ragOptions) {
+    private List<DocumentRecord> getSourcesFromConversation(String conversation,
+                                                            Kernel kernel,
+                                                            AzureAISearchVectorStoreRecordCollection<DocumentRecord> recordCollection,
+                                                            RAGOptions ragOptions) {
         KernelFunction<String> extractKeywords = kernel
                 .getPlugin("RAG")
                 .get("ExtractKeywords");
@@ -151,7 +141,7 @@ public class JavaSemanticKernelWithVectorStoreChatApproach implements RAGApproac
                 .block();
         String searchQuery = result.getResult();
 
-        return AzureAISearchVectorStoreApproach.searchAsync(
+        return AzureAISearchVectorStoreUtils.searchAsync(
                 searchQuery,
                 kernel,
                 recordCollection,

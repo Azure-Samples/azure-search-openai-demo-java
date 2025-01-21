@@ -252,12 +252,12 @@ const Chat = () => {
             text: "Java Azure Open AI SDK"
         },
         {
-            key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
+            key: Approaches.JAVA_SEMANTIC_KERNEL,
             text: "Java Semantic Kernel"
         },
         {
-            key: Approaches.JAVA_SEMANTIC_KERNEL,
-            text: "Java Semantic Kernel - Vector Store"
+            key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
+            text: "Java Semantic Kernel - Chains"
         },
     ];
 
