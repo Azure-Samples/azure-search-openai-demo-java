@@ -139,7 +139,7 @@ public class AzureAISearchVectorStoreUtils {
                 .stream()
                 .map(result -> {
                     return new ContentSource(
-                            result.getSourceFile(),
+                            result.getSourcePage(),
                             result.getContent()
                     );
                 })

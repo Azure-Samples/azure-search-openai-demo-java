@@ -254,11 +254,11 @@ const Chat = () => {
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL,
             text: "Java Semantic Kernel"
-        },
+        }/**,
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
             text: "Java Semantic Kernel - Chains"
-        },
+        },*/
     ];
 
     return (
