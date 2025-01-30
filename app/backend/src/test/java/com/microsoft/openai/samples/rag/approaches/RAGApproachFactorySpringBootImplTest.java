@@ -6,6 +6,7 @@ import com.azure.core.credential.TokenCredential;
 import com.azure.search.documents.SearchAsyncClient;
 import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
 import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
+import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithVectorStoreApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
 import com.microsoft.openai.samples.rag.proxy.AzureAISearchProxy;
 import org.junit.jupiter.api.Test;
@@ -38,10 +39,8 @@ class RAGApproachFactorySpringBootImplTest {
 
     @Test
     void testCreateApproachWithJavaSemanticKernelMemory() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
-        });
-        //assertInstanceOf(JavaSemanticKernelWithMemoryApproach.class, approach);
+        RAGApproach approach = ragApproachFactory.createApproach("jsk", RAGType.ASK, null);
+        assertInstanceOf(JavaSemanticKernelWithVectorStoreApproach.class, approach);
     }
 
     @Test

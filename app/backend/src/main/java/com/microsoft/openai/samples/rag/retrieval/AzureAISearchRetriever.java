@@ -5,12 +5,13 @@ import com.azure.ai.openai.models.ChatCompletions;
 import com.azure.ai.openai.models.Embeddings;
 import com.azure.core.util.Context;
 import com.azure.search.documents.SearchDocument;
+import com.azure.search.documents.models.QueryCaption;
 import com.azure.search.documents.models.QueryCaptionType;
-import com.azure.search.documents.models.QueryLanguage;
-import com.azure.search.documents.models.QuerySpellerType;
 import com.azure.search.documents.models.QueryType;
 import com.azure.search.documents.models.SearchOptions;
-import com.azure.search.documents.models.SearchQueryVector;
+import com.azure.search.documents.models.SemanticSearchOptions;
+import com.azure.search.documents.models.VectorSearchOptions;
+import com.azure.search.documents.models.VectorizedQuery;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.microsoft.openai.samples.rag.approaches.ContentSource;
 import com.microsoft.openai.samples.rag.approaches.RAGOptions;
@@ -126,7 +127,7 @@ public class AzureAISearchRetriever implements Retriever {
                             if (options.isSemanticCaptions()) {
                                 StringBuilder sourcesContentBuffer = new StringBuilder();
 
-                                result.getCaptions()
+                                result.getSemanticSearch().getQueryCaptions()
                                         .forEach(
                                                 caption ->
                                                         sourcesContentBuffer
@@ -162,16 +163,15 @@ public class AzureAISearchRetriever implements Retriever {
         Optional.ofNullable(options.getTop())
                 .ifPresentOrElse(searchOptions::setTop, () -> searchOptions.setTop(3));
 
+        VectorizedQuery query = new VectorizedQuery(questionVector)
+                .setKNearestNeighborsCount(options.getTop())
+                .setFields("embedding");
+
         // "embedding" is the field name in the index where the embeddings are stored.
-        searchOptions.setVectors(
-                new SearchQueryVector()
-                        .setValue(questionVector)
-                        .setKNearestNeighborsCount(options.getTop())
-                        .setFields("embedding"));
+        searchOptions.setVectorSearchOptions(new VectorSearchOptions().setQueries(query));
     }
 
     private void setSearchOptions(RAGOptions options, SearchOptions searchOptions) {
-
         Optional.ofNullable(options.getTop())
                 .ifPresentOrElse(searchOptions::setTop, () -> searchOptions.setTop(3));
         Optional.ofNullable(options.getExcludeCategory())
@@ -186,11 +186,14 @@ public class AzureAISearchRetriever implements Retriever {
                         isSemanticRanker -> {
                             if (isSemanticRanker) {
                                 searchOptions.setQueryType(QueryType.SEMANTIC);
-                                searchOptions.setQueryLanguage(QueryLanguage.EN_US);
-                                searchOptions.setSpeller(QuerySpellerType.LEXICON);
-                                searchOptions.setSemanticConfigurationName("default");
-                                searchOptions.setQueryCaption(QueryCaptionType.EXTRACTIVE);
-                                searchOptions.setQueryCaptionHighlightEnabled(false);
+                                searchOptions.setSemanticSearchOptions(
+                                  new SemanticSearchOptions()
+                                          .setSemanticConfigurationName("default")
+                                          .setQueryCaption(
+                                                  new QueryCaption(QueryCaptionType.EXTRACTIVE)
+                                                          .setHighlightEnabled(false)
+                                          )
+                                );
                             }
                         });
     }

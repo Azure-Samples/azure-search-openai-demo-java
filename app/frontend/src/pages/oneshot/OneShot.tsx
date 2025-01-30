@@ -159,16 +159,14 @@ export function Component(): JSX.Element {
             key: Approaches.JAVA_OPENAI_SDK,
             text: "Java Azure Open AI SDK"
         },
-        /* Pending Semantic Kernel Memory implementation in V1.0.0
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL,
-            text: "Java Semantic Kernel - Memory"
+            text: "Java Semantic Kernel"
         },
-        */
         {
             key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
-            text: "Java Semantic Kernel - Orchestration"
-        }
+            text: "Java Semantic Kernel - Chains"
+        },
     ];
 
     return (
@@ -246,7 +244,7 @@ export function Component(): JSX.Element {
                         onChange={onSKModeChange}
                     />
                 )*/}
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL) && (
+                {(approach === Approaches.JAVA_OPENAI_SDK) && (
                 <TextField
                     className={styles.oneshotSettingsSeparator}
                     defaultValue={promptTemplate}
@@ -268,14 +266,13 @@ export function Component(): JSX.Element {
                 />
                 <TextField className={styles.oneshotSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
 
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Checkbox
                     className={styles.oneshotSettingsSeparator}
                     checked={useSemanticRanker}
                     label="Use semantic ranker for retrieval"
                     onChange={onUseSemanticRankerChange}
                 />
-                )}
+                
                 {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
                 <Checkbox
                     className={styles.oneshotSettingsSeparator}
@@ -285,19 +282,18 @@ export function Component(): JSX.Element {
                     disabled={!useSemanticRanker}
                 />
                 )}
-                {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                    <Dropdown
-                        className={styles.oneshotSettingsSeparator}
-                        label="Retrieval mode"
-                        options={[
-                            { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
-                            { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
-                            { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
-                        ]}
-                        required
-                        onChange={onRetrievalModeChange}
-                    />
-                )}
+
+                <Dropdown
+                    className={styles.oneshotSettingsSeparator}
+                    label="Retrieval mode"
+                    options={[
+                        { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
+                        { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
+                        { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
+                    ]}
+                    required
+                    onChange={onRetrievalModeChange}
+                />
                 
                 {useLogin && (
                     <Checkbox

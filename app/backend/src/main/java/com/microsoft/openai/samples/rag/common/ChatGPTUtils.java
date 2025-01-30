@@ -44,10 +44,10 @@ public class ChatGPTUtils {
                 content = ((ChatRequestUserMessage) message).getContent().toString();
             } else if (message instanceof ChatRequestSystemMessage) {
                 sb.append(IM_START_SYSTEM).append("\n");
-                content = ((ChatRequestSystemMessage) message).getContent();
+                content = ((ChatRequestSystemMessage) message).getContent().toString();
             } else if (message instanceof ChatRequestAssistantMessage) {
                 sb.append(IM_START_ASSISTANT).append("\n");
-                content = ((ChatRequestAssistantMessage) message).getContent();
+                content = ((ChatRequestAssistantMessage) message).getContent().toString();
             }
 
             if (content != null) {
