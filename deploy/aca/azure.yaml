@@ -8,16 +8,21 @@ services:
     project: ../../app/backend
     language: java
     host: containerapp
+    docker:
+      remoteBuild: true
   indexer:
     project: ../../app/indexer
     language: java
     host: containerapp
     docker:
       path: ./microservice/Dockerfile
+      remoteBuild: true
   web:
     project: ../../app/frontend
     language: js
     host: containerapp
+    docker:
+      remoteBuild: true
 
 
 hooks:
