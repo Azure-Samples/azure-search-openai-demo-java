@@ -11,7 +11,11 @@ import com.microsoft.openai.samples.rag.approaches.RAGOptions;
 import com.microsoft.openai.samples.rag.approaches.RAGResponse;
 import com.microsoft.openai.samples.rag.common.ChatGPTConversation;
 import com.microsoft.openai.samples.rag.common.ChatGPTUtils;
+import com.microsoft.openai.samples.rag.common.ResponseMessageUtils;
 import com.microsoft.openai.samples.rag.controller.ChatResponse;
+import com.microsoft.openai.samples.rag.controller.ChatResponseNEW;
+import com.microsoft.openai.samples.rag.controller.ResponseContextNEW;
+import com.microsoft.openai.samples.rag.controller.ResponseMessage;
 import com.microsoft.openai.samples.rag.proxy.OpenAIProxy;
 import com.microsoft.openai.samples.rag.retrieval.FactsRetrieverProvider;
 import com.microsoft.openai.samples.rag.retrieval.Retriever;
@@ -31,7 +35,7 @@ import org.springframework.stereotype.Component;
  * generate embeddings vector for the chat extracted keywords.
  */
 @Component
-public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, RAGResponse> {
+public class PlainJavaChatApproach  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlainJavaChatApproach.class);
     private final ObjectMapper objectMapper;
@@ -53,8 +57,8 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
      * @param options
      * @return
      */
-    @Override
-    public RAGResponse run(ChatGPTConversation questionOrConversation, RAGOptions options) {
+
+    public ChatResponseNEW run(ChatGPTConversation questionOrConversation, RAGOptions options) {
         // Get instance of retriever based on the retrieval mode: hybryd, text, vectors.
         Retriever factsRetriever = factsRetrieverProvider.getFactsRetriever(options);
 
@@ -87,15 +91,10 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
                 chatCompletions.getUsage().getCompletionTokens(),
                 chatCompletions.getUsage().getTotalTokens());
 
-        return new RAGResponse.Builder()
-                .question(ChatGPTUtils.getLastUserQuestion(questionOrConversation.getMessages()))
-                .prompt(ChatGPTUtils.formatAsChatML(semanticSearchChat.getMessages()))
-                .answer(chatCompletions.getChoices().get(0).getMessage().getContent())
-                .sources(sources)
-                .build();
+        return ResponseMessageUtils.buildChatResponse(questionOrConversation
+        , options, sources, semanticSearchChat, chatCompletions, chatCompletions.getChoices().get(0),false, false);
     }
 
-    @Override
     public void runStreaming(
             ChatGPTConversation questionOrConversation,
             RAGOptions options,
@@ -117,6 +116,7 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
                 ChatGPTUtils.buildDefaultChatCompletionsOptions(semanticSearchChat.getMessages());
 
         int index = 0;
+        StringBuilder accumulatedContent = options.isSuggestFollowupQuestions() ? new StringBuilder() : null;
 
         IterableStream<ChatCompletions> completions =
                 openAIProxy.getChatCompletionsStream(chatCompletionsOptions);
@@ -138,29 +138,39 @@ public class PlainJavaChatApproach implements RAGApproach<ChatGPTConversation, R
                     continue;
                 }
 
-                RAGResponse ragResponse =
-                        new RAGResponse.Builder()
-                                .question(
-                                        ChatGPTUtils.getLastUserQuestion(
-                                                questionOrConversation.getMessages()))
-                                .prompt(
-                                        ChatGPTUtils.formatAsChatML(
-                                                semanticSearchChat.getMessages()))
-                                .answer(choice.getDelta().getContent())
-                                .sources(sources)
-                                .build();
-
-                ChatResponse response;
+                ChatResponseNEW response;
                 if (index == 0) {
-                    response = ChatResponse.buildChatResponse(ragResponse);
+                    response = ResponseMessageUtils.buildChatResponse(questionOrConversation
+                            , options, sources, semanticSearchChat, completion,choice, true, false);
                 } else {
-                    response = ChatResponse.buildChatDeltaResponse(index, ragResponse);
+                    response = ResponseMessageUtils.buildChatResponse(questionOrConversation
+                            , options, sources, semanticSearchChat, completion,choice, true, true);
+
+                    if (options.isSuggestFollowupQuestions()) {
+                        accumulatedContent.append(choice.getDelta().getContent());
+                    }
                 }
                 index++;
 
                 try {
                     String value = objectMapper.writeValueAsString(response) + "\n";
                     outputStream.write(value.getBytes());
+                    outputStream.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        // After streaming, if follow-up is enabled, extract and send follow-up queries
+        if (options.isSuggestFollowupQuestions() && accumulatedContent != null && accumulatedContent.length() > 0) {
+            List<String> followUps = ResponseMessageUtils.extractFollowUpQueries(accumulatedContent.toString());
+
+            if (!followUps.isEmpty()) {
+                ResponseContextNEW contextFollowUps = new ResponseContextNEW(null,null, followUps);
+                ChatResponseNEW chatResponseNEW = new ChatResponseNEW(null,contextFollowUps,null);
+                try {
+                    String followUpJson = objectMapper.writeValueAsString(chatResponseNEW) + "\n";
+                    outputStream.write(followUpJson.getBytes());
                     outputStream.flush();
                 } catch (IOException e) {
                     throw new RuntimeException(e);

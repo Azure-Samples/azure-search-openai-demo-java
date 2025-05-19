@@ -1,9 +1,5 @@
 package com.microsoft.openai.samples.rag.approaches;
 
-import com.microsoft.openai.samples.rag.ask.approaches.PlainJavaAskApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelChainsApproach;
-import com.microsoft.openai.samples.rag.ask.approaches.semantickernel.JavaSemanticKernelWithVectorStoreApproach;
-import com.microsoft.openai.samples.rag.chat.approaches.PlainJavaChatApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.semantickernel.JavaSemanticKernelChainsChatApproach;
 import com.microsoft.openai.samples.rag.chat.approaches.semantickernel.JavaSemanticKernelWithVectorStoreChatApproach;
 import org.springframework.context.ApplicationContext;
@@ -29,7 +25,7 @@ public class RAGApproachFactorySpringBootImpl implements RAGApproachFactory, App
 
         if (ragType.equals(RAGType.CHAT)) {
             if (JAVA_OPENAI_SDK.equals(approachName)) {
-                return applicationContext.getBean(PlainJavaChatApproach.class);
+                //return applicationContext.getBean(PlainJavaChatApproach.class);
             } else if (JAVA_SEMANTIC_KERNEL.equals(approachName)) {
                 return applicationContext.getBean(JavaSemanticKernelWithVectorStoreChatApproach.class);
             } else if (

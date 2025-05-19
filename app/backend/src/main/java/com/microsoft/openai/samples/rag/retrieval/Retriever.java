@@ -16,4 +16,5 @@ public interface Retriever {
 
     List<ContentSource> retrieveFromConversation(
             ChatGPTConversation conversation, RAGOptions ragOptions);
+
 }
