@@ -8,6 +8,8 @@ services:
     project: ../../app/backend
     language: java
     host: aks
+    docker:
+      remoteBuild: true
     k8s:
       namespace: azure-open-ai
   indexer:
@@ -16,6 +18,7 @@ services:
     host: aks
     docker:
       path: ./microservice/Dockerfile
+      remoteBuild: true
     k8s:
       namespace: azure-open-ai
   frontend:
@@ -26,6 +29,7 @@ services:
       namespace: azure-open-ai
     docker:
       path: ./Dockerfile-aks
+      remoteBuild: true
 
 infra:
   path: ./infra
