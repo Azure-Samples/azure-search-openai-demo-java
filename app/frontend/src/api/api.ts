@@ -168,7 +168,7 @@ export async function getChatHistoryListApi(count: number, continuationToken: st
 
 export async function getChatHistoryApi(id: string, idToken: string): Promise<HistoryApiResponse> {
     const headers = await getHeaders(idToken);
-    const response = await fetch(`/chat_history/sessions/${id}`, {
+    const response = await fetch(`${BACKEND_URI}/chat_history/sessions/${id}`, {
         method: "GET",
         headers: { ...headers, "Content-Type": "application/json" }
     });
@@ -183,7 +183,7 @@ export async function getChatHistoryApi(id: string, idToken: string): Promise<Hi
 
 export async function deleteChatHistoryApi(id: string, idToken: string): Promise<any> {
     const headers = await getHeaders(idToken);
-    const response = await fetch(`/chat_history/sessions/${id}`, {
+    const response = await fetch(`${BACKEND_URI}/chat_history/sessions/${id}`, {
         method: "DELETE",
         headers: { ...headers, "Content-Type": "application/json" }
     });

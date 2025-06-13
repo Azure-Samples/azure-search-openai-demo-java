@@ -1,7 +1,7 @@
 #This is client security configuration for react msal
 app:
   auth:
-    useLogin: true
+    useLogin: ${AZURE_USE_AUTHENTICATION:false}
     requireAccessControl: false
     enableUnauthenticatedAccess: true
     msal-config:

@@ -144,13 +144,13 @@
       "value": "${USE_SERVICEBUS_INDEXING=true}"
     },
     "apiAppExists": {
-      "value": true
+      "value": false
     },
     "webAppExists": {
-      "value": true
+      "value": false
     },
     "indexerAppExists": {
-      "value": true
+      "value": false
     }
 
   }
