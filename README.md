@@ -69,13 +69,13 @@ It uses [Langchain4J](https://github.com/langchain4j/langchain4j) AI orchestrati
 
 All the available architectures and implementations come with few options to start developing and running the application locally using dev containers or in the cloud using github codespaces. For more detailed instructions, please refer to the specific architecture implementation documentation:
  - [Azure Container Apps Getting Started](docs/aca/README-ACA.md#getting-started)
- - **Azure Kubernetes Service Getting Started** :sunny: :cloud: :construction_worker_man **WIP**
+ - **Azure Kubernetes Service Getting Started** :sunny: :cloud:  **WIP**
 
 
 ## Guidance
 For platform specific guidance, please refer to the following documentation:
- - [Azure Container Apps Getting Started](docs/aca/README-ACA.md#guidance)
- - **Azure Kubernetes Service Getting Started** :sunny: :cloud: :construction_worker_man **WIP**
+ - [Azure Container Apps Guidance](docs/aca/README-ACA.md#guidance)
+ - **Azure Kubernetes Service Guidance** :sunny: :cloud:  **WIP**
 
 
 This sample is designed to get you started quickly and let you experiment with Java RAG architectures on Azure. For production deployment, you can use the [Azure Application Landing Zones (LZA)](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/ready) to deploy the solution in production leveraging best practices for security, monitoring, networking and operational excellence.

@@ -36,19 +36,17 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     * [Existing resource group](#existing-resource-group)
     * [Existing OpenAI resource](#existing-openai-resource)
-    * [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
+    * [Existing Azure AI Search resource](#existing-azure-ai-search-resource)
     * [Other existing Azure resources](#other-existing-azure-resources)
     * [Provision remaining resources](#provision-remaining-resources)
-  * [Deploying again](#redeploying)
-  * [Running locally](#running-locally)
+  * [Redeploying](#redeploying)
   * [UI Navigation](#ui-navigation)
 * [Guidance](#guidance)
   * [Enabling Application Insights](#enabling-application-insights)
-  * [Enabling authentication](#enabling-authentication)
+  * [Enabling login and search filtering](#enabling-login-and-search-filtering)
+  * [Enabling client-side chat history](#enabling-client-side-chat-history)
+  * [Enabling persistent chat history with Azure Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db)
   * [App Continuous Integration](#app-continuous-integration)
-    * [GitHub](#github)
-    * [Azure DevOps](#azure-devops)
-  * [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
   * [Productionizing](#productionizing)
   * [Cost estimation](#cost-estimation)
   * [Note](#note)
@@ -240,11 +238,11 @@ Under "Trace & Events" panel you can review custom Java informational logs to be
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
-### Enabling Login and User Access Control for Documents
+### Enabling login and search filtering
 
-see [here](./login_and_acl.md) for detailed guidance.
+See [here](./login_and_acl.md) for detailed guidance.
 
-## Enabling client-side chat history
+### Enabling client-side chat history
 
 This feature allows users to view the chat history of their conversation, stored in the browser using [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API). That means the chat history will be available only on the device where the chat was initiated. To enable browser-stored chat history, run:
 
@@ -253,7 +251,7 @@ azd env set USE_CHAT_HISTORY_BROWSER true
 ```
 This is useful especially for unauthenticated users. For authenticated ones see below.
 
-## Enabling persistent chat history with Azure Cosmos DB
+### Enabling persistent chat history with Azure Cosmos DB
 
 This feature allows authenticated users to view the chat history of their conversations, stored in the server-side storage using [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/).This option requires that authentication be enabled. The chat history will be persistent and accessible from any device where the user logs in with the same account. To enable server-stored chat history, run:
 
@@ -264,16 +262,7 @@ azd env set USE_CHAT_HISTORY_COSMOS true
 When both the browser-stored and Cosmos DB options are enabled, Cosmos DB will take precedence over browser-stored chat history.
 
 ### App Continuous Integration
-:sunny: :cloud: :construction_worker_man: WIP
-
-### Custom Data Ingestion and Indexing
-The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
-
-If you want to chat with your custom documents you can:
-1. Add your pdf documents in the [data folder](../../data).
-2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aca` 
-3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
+:sunny: :cloud: :construction_worker_man: **WIP**
 
 ### Productionizing
 
@@ -325,8 +314,9 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 - Azure Monitor: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 - Azure Event Grid: Basic tier. Pricing per operation. [Pricing](https://azure.microsoft.com/pricing/details/event-grid/)
 - Azure Service Bus: Standard tier. Pricing per hour and operations. [Pricing](https://azure.microsoft.com/pricing/details/service-bus/)
+- Azure Cosmos DB: Only provisioned if you enabled [chat history with Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db). Serverless tier. Pricing per request unit and storage. [Pricing](https://azure.microsoft.com/pricing/details/cosmos-db/)
 
-The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each month are free for ACA. To reduce costs, you can switch to free SKUs Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or changing the code to use the Itext document based parser, or by removing the postprovision hook in `azure.yaml` that runs the `indexer java cli`.
+The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each month are free for ACA. To reduce costs, you can switch to free SKUs Document Intelligence by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Document Intelligence resource only analyzes the first 2 pages of each document. 
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
 either by deleting the resource group in the Portal or running `azd down`.
