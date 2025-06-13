@@ -5,7 +5,6 @@ import com.azure.core.credential.TokenCredential;
 import com.azure.identity.AzureCliCredentialBuilder;
 import com.azure.identity.EnvironmentCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
-import com.microsoft.openai.samples.indexer.service.BlobMessageConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,7 @@ public class AzureAuthenticationConfiguration {
     String clientId;
 
     @Profile("dev")
-    @Bean
+    @Bean(name = "token-credential")
     @Primary
     public TokenCredential localTokenCredential() {
         logger.info("Dev Profile activated using AzureCliCredentialBuilder");
@@ -32,12 +31,13 @@ public class AzureAuthenticationConfiguration {
     }
 
     @Profile("docker")
-    @Bean
+    @Bean(name = "token-credential")
     @Primary
     public TokenCredential servicePrincipalTokenCredential() {
         return new EnvironmentCredentialBuilder().build();
     }
-    @Bean
+
+    @Bean(name = "token-credential")
     @Profile("default")
     @Primary
     public TokenCredential managedIdentityTokenCredential() {

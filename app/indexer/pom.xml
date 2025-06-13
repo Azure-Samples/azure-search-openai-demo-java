@@ -19,13 +19,15 @@
         <apache.common.text>1.11.0</apache.common.text>
         <picocli.version>4.7.5</picocli.version>
         <logback.version>1.4.14</logback.version>
+        <langchain4j.version>1.0.1</langchain4j.version>
+        <!--azure.sdk.version>1.2.25</azure.sdk.version-->
+        <azure.sdk.version>1.2.33</azure.sdk.version>
     </properties>
 
     <modules>
         <module>core</module>
         <module>cli</module>
         <module>microservice</module>
-        <module>functions</module>
     </modules>
 
     <dependencyManagement>
@@ -33,7 +35,7 @@
             <dependency>
                 <groupId>com.azure</groupId>
                 <artifactId>azure-sdk-bom</artifactId>
-                <version>1.2.25</version>
+                <version>${azure.sdk.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

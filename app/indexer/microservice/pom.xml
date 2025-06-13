@@ -19,6 +19,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <spring-cloud-azure.version>5.14.0</spring-cloud-azure.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <langchain4j.version>1.0.1</langchain4j.version>
     </properties>
 
     <dependencyManagement>
@@ -52,6 +53,12 @@
             <groupId>com.azure.spring</groupId>
             <artifactId>spring-cloud-azure-starter-servicebus-jms</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-loader-azure-storage-blob</artifactId>
+            <version>1.0.1-beta6</version>
+        </dependency>
+
     </dependencies>
 
     <build>

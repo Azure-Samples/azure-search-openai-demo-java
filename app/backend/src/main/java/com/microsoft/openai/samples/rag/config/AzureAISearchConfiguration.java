@@ -17,10 +17,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AzureAISearchConfiguration {
 
-    @Value("${cognitive.search.service}")
+    @Value("${azureai.search.service}")
     String searchServiceName;
 
-    @Value("${cognitive.search.index}")
+    @Value("${azureai.search.index}")
     String indexName;
 
     final TokenCredential tokenCredential;

@@ -4,22 +4,21 @@ package com.microsoft.openai.samples.rag.approaches;
 public class RAGOptions {
 
     private RetrievalMode retrievalMode;
-    private SemanticKernelMode semantickKernelMode;
     private boolean semanticRanker;
     private boolean semanticCaptions;
     private boolean suggestFollowupQuestions;
     private String excludeCategory;
     private String promptTemplate;
     private Integer top;
+    private String threadId;
+    private float minimumSearchScore = 0.5f;
+    private float minimumRerankerScore = 0.5f;
+    private double temperature = 0.3f;
 
     private RAGOptions() {}
 
     public RetrievalMode getRetrievalMode() {
         return retrievalMode;
-    }
-
-    public SemanticKernelMode getSemantickKernelMode() {
-        return semantickKernelMode;
     }
 
     public boolean isSemanticRanker() {
@@ -46,25 +45,32 @@ public class RAGOptions {
         return suggestFollowupQuestions;
     }
 
+    public String getThreadId() {
+        return threadId;
+    }
+
+    public float getMinimumSearchScore() { return minimumSearchScore;}
+
+    public float getMinimumRerankerScore() { return minimumRerankerScore;}
+
+    public double getTemperature() { return temperature;
+    }
+
     public static class Builder {
         private RetrievalMode retrievalMode;
-
-        private SemanticKernelMode semanticKernelMode;
         private boolean semanticRanker;
         private boolean semanticCaptions;
         private String excludeCategory;
         private String promptTemplate;
         private Integer top;
-
         private boolean suggestFollowupQuestions;
+        private String threadId;
+        private float minimumSearchScore = 0.5f;
+        private float minimumRerankerScore = 0.5f;
+        private double temperature = 0.3f;
 
         public Builder retrievialMode(String retrievialMode) {
             this.retrievalMode = RetrievalMode.valueOf(retrievialMode);
-            return this;
-        }
-
-        public Builder semanticKernelMode(String semanticKernelMode) {
-            this.semanticKernelMode = SemanticKernelMode.valueOf(semanticKernelMode);
             return this;
         }
 
@@ -98,16 +104,39 @@ public class RAGOptions {
             return this;
         }
 
+        public Builder threadId(String threadId) {
+            this.threadId = threadId;
+            return this;
+        }
+
+        public Builder minimumSearchScore(float minimumSearchScore) {
+            this.minimumSearchScore = minimumSearchScore;
+            return this;
+        }
+
+        public Builder minimumRerankerScore(float minimumRerankerScore) {
+            this.minimumRerankerScore = minimumRerankerScore;
+            return this;
+        }
+
+        public Builder temperature(float temperature) {
+            this.temperature = temperature;
+            return this;
+        }
+
         public RAGOptions build() {
             RAGOptions ragOptions = new RAGOptions();
             ragOptions.retrievalMode = this.retrievalMode;
-            ragOptions.semantickKernelMode = this.semanticKernelMode;
             ragOptions.semanticRanker = this.semanticRanker;
             ragOptions.semanticCaptions = this.semanticCaptions;
             ragOptions.suggestFollowupQuestions = this.suggestFollowupQuestions;
             ragOptions.excludeCategory = this.excludeCategory;
             ragOptions.promptTemplate = this.promptTemplate;
             ragOptions.top = this.top;
+            ragOptions.threadId = this.threadId;
+            ragOptions.minimumSearchScore = this.minimumSearchScore;
+            ragOptions.minimumRerankerScore = this.minimumRerankerScore;
+            ragOptions.temperature = this.temperature;
             return ragOptions;
         }
     }

@@ -21,7 +21,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.microsoft.openai.samples.indexer.CLI</mainClass>
+                  <mainClass>com.microsoft.openai.samples.indexer.cli.CLI</mainClass>
                 </transformer>
               </transformers>
               <filters>

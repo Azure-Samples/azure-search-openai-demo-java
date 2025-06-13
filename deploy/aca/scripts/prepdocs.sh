@@ -16,4 +16,4 @@ echo 'Building java indexer'
 mvn package -f ../../app/indexer/pom.xml
 
 echo 'Running the java indexer cli.jar'
-java -jar ../../app/indexer/cli/target/cli.jar '../../data' --verbose --storageaccount "$AZURE_STORAGE_ACCOUNT" --container "$AZURE_STORAGE_CONTAINER" --searchservice "$AZURE_SEARCH_SERVICE"  --openai-service-name "$AZURE_OPENAI_SERVICE"  --openai-emb-deployment "$AZURE_OPENAI_EMB_DEPLOYMENT"  --index "$AZURE_SEARCH_INDEX" --formrecognizerservice "$AZURE_FORMRECOGNIZER_SERVICE"  upload
+java -jar ../../app/indexer/cli/target/cli.jar '../../data' --verbose --storageaccount "$AZURE_STORAGE_ACCOUNT" --container "$AZURE_STORAGE_CONTAINER" --searchservice "$AZURE_SEARCH_SERVICE"  --openai-service-name "$AZURE_OPENAI_SERVICE"  --openai-emb-deployment "$AZURE_OPENAI_EMB_DEPLOYMENT"  --index "$AZURE_SEARCH_INDEX" --document-intelligent-service "$AZURE_DOCUMENT_INTELLIGENCE_SERVICE" --embedding-dimensions "$AZURE_OPENAI_EMB_DIMENSIONS" --indexer-url "$INDEXER_URI"  upload

@@ -1,0 +1,32 @@
+#This is client security configuration for react msal
+app:
+  auth:
+    useLogin: true
+    requireAccessControl: false
+    enableUnauthenticatedAccess: true
+    msal-config:
+      auth:
+        client-id: ${AZURE_CLIENT_APP_ID}
+        authority: "https://login.microsoftonline.com/${AZURE_AUTH_TENANT_ID}"
+        redirect-uri: "/redirect"
+        post-logout-redirect-uri: "/"
+        navigate-to-login-request-url: false
+      cache:
+        cache-location: "localStorage"
+        store-auth-state-in-cookie: false
+    login-request:
+      scopes:
+        - ".default"
+    token-request:
+      scopes:
+        - "api://${AZURE_SERVER_APP_ID}/access_as_user"
+
+#This is server security configuration
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://login.microsoftonline.com/${AZURE_AUTH_TENANT_ID}/discovery/v2.0/keys
+          issuer-uri: https://login.microsoftonline.com/${AZURE_AUTH_TENANT_ID}/v2.0
+          audience: ${AZURE_SERVER_APP_ID}

@@ -18,7 +18,7 @@
 
 		<spring-cloud-azure.version>5.14.0</spring-cloud-azure.version>
 		<azure-search.version>11.7.2</azure-search.version>
-		<semantic-kernel.version>1.4.2</semantic-kernel.version>
+		<azure-openai.version>1.0.0-beta.16</azure-openai.version>
 		<mockito-inline.version>4.5.1</mockito-inline.version>
 		<maven.compiler-plugin.version>3.11.0</maven.compiler-plugin.version>
 
@@ -27,6 +27,7 @@
 		<com.uber.nullaway.version>0.10.14</com.uber.nullaway.version>
 		<google.errorprone.core.version>2.22.0</google.errorprone.core.version>
 		<maven.spotbugs-plugin.version>4.7.3.6</maven.spotbugs-plugin.version>
+		<langchain4j.version>1.0.1-beta6</langchain4j.version>
 	</properties>
 
 	<dependencyManagement>
@@ -37,13 +38,6 @@
 				<version>${spring-cloud-azure.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.microsoft.semantic-kernel</groupId>
-				<artifactId>semantickernel-bom</artifactId>
-				<version>${semantic-kernel.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
 			</dependency>
 
 			<!-- Not sure why the build seems to pick the wrong version for this  -->
@@ -60,6 +54,37 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webflux</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-ai-openai</artifactId>
+			<version>${azure-openai.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-azure-open-ai</artifactId>
+			<version>${langchain4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-azure-ai-search</artifactId>
+			<version>${langchain4j.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -72,6 +97,15 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-spring-data-cosmos</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -114,20 +148,7 @@
 			<artifactId>azure-storage-blob</artifactId>
 		</dependency>
 
-		<!-- Semantic Kernel start-->
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-aiservices-openai</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.semantic-kernel</groupId>
-			<artifactId>semantickernel-data-azureaisearch</artifactId>
-		</dependency>
-		<!-- Semantic Kernel end -->
+
 	</dependencies>
 
 	<build>

@@ -9,7 +9,6 @@ COPY pom.xml .
 COPY cli cli
 COPY core core
 COPY microservice microservice
-COPY functions functions
 
 RUN chmod +x ./mvnw
 # Convert CRLF to LF
@@ -27,4 +26,4 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 RUN curl -s -LJ -o /app/applicationinsights-agent-3.4.19.jar https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.4.19/applicationinsights-agent-3.4.19.jar
 COPY microservice/applicationinsights.json /app
 
-ENTRYPOINT ["java","-javaagent:/app/applicationinsights-agent-3.4.19.jar","-noverify", "-XX:MaxRAMPercentage=70", "-XX:+UseParallelGC", "-XX:ActiveProcessorCount=2", "-cp","app:app/lib/*","com.microsoft.openai.samples.indexer.service.Application"]
+ENTRYPOINT ["java","-javaagent:/app/applicationinsights-agent-3.4.19.jar","-noverify", "-XX:MaxRAMPercentage=70", "-XX:+UseParallelGC", "-XX:ActiveProcessorCount=2", "-cp","app:app/lib/*","com.microsoft.openai.samples.indexer.service.IndexerApplication"]

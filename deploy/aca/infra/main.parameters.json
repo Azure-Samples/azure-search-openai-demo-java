@@ -29,13 +29,13 @@
     "openAiSkuName": {
       "value": "S0"
     },
-    "formRecognizerServiceName": {
-      "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
+    "documentIntelligenceServiceName": {
+      "value": "${AZURE_DOCUMENT_INTELLIGENCE_SERVICE}"
     },
-    "formRecognizerResourceGroupName": {
-      "value": "${AZURE_FORMRECOGNIZER_RESOURCE_GROUP}"
+    "documentIntelligenceResourceGroupName": {
+      "value": "${AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP}"
     },
-    "formRecognizerSkuName": {
+    "documentIntelligenceSkuName": {
       "value": "S0"
     },
     "searchIndexName": {
@@ -84,19 +84,74 @@
       "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME=Standard}"
     },
     "embeddingModelName": {
-      "value": "${AZURE_OPENAI_EMB_MODEL=text-embedding-3-small}"
+      "value": "${AZURE_OPENAI_EMB_MODEL}"
     },
     "embeddingModelVersion": {
-      "value": "${AZURE_OPENAI_EMB_MODEL_VERSION=1}"
+      "value": "${AZURE_OPENAI_EMB_MODEL_VERSION}"
     },
     "embeddingDeploymentName": {
-      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT=text-embedding-3-small}"
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT}"
+    },
+     "embeddingDeploymentVersion":{
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_VERSION}"
+    },
+    "embeddingDeploymentSkuName":{
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_SKU}"
     },
     "embeddingDeploymentCapacity": {
-      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY=120}"
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY}"
+    },
+      "embeddingDimensions": {
+      "value": "${AZURE_OPENAI_EMB_DIMENSIONS}"
     },
     "useApplicationInsights": {
       "value": "${AZURE_USE_APPLICATION_INSIGHTS=true}"
+    },
+     "useChatHistoryBrowser": {
+      "value": "${USE_CHAT_HISTORY_BROWSER=false}"
+    },
+    "useChatHistoryCosmos": {
+      "value": "${USE_CHAT_HISTORY_COSMOS=false}"
+    },
+    "cosmosDbSkuName": {
+      "value": "${AZURE_COSMOSDB_SKU=serverless}"
+    },
+    "cosmodDbResourceGroupName": {
+      "value": "${AZURE_COSMOSDB_RESOURCE_GROUP}"
+    },
+    "cosmosDbLocation": {
+      "value": "${AZURE_COSMOSDB_LOCATION}"
+    },
+    "cosmosDbAccountName": {
+      "value": "${AZURE_COSMOSDB_ACCOUNT}"
+    },
+    "cosmosDbThroughput": {
+      "value": "${AZURE_COSMOSDB_THROUGHPUT}"
+    },
+      "useAuthentication": {
+      "value": "${AZURE_USE_AUTHENTICATION=false}"
+    },
+     "authTenantId": {
+      "value": "${AZURE_AUTH_TENANT_ID}"
+    },
+    "serverAppId": {
+      "value": "${AZURE_SERVER_APP_ID}"
+    },
+    "clientAppId": {
+      "value": "${AZURE_CLIENT_APP_ID}"
+    },
+    "useServiceBusIndexing": {
+      "value": "${USE_SERVICEBUS_INDEXING=true}"
+    },
+    "apiAppExists": {
+      "value": true
+    },
+    "webAppExists": {
+      "value": true
+    },
+    "indexerAppExists": {
+      "value": true
     }
+
   }
 }

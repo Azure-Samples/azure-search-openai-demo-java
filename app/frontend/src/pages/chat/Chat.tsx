@@ -1,46 +1,66 @@
-import { useRef, useState, useEffect } from "react";
-import { Checkbox, ChoiceGroup, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption, IChoiceGroupOption } from "@fluentui/react";
-import { SparkleFilled } from "@fluentui/react-icons";
+import { useRef, useState, useEffect, useContext } from "react";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import { Panel, DefaultButton } from "@fluentui/react";
 import readNDJSONStream from "ndjson-readablestream";
 
+import appLogo from "../../assets/applogo.svg";
 import styles from "./Chat.module.css";
 
 import {
     chatApi,
+    configApi,
     RetrievalMode,
     ChatAppResponse,
     ChatAppResponseOrError,
     ChatAppRequest,
     ResponseMessage,
-    Approaches,
-    SKMode
+    VectorFields,
+    GPT4VInput,
+    SpeechConfig
 } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
+import { HistoryPanel } from "../../components/HistoryPanel";
+import { HistoryProviderOptions, useHistoryManager } from "../../components/HistoryProviders";
+import { HistoryButton } from "../../components/HistoryButton";
 import { SettingsButton } from "../../components/SettingsButton";
 import { ClearChatButton } from "../../components/ClearChatButton";
-import { useLogin, getToken } from "../../authConfig";
+import { UploadFile } from "../../components/UploadFile";
+import { useLogin, getToken, requireAccessControl } from "../../authConfig";
 import { useMsal } from "@azure/msal-react";
 import { TokenClaimsDisplay } from "../../components/TokenClaimsDisplay";
+import { LoginContext } from "../../loginContext";
+import { LanguagePicker } from "../../i18n/LanguagePicker";
+import { Settings } from "../../components/Settings/Settings";
 
 const Chat = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [approach, setApproach] = useState<Approaches>(Approaches.JAVA_OPENAI_SDK);
-    const [skMode, setSKMode] = useState<SKMode>(SKMode.Chains);
+    const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
+    const [temperature, setTemperature] = useState<number>(0.3);
+    const [seed, setSeed] = useState<number | null>(null);
+    const [minimumRerankerScore, setMinimumRerankerScore] = useState<number>(0);
+    const [minimumSearchScore, setMinimumSearchScore] = useState<number>(0);
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
+    const [useQueryRewriting, setUseQueryRewriting] = useState<boolean>(false);
+    const [reasoningEffort, setReasoningEffort] = useState<string>("");
+    const [streamingEnabled, setStreamingEnabled] = useState<boolean>(true);
     const [shouldStream, setShouldStream] = useState<boolean>(true);
-    const [streamAvailable, setStreamAvailable] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
+    const [includeCategory, setIncludeCategory] = useState<string>("");
     const [excludeCategory, setExcludeCategory] = useState<string>("");
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
+    const [vectorFields, setVectorFields] = useState<VectorFields>(VectorFields.TextAndImageEmbeddings);
     const [useOidSecurityFilter, setUseOidSecurityFilter] = useState<boolean>(false);
     const [useGroupsSecurityFilter, setUseGroupsSecurityFilter] = useState<boolean>(false);
+    const [gpt4vInput, setGPT4VInput] = useState<GPT4VInput>(GPT4VInput.TextAndImages);
+    const [useGPT4V, setUseGPT4V] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -55,8 +75,64 @@ const Chat = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: ChatAppResponse][]>([]);
     const [streamedAnswers, setStreamedAnswers] = useState<[user: string, response: ChatAppResponse][]>([]);
+    const [speechUrls, setSpeechUrls] = useState<(string | null)[]>([]);
 
-    const handleAsyncRequest = async (question: string, answers: [string, ChatAppResponse][], setAnswers: Function, responseBody: ReadableStream<any>) => {
+    const [showGPT4VOptions, setShowGPT4VOptions] = useState<boolean>(false);
+    const [showSemanticRankerOption, setShowSemanticRankerOption] = useState<boolean>(false);
+    const [showQueryRewritingOption, setShowQueryRewritingOption] = useState<boolean>(false);
+    const [showReasoningEffortOption, setShowReasoningEffortOption] = useState<boolean>(false);
+    const [showVectorOption, setShowVectorOption] = useState<boolean>(false);
+    const [showUserUpload, setShowUserUpload] = useState<boolean>(false);
+    const [showLanguagePicker, setshowLanguagePicker] = useState<boolean>(false);
+    const [showSpeechInput, setShowSpeechInput] = useState<boolean>(false);
+    const [showSpeechOutputBrowser, setShowSpeechOutputBrowser] = useState<boolean>(false);
+    const [showSpeechOutputAzure, setShowSpeechOutputAzure] = useState<boolean>(false);
+    const [showChatHistoryBrowser, setShowChatHistoryBrowser] = useState<boolean>(false);
+    const [showChatHistoryCosmos, setShowChatHistoryCosmos] = useState<boolean>(false);
+    const audio = useRef(new Audio()).current;
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const speechConfig: SpeechConfig = {
+        speechUrls,
+        setSpeechUrls,
+        audio,
+        isPlaying,
+        setIsPlaying
+    };
+
+    const getConfig = async () => {
+        configApi().then(config => {
+            setShowGPT4VOptions(config.showGPT4VOptions);
+            if (config.showGPT4VOptions) {
+                setUseGPT4V(true);
+            }
+            setUseSemanticRanker(config.showSemanticRankerOption);
+            setShowSemanticRankerOption(config.showSemanticRankerOption);
+            setUseQueryRewriting(config.showQueryRewritingOption);
+            setShowQueryRewritingOption(config.showQueryRewritingOption);
+            setShowReasoningEffortOption(config.showReasoningEffortOption);
+            setStreamingEnabled(config.streamingEnabled);
+            if (!config.streamingEnabled) {
+                setShouldStream(false);
+            }
+            if (config.showReasoningEffortOption) {
+                setReasoningEffort(config.defaultReasoningEffort);
+            }
+            setShowVectorOption(config.showVectorOption);
+            if (!config.showVectorOption) {
+                setRetrievalMode(RetrievalMode.Text);
+            }
+            setShowUserUpload(config.showUserUpload);
+            setshowLanguagePicker(config.showLanguagePicker);
+            setShowSpeechInput(config.showSpeechInput);
+            setShowSpeechOutputBrowser(config.showSpeechOutputBrowser);
+            setShowSpeechOutputAzure(config.showSpeechOutputAzure);
+            setShowChatHistoryBrowser(config.showChatHistoryBrowser);
+            setShowChatHistoryCosmos(config.showChatHistoryCosmos);
+        });
+    };
+
+    const handleAsyncRequest = async (question: string, answers: [string, ChatAppResponse][], responseBody: ReadableStream<any>) => {
         let answer: string = "";
         let askResponse: ChatAppResponse = {} as ChatAppResponse;
 
@@ -66,7 +142,7 @@ const Chat = () => {
                     answer += newContent;
                     const latestResponse: ChatAppResponse = {
                         ...askResponse,
-                        choices: [{ ...askResponse.choices[0], message: { content: answer, role: askResponse.choices[0].message.role } }]
+                        message: { content: answer, role: askResponse.message.role }
                     };
                     setStreamedAnswers([...answers, [question, latestResponse]]);
                     resolve(null);
@@ -76,13 +152,17 @@ const Chat = () => {
         try {
             setIsStreaming(true);
             for await (const event of readNDJSONStream(responseBody)) {
-                if (event["choices"] && event["choices"][0]["context"] && event["choices"][0]["context"]["data_points"]) {
-                    event["choices"][0]["message"] = event["choices"][0]["delta"];
-                    askResponse = event;
-                    answer = askResponse["choices"][0]["message"]["content"];
-                } else if (event["choices"] && event["choices"][0]["delta"]["content"]) {
+                if (event["context"] && event["context"]["data_points"]) {
+                    event["message"] = event["delta"];
+                    askResponse = event as ChatAppResponse;
+                } else if (event["delta"] && event["delta"]["content"]) {
                     setIsLoading(false);
-                    await updateState(event["choices"][0]["delta"]["content"]);
+                    await updateState(event["delta"]["content"]);
+                } else if (event["context"]) {
+                    // Update context with new keys from latest event
+                    askResponse.context = { ...askResponse.context, ...event["context"] };
+                } else if (event["error"]) {
+                    throw Error(event["error"]);
                 }
             }
         } finally {
@@ -90,12 +170,20 @@ const Chat = () => {
         }
         const fullResponse: ChatAppResponse = {
             ...askResponse,
-            choices: [{ ...askResponse.choices[0], message: { content: answer, role: askResponse.choices[0].message.role } }]
+            message: { content: answer, role: askResponse.message.role }
         };
         return fullResponse;
     };
 
     const client = useLogin ? useMsal().instance : undefined;
+    const { loggedIn } = useContext(LoginContext);
+
+    const historyProvider: HistoryProviderOptions = (() => {
+        if (useLogin && showChatHistoryCosmos) return HistoryProviderOptions.CosmosDB;
+        if (showChatHistoryBrowser) return HistoryProviderOptions.IndexedDB;
+        return HistoryProviderOptions.None;
+    })();
+    const historyManager = useHistoryManager(historyProvider);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -110,46 +198,65 @@ const Chat = () => {
         try {
             const messages: ResponseMessage[] = answers.flatMap(a => [
                 { content: a[0], role: "user" },
-                { content: a[1].choices[0].message.content, role: "assistant" }
+                { content: a[1].message.content, role: "assistant" }
             ]);
 
-            const stream = streamAvailable && shouldStream;
             const request: ChatAppRequest = {
                 messages: [...messages, { content: question, role: "user" }],
-                stream: stream,
                 context: {
                     overrides: {
                         prompt_template: promptTemplate.length === 0 ? undefined : promptTemplate,
+                        include_category: includeCategory.length === 0 ? undefined : includeCategory,
                         exclude_category: excludeCategory.length === 0 ? undefined : excludeCategory,
                         top: retrieveCount,
+                        temperature: temperature,
+                        minimum_reranker_score: minimumRerankerScore,
+                        minimum_search_score: minimumSearchScore,
                         retrieval_mode: retrievalMode,
                         semantic_ranker: useSemanticRanker,
                         semantic_captions: useSemanticCaptions,
+                        query_rewriting: useQueryRewriting,
+                        reasoning_effort: reasoningEffort,
                         suggest_followup_questions: useSuggestFollowupQuestions,
                         use_oid_security_filter: useOidSecurityFilter,
                         use_groups_security_filter: useGroupsSecurityFilter,
-                        semantic_kernel_mode: skMode
+                        vector_fields: vectorFields,
+                        use_gpt4v: useGPT4V,
+                        gpt4v_input: gpt4vInput,
+                        language: i18n.language,
+                        ...(seed !== null ? { seed: seed } : {})
                     }
                 },
-                approach: approach,
-                // ChatAppProtocol: Client must pass on any session state received from the server
-                session_state: answers.length ? answers[answers.length - 1][1].choices[0].session_state : null
+                // AI Chat Protocol: Client must pass on any session state received from the server
+                session_state: answers.length ? answers[answers.length - 1][1].session_state : null
             };
 
-            const response = await chatApi(request, token?.accessToken);
+            const response = await chatApi(request, shouldStream, token);
             if (!response.body) {
                 throw Error("No response body");
             }
-            if (stream) {
-                const parsedResponse: ChatAppResponse = await handleAsyncRequest(question, answers, setAnswers, response.body);
+            if (response.status > 299 || !response.ok) {
+                throw Error(`Request failed with status ${response.status}`);
+            }
+            if (shouldStream) {
+                const parsedResponse: ChatAppResponse = await handleAsyncRequest(question, answers, response.body);
                 setAnswers([...answers, [question, parsedResponse]]);
+                if (typeof parsedResponse.session_state === "string" && parsedResponse.session_state !== "") {
+                    const token = client ? await getToken(client) : undefined;
+                    historyManager.addItem(parsedResponse.session_state, [...answers, [question, parsedResponse]], token);
+                }
             } else {
                 const parsedResponse: ChatAppResponseOrError = await response.json();
-                if (response.status > 299 || !response.ok) {
-                    throw Error(parsedResponse.error || "Unknown error");
+                if (parsedResponse.error) {
+                    throw Error(parsedResponse.error);
                 }
                 setAnswers([...answers, [question, parsedResponse as ChatAppResponse]]);
+                if (typeof parsedResponse.session_state === "string" && parsedResponse.session_state !== "") {
+                    const token = client ? await getToken(client) : undefined;
+                    historyManager.addItem(parsedResponse.session_state, [...answers, [question, parsedResponse as ChatAppResponse]], token);
+                }
             }
+            setSpeechUrls([...speechUrls, null]);
         } catch (e) {
             setError(e);
         } finally {
@@ -163,6 +270,7 @@ const Chat = () => {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
         setAnswers([]);
+        setSpeechUrls([]);
         setStreamedAnswers([]);
         setIsLoading(false);
         setIsStreaming(false);
@@ -170,55 +278,73 @@ const Chat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "auto" }), [streamedAnswers]);
+    useEffect(() => {
+        getConfig();
+    }, []);
 
-    const onPromptTemplateChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        setPromptTemplate(newValue || "");
-    };
-
-    const onRetrieveCountChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
-        setRetrieveCount(parseInt(newValue || "3"));
-    };
-
-    const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
-        setRetrievalMode(option?.data || RetrievalMode.Hybrid);
-    };
-
-    const onSKModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<SKMode> | undefined, index?: number | undefined) => {
-        setSKMode(option?.data || SKMode.Chains);
-    };
-
-    const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
-        const newApproach = (option?.key as Approaches);
-        setApproach(newApproach || Approaches.JAVA_OPENAI_SDK);
-        setStreamAvailable(newApproach === Approaches.JAVA_OPENAI_SDK);
-    };
-
-    const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setUseSemanticRanker(!!checked);
-    };
-
-    const onUseSemanticCaptionsChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setUseSemanticCaptions(!!checked);
-    };
-
-    const onShouldStreamChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setShouldStream(!!checked);
-    };
-
-    const onExcludeCategoryChanged = (_ev?: React.FormEvent, newValue?: string) => {
-        setExcludeCategory(newValue || "");
-    };
-
-    const onUseSuggestFollowupQuestionsChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setUseSuggestFollowupQuestions(!!checked);
-    };
-
-    const onUseOidSecurityFilterChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setUseOidSecurityFilter(!!checked);
-    };
-
-    const onUseGroupsSecurityFilterChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-        setUseGroupsSecurityFilter(!!checked);
+    const handleSettingsChange = (field: string, value: any) => {
+        switch (field) {
+            case "promptTemplate":
+                setPromptTemplate(value);
+                break;
+            case "temperature":
+                setTemperature(value);
+                break;
+            case "seed":
+                setSeed(value);
+                break;
+            case "minimumRerankerScore":
+                setMinimumRerankerScore(value);
+                break;
+            case "minimumSearchScore":
+                setMinimumSearchScore(value);
+                break;
+            case "retrieveCount":
+                setRetrieveCount(value);
+                break;
+            case "useSemanticRanker":
+                setUseSemanticRanker(value);
+                break;
+            case "useQueryRewriting":
+                setUseQueryRewriting(value);
+                break;
+            case "reasoningEffort":
+                setReasoningEffort(value);
+                break;
+            case "useSemanticCaptions":
+                setUseSemanticCaptions(value);
+                break;
+            case "excludeCategory":
+                setExcludeCategory(value);
+                break;
+            case "includeCategory":
+                setIncludeCategory(value);
+                break;
+            case "useOidSecurityFilter":
+                setUseOidSecurityFilter(value);
+                break;
+            case "useGroupsSecurityFilter":
+                setUseGroupsSecurityFilter(value);
+                break;
+            case "shouldStream":
+                setShouldStream(value);
+                break;
+            case "useSuggestFollowupQuestions":
+                setUseSuggestFollowupQuestions(value);
+                break;
+            case "useGPT4V":
+                setUseGPT4V(value);
+                break;
+            case "gpt4vInput":
+                setGPT4VInput(value);
+                break;
+            case "vectorFields":
+                setVectorFields(value);
+                break;
+            case "retrievalMode":
+                setRetrievalMode(value);
+                break;
+        }
     };
 
     const onExampleClicked = (example: string) => {
@@ -246,35 +372,37 @@ const Chat = () => {
         setSelectedAnswer(index);
     };
 
-    const approaches: IChoiceGroupOption[] = [
-        {
-            key: Approaches.JAVA_OPENAI_SDK,
-            text: "Java Azure Open AI SDK"
-        },
-        {
-            key: Approaches.JAVA_SEMANTIC_KERNEL,
-            text: "Java Semantic Kernel"
-        }/**,
-        {
-            key: Approaches.JAVA_SEMANTIC_KERNEL_PLANNER,
-            text: "Java Semantic Kernel - Chains"
-        },*/
-    ];
+    const { t, i18n } = useTranslation();
 
     return (
         <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
+            {/* Setting the page title using react-helmet-async */}
+            <Helmet>
+                <title>{t("pageTitle")}</title>
+            </Helmet>
+            <div className={styles.commandsSplitContainer}>
+                <div className={styles.commandsContainer}>
+                    {((loggedIn && showChatHistoryCosmos) || showChatHistoryBrowser) && (
+                        <HistoryButton className={styles.commandButton} onClick={() => setIsHistoryPanelOpen(!isHistoryPanelOpen)} />
+                    )}
+                </div>
+                <div className={styles.commandsContainer}>
+                    <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                    {showUserUpload && <UploadFile className={styles.commandButton}  />}
+                    <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
+                </div>
             </div>
-            <div className={styles.chatRoot}>
+            <div className={styles.chatRoot} style={{ marginLeft: isHistoryPanelOpen ? "300px" : "0" }}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />
-                            <h1 className={styles.chatEmptyStateTitle}>Chat with your data</h1>
-                            <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2>
-                            <ExampleList onExampleClicked={onExampleClicked} />
+                            <img src={appLogo} alt="App logo" width="120" height="120" />
+
+                            <h1 className={styles.chatEmptyStateTitle}>{t("chatEmptyStateTitle")}</h1>
+                            <h2 className={styles.chatEmptyStateSubtitle}>{t("chatEmptyStateSubtitle")}</h2>
+                            {showLanguagePicker && <LanguagePicker onLanguageChange={newLang => i18n.changeLanguage(newLang)} />}
+
+                            <ExampleList onExampleClicked={onExampleClicked} useGPT4V={useGPT4V} />
                         </div>
                     ) : (
                         <div className={styles.chatMessageStream}>
@@ -287,12 +415,16 @@ const Chat = () => {
                                                 isStreaming={true}
                                                 key={index}
                                                 answer={streamedAnswer[1]}
+                                                index={index}
+                                                speechConfig={speechConfig}
                                                 isSelected={false}
                                                 onCitationClicked={c => onShowCitation(c, index)}
                                                 onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
                                                 onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
                                                 onFollowupQuestionClicked={q => makeApiRequest(q)}
                                                 showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
+                                                showSpeechOutputAzure={showSpeechOutputAzure}
+                                                showSpeechOutputBrowser={showSpeechOutputBrowser}
                                             />
                                         </div>
                                     </div>
@@ -306,12 +438,16 @@ const Chat = () => {
                                                 isStreaming={false}
                                                 key={index}
                                                 answer={answer[1]}
+                                                index={index}
+                                                speechConfig={speechConfig}
                                                 isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                                 onCitationClicked={c => onShowCitation(c, index)}
                                                 onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
                                                 onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
                                                 onFollowupQuestionClicked={q => makeApiRequest(q)}
                                                 showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
+                                                showSpeechOutputAzure={showSpeechOutputAzure}
+                                                showSpeechOutputBrowser={showSpeechOutputBrowser}
                                             />
                                         </div>
                                     </div>
@@ -339,9 +475,10 @@ const Chat = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Type a new question (e.g. does my plan cover annual eye exams?)"
+                            placeholder={t("defaultExamples.placeholder")}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
+                            showSpeechInput={showSpeechInput}
                         />
                     </div>
                 </div>
@@ -357,116 +494,62 @@ const Chat = () => {
                     />
                 )}
 
+                {((loggedIn && showChatHistoryCosmos) || showChatHistoryBrowser) && (
+                    <HistoryPanel
+                        provider={historyProvider}
+                        isOpen={isHistoryPanelOpen}
+                        notify={!isStreaming && !isLoading}
+                        onClose={() => setIsHistoryPanelOpen(false)}
+                        onChatSelected={answers => {
+                            if (answers.length === 0) return;
+                            setAnswers(answers);
+                            lastQuestionRef.current = answers[answers.length - 1][0];
+                        }}
+                    />
+                )}
+
                 <Panel
-                    headerText="Configure answer generation"
+                    headerText={t("labels.headerText")}
                     isOpen={isConfigPanelOpen}
                     isBlocking={false}
                     onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel="Close"
-                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
+                    closeButtonAriaLabel={t("labels.closeButton")}
+                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>{t("labels.closeButton")}</DefaultButton>}
                     isFooterAtBottom={true}
                 >
-                    <ChoiceGroup
-                        className={styles.chatSettingsSeparator}
-                        label="Approach"
-                        options={approaches}
-                        defaultSelectedKey={approach}
-                        onChange={onApproachChange}
+                    <Settings
+                        promptTemplate={promptTemplate}
+                        temperature={temperature}
+                        retrieveCount={retrieveCount}
+                        seed={seed}
+                        minimumSearchScore={minimumSearchScore}
+                        minimumRerankerScore={minimumRerankerScore}
+                        useSemanticRanker={useSemanticRanker}
+                        useSemanticCaptions={useSemanticCaptions}
+                        useQueryRewriting={useQueryRewriting}
+                        reasoningEffort={reasoningEffort}
+                        excludeCategory={excludeCategory}
+                        includeCategory={includeCategory}
+                        retrievalMode={retrievalMode}
+                        useGPT4V={useGPT4V}
+                        gpt4vInput={gpt4vInput}
+                        vectorFields={vectorFields}
+                        showSemanticRankerOption={showSemanticRankerOption}
+                        showQueryRewritingOption={showQueryRewritingOption}
+                        showReasoningEffortOption={showReasoningEffortOption}
+                        showGPT4VOptions={showGPT4VOptions}
+                        showVectorOption={showVectorOption}
+                        useOidSecurityFilter={useOidSecurityFilter}
+                        useGroupsSecurityFilter={useGroupsSecurityFilter}
+                        useLogin={!!useLogin}
+                        loggedIn={loggedIn}
+                        requireAccessControl={requireAccessControl}
+                        shouldStream={shouldStream}
+                        streamingEnabled={streamingEnabled}
+                        useSuggestFollowupQuestions={useSuggestFollowupQuestions}
+                        showSuggestFollowupQuestions={true}
+                        onChange={handleSettingsChange}
                     />
-
-                    {(approach === Approaches.JAVA_OPENAI_SDK) && (
-                        <TextField
-                            className={styles.chatSettingsSeparator}
-                            defaultValue={promptTemplate}
-                            label="Override prompt template"
-                            multiline
-                            autoAdjustHeight
-                            onChange={onPromptTemplateChange}
-                        />
-                    )}
-                    
-                    { //pending implementation of vector stores
-                    /*(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                        <Dropdown
-                            className={styles.oneshotSettingsSeparator}
-                            label="Semantic Kernel mode"
-                            options={[
-                                { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                                { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
-                            ]}
-                            required
-                            onChange={onSKModeChange}
-                        />
-                    )*/}
-
-                    <SpinButton
-                        className={styles.chatSettingsSeparator}
-                        label="Retrieve this many search results:"
-                        min={1}
-                        max={50}
-                        defaultValue={retrieveCount.toString()}
-                        onChange={onRetrieveCountChange}
-                    />
-                    <TextField className={styles.chatSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
-                    <Checkbox
-                        className={styles.chatSettingsSeparator}
-                        checked={useSemanticRanker}
-                        label="Use semantic ranker for retrieval"
-                        onChange={onUseSemanticRankerChange}
-                    />
-                    {(approach === Approaches.JAVA_OPENAI_SDK || approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                        <Checkbox
-                            className={styles.chatSettingsSeparator}
-                            checked={useSemanticCaptions}
-                            label="Use query-contextual summaries instead of whole documents"
-                            onChange={onUseSemanticCaptionsChange}
-                            disabled={!useSemanticRanker}
-                        />
-                    )}
-                    <Checkbox
-                        className={styles.chatSettingsSeparator}
-                        checked={useSuggestFollowupQuestions}
-                        label="Suggest follow-up questions"
-                        onChange={onUseSuggestFollowupQuestionsChange}
-                    />
-                    {useLogin && (
-                        <Checkbox
-                            className={styles.chatSettingsSeparator}
-                            checked={useOidSecurityFilter}
-                            label="Use oid security filter"
-                            disabled={!client?.getActiveAccount()}
-                            onChange={onUseOidSecurityFilterChange}
-                        />
-                    )}
-                    {useLogin && (
-                        <Checkbox
-                            className={styles.chatSettingsSeparator}
-                            checked={useGroupsSecurityFilter}
-                            label="Use groups security filter"
-                            disabled={!client?.getActiveAccount()}
-                            onChange={onUseGroupsSecurityFilterChange}
-                        />
-                    )}
-                    <Dropdown
-                        className={styles.chatSettingsSeparator}
-                        label="Retrieval mode"
-                        options={[
-                            { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
-                            { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
-                            { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
-                        ]}
-                        required
-                        onChange={onRetrievalModeChange}
-                    />
-                    {streamAvailable &&
-                        <Checkbox
-                            className={styles.chatSettingsSeparator}
-                            checked={shouldStream}
-                            label="Stream chat completion responses"
-                            onChange={onShouldStreamChange}
-                        />
-                    }
-
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>
             </div>

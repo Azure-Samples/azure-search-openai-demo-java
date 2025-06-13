@@ -1,34 +1,44 @@
-export const enum Approaches {
-    JAVA_OPENAI_SDK = "jos",
-    JAVA_SEMANTIC_KERNEL = "jsk",
-    JAVA_SEMANTIC_KERNEL_PLANNER = "jskp"
-}
-
 export const enum RetrievalMode {
     Hybrid = "hybrid",
     Vectors = "vectors",
     Text = "text"
 }
 
-export const enum SKMode {
-    Chains = "chains",
-    Planner = "planner"
+export const enum GPT4VInput {
+    TextAndImages = "textAndImages",
+    Images = "images",
+    Texts = "texts"
+}
+
+export const enum VectorFields {
+    Embedding = "textEmbeddingOnly",
+    ImageEmbedding = "imageEmbeddingOnly",
+    TextAndImageEmbeddings = "textAndImageEmbeddings"
 }
 
 export type ChatAppRequestOverrides = {
     retrieval_mode?: RetrievalMode;
     semantic_ranker?: boolean;
     semantic_captions?: boolean;
+    query_rewriting?: boolean;
+    reasoning_effort?: string;
+    include_category?: string;
     exclude_category?: string;
+    seed?: number;
     top?: number;
     temperature?: number;
+    minimum_search_score?: number;
+    minimum_reranker_score?: number;
     prompt_template?: string;
     prompt_template_prefix?: string;
     prompt_template_suffix?: string;
     suggest_followup_questions?: boolean;
     use_oid_security_filter?: boolean;
     use_groups_security_filter?: boolean;
-    semantic_kernel_mode?: SKMode;
+    use_gpt4v?: boolean;
+    gpt4v_input?: GPT4VInput;
+    vector_fields: VectorFields;
+    language: string;
 };
 
 export type ResponseMessage = {
@@ -36,25 +46,31 @@ export type ResponseMessage = {
     role: string;
 };
 
-export type ResponseContext = {
-    thoughts: string | null;
-    data_points: string[];
+export type Thoughts = {
+    title: string;
+    description: any; // It can be any output from the api
+    props?: { [key: string]: any };
 };
 
-export type ResponseChoice = {
-    index: number;
-    message: ResponseMessage;
-    context: ResponseContext;
-    session_state: any;
+export type ResponseContext = {
+    data_points: string[];
+    followup_questions: string[] | null;
+    thoughts: Thoughts[];
 };
 
 export type ChatAppResponseOrError = {
-    choices?: ResponseChoice[];
+    message: ResponseMessage;
+    delta: ResponseMessage;
+    context: ResponseContext;
+    session_state: any;
     error?: string;
 };
 
 export type ChatAppResponse = {
-    choices: ResponseChoice[];
+    message: ResponseMessage;
+    delta: ResponseMessage;
+    context: ResponseContext;
+    session_state: any;
 };
 
 export type ChatAppRequestContext = {
@@ -63,8 +79,51 @@ export type ChatAppRequestContext = {
 
 export type ChatAppRequest = {
     messages: ResponseMessage[];
-    approach: Approaches;
     context?: ChatAppRequestContext;
-    stream?: boolean;
     session_state: any;
+};
+
+export type Config = {
+    defaultReasoningEffort: string;
+    showGPT4VOptions: boolean;
+    showSemanticRankerOption: boolean;
+    showQueryRewritingOption: boolean;
+    showReasoningEffortOption: boolean;
+    streamingEnabled: boolean;
+    showVectorOption: boolean;
+    showUserUpload: boolean;
+    showLanguagePicker: boolean;
+    showSpeechInput: boolean;
+    showSpeechOutputBrowser: boolean;
+    showSpeechOutputAzure: boolean;
+    showChatHistoryBrowser: boolean;
+    showChatHistoryCosmos: boolean;
+};
+
+export type SimpleAPIResponse = {
+    message?: string;
+};
+
+export interface SpeechConfig {
+    speechUrls: (string | null)[];
+    setSpeechUrls: (urls: (string | null)[]) => void;
+    audio: HTMLAudioElement;
+    isPlaying: boolean;
+    setIsPlaying: (isPlaying: boolean) => void;
+}
+
+export type HistoryListApiResponse = {
+    sessions: {
+        id: string;
+        entra_oid: string;
+        title: string;
+        timestamp: number;
+    }[];
+    continuation_token?: string;
+};
+
+export type HistoryApiResponse = {
+    id: string;
+    entra_oid: string;
+    answers: any;
 };
