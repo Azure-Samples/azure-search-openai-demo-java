@@ -174,7 +174,7 @@ azd auth login
 azd env set AZURE_OPENAI_CHATGPT_MODEL "gpt-4" # Change the chatgpt model to gpt-4
 azd up
 ```
-> NOTE: This sample has been tested with gpt-35-turbo/0613 model version.Using other models or different versions might result in unexpected behavior.
+> NOTE: This sample has been tested with gpt-4o-mini.Using other models or different versions might result in unexpected behavior.
 ### Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources
 
 ```shell

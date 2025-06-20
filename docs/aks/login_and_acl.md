@@ -36,7 +36,7 @@ Two Microsoft Entra applications must be registered in order to make the optiona
 
 ### Prerequisites : Self signed certificate for Nginx Ingress Controller
 
-When enabling user authentication, the [managed Nginx Ingress Controller](https://learn.microsoft.com/en-us/azure/aks/app-routing) requires a self-signed certificate to be created and used for TLS termination. This is necessary as we use [MSAL React library](https://learn.microsoft.com/en-us/samples/azure-samples/ms-identity-ciam-javascript-tutorial/ms-identity-ciam-javascript-tutorial-1-sign-in-react/) to authenticate users with Entra ID, and it only works for HTTPS connections
+When enabling user authentication, the [managed Nginx Ingress Controller](https://learn.microsoft.com/en-us/azure/aks/app-routing) requires a self-signed certificate to be created and used for TLS termination. This is necessary as we use [MSAL React library](https://learn.microsoft.com/en-us/samples/azure-samples/ms-identity-ciam-javascript-tutorial/ms-identity-ciam-javascript-tutorial-1-sign-in-react/) to authenticate users with Entra ID, and it only works on HTTPS connections
 
 Follow these steps to create a self-signed certificate that will be automatically configured in the Nginx Ingress Controller by azd [post-deploy hooks](../../deploy/aks/scripts/set_ingress_tls.ps1)
 
