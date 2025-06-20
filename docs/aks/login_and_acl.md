@@ -34,6 +34,21 @@ This guide demonstrates how to add an optional login and document level access c
 
 Two Microsoft Entra applications must be registered in order to make the optional login and document level access control system work correctly. One app is for the client UI. The client UI is implemented as a [single page application](https://learn.microsoft.com/entra/identity-platform/scenario-spa-app-registration). The other app is for the API server that needs to be accessed by the UI (server rest API is protected by authentication using oauth2 JWT).The indexer app is not protected.
 
+### Prerequisites : Self signed certificate for Nginx Ingress Controller
+
+When enabling user authentication, the [managed Nginx Ingress Controller](https://learn.microsoft.com/en-us/azure/aks/app-routing) requires a self-signed certificate to be created and used for TLS termination. This is necessary as we use [MSAL React library](https://learn.microsoft.com/en-us/samples/azure-samples/ms-identity-ciam-javascript-tutorial/ms-identity-ciam-javascript-tutorial-1-sign-in-react/) to authenticate users with Entra ID, and it only works for HTTPS connections
+
+Follow these steps to create a self-signed certificate that will be automatically configured in the Nginx Ingress Controller by azd [post-deploy hooks](../../deploy/aks/scripts/set_ingress_tls.ps1)
+
+ > [!WARNING]
+ > Manual creation of the self-signed certificate is not required if you are running azd on Unix or Linux. The [set_ingress_tls.sh](../../deploy/aks/scripts/set_ingress_tls.sh) script will automatically create the self-signed certificate for you.
+
+```shell
+appHostName="$(azd env get-value AZURE_ENV_NAME).$(azd env get-value AZURE_LOCATION).cloudapp.azure.com"
+echo $appHostName
+openssl req -new -x509 -nodes -out aks-ingress-tls.crt -keyout aks-ingress-tls.key -subj "/CN=$appHostName" -addext "subjectAltName=DNS:$appHostName"
+openssl pkcs12 -export -in aks-ingress-tls.crt -inkey aks-ingress-tls.key -out aks-ingress-tls.pfx
+```
 ### Automatic Setup
 
 The easiest way to setup the two apps is to use the `azd` CLI. We've written scripts that will automatically create the two apps and configure them for use with the sample. To trigger the automatic setup, run the following commands:

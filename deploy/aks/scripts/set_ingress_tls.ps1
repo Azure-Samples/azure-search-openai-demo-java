@@ -101,7 +101,7 @@ if ($certificate) {
 
 
 # Enable azure key vault as Secrets Store CSI driver for application routing add-on enabled
-$keyVaultId = az keyvault show --name $kvName --query id -o tsv
+$keyVaultId = az keyvault show -g $clusterRG --name $kvName --query id -o tsv
                                                                               
 $secretsProvider = az aks show -g $clusterRG -n $clusterName --query "addonProfiles.azureKeyvaultSecretsProvider" -o json | ConvertFrom-Json
 
@@ -114,7 +114,7 @@ if ($secretsProvider -and $secretsProvider.PSObject.Properties['enabled'] -and (
   $IngressServicePrincipalID = az ad sp list --display-name "webapprouting-$clusterName" --query "[].id" --output tsv
 
   Write-Host "Assigning Key Vault access policies to the Ingress Service Principal [$IngressServicePrincipalID] for Key Vault [$kvName]"
-  az keyvault set-policy --name $kvName --object-id  $IngressServicePrincipalID --secret-permissions get list --certificate-permissions get list
+  az keyvault set-policy -g $clusterRG --name $kvName --object-id  $IngressServicePrincipalID --secret-permissions get list --certificate-permissions get list
 }
 
 

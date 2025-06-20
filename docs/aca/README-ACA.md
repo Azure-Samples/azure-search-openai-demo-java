@@ -310,7 +310,7 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each month are free for ACA. To reduce costs, you can switch to free SKUs Document Intelligence by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Document Intelligence resource only analyzes the first 2 pages of each document. 
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
+either by deleting the resource group in the Portal or running `azd down --purge`.
 
 ### Note
 

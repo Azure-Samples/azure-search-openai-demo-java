@@ -58,7 +58,7 @@ echo "Configure DNS for cluster Public IP using $appHostName"
 nodeRG=$(az aks show -n $clusterName -g $clusterRG -o json | jq -r '.nodeResourceGroup')
 echo "AKS Cluster is in resource group: $nodeRG"
 
-ingressIP=$(kubectl get ingress ingress-api -n azure-open-ai -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+ingressIP=$(kubectl get ingress ingress-api -n java-rag-ns -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
 
 if [ -z "$ingressIP" ]; then
   echo "Please retry once Ingress Address is assigned to the AKS Cluster"
@@ -68,7 +68,7 @@ fi
 echo "Found Ingress IP: $ingressIP"
 
 # List public IP resources in the specified resource group
-ipName=$(az network.public-ip list -g $nodeRG -o json | jq -c ".[] | select(.ipAddress | contains(\"$ingressIP\"))" | jq '.name' -r)
+ipName=$(az network public-ip list -g $nodeRG -o json | jq -c ".[] | select(.ipAddress | contains(\"$ingressIP\"))" | jq '.name' -r)
 echo "Public-ip IP Name within RG is: $ipName"
 
 # Add a DNS name ($adAppName) to the public IP address
@@ -102,8 +102,11 @@ else
   if [ -f "aks-ingress-tls.pfx" ]; then
     echo "aks-ingress-tls.pfx found."
   else
-    echo "Please create a aks-ingress-tls.pfx. For more info see https://learn.microsoft.com/en-us/azure/aks/app-routing-dns-ssl#create-and-export-a-self-signed-ssl-certificate"
-    exit 1
+    echo "aks-ingress-tls.pfx not found... trying to create a new for the hostname $appHostName"
+    openssl req -new -x509 -nodes -out aks-ingress-tls.crt -keyout aks-ingress-tls.key -subj "/CN=$appHostName" -addext "subjectAltName=DNS:$appHostName"
+    echo "Creating aks-ingress-tls.pfx from aks-ingress-tls.crt and aks-ingress-tls.key"
+    openssl pkcs12 -export -in aks-ingress-tls.crt -inkey aks-ingress-tls.key -out aks-ingress-tls.pfx
+    echo "aks-ingress-tls.pfx created successfully." 
   fi
 
   # Import the PFX file into Azure Key Vault
@@ -112,22 +115,22 @@ else
 fi
 
 # Enable azure key vault as Secrets Store CSI driver for application routing add-on enabled
-keyVaultId=$(az keyvault show --name $kvName --query id -o tsv)
+keyVaultId=$(az keyvault show -g $clusterRG --name $kvName --query id -o tsv)
 
 secretsProvider=$(az aks show -g $clusterRG -n $clusterName --query "addonProfiles.azureKeyvaultSecretsProvider" -o json)
 secretsProviderEnabled=$(echo $secretsProvider | jq -r '.enabled // false')
 
-if [ "$secretsProviderEnabled" = "true" ]; then
-  echo "Azure Key Vault Secrets Provider add-on is ENABLED"
-else
+#if [ "$secretsProviderEnabled" = "true" ]; then
+#  echo "Azure Key Vault Secrets Provider add-on is ENABLED"
+#else
   echo "Enabling Azure Key Vault Secrets Provider add-on for aks ingress. KeyVault Id[$keyVaultId]"
   az aks approuting update -g $clusterRG -n $clusterName --enable-kv --attach-kv $keyVaultId
 
   IngressServicePrincipalID=$(az ad sp list --display-name "webapprouting-$clusterName" --query "[].id" --output tsv)
 
   echo "Assigning Key Vault access policies to the Ingress Service Principal [$IngressServicePrincipalID] for Key Vault [$kvName]"
-  az keyvault set-policy --name $kvName --object-id $IngressServicePrincipalID --secret-permissions get list --certificate-permissions get list
-fi
+  az keyvault set-policy -g $clusterRG --name $kvName --object-id $IngressServicePrincipalID --secret-permissions get list --certificate-permissions get list
+#fi
 
 # Create the Ingress resource with TLS configuration
 certUri="https://$kvName.vault.azure.net/certificates/aks-ingress-tls"

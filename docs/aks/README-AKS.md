@@ -23,25 +23,25 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 <!-- TOC -->
 - [Getting Started](#getting-started)
-  * [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
+  - [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
   - [Prerequisites](#prerequisites)
   - [Starting from scratch](#starting-from-scratch)
   - [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     - [Existing resource group](#existing-resource-group)
     - [Existing OpenAI resource](#existing-openai-resource)
-    - [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
+    - [Existing Azure AI Search resource](#existing-azure-ai-search-resource)
     - [Other existing Azure resources](#other-existing-azure-resources)
     - [Provision remaining resources](#provision-remaining-resources)
-  - [Deploying again](#redeploying)
-  - [Running locally](#running-locally)
+  - [Redeploying](#redeploying)
+  - [Examples of an azd deployment changing the default chatgpt deployment model](#examples-of-an-azd-deployment-changing-the-default-chatgpt-deployment-model)
+  - [Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources](#examples-of-an-azd-deployment-reusing-an-existing-azure-openai-and-azure-ai-search-resources)
   - [UI Navigation](#ui-navigation)
 - [Guidance](#guidance)
   - [Enabling Application Insights](#enabling-application-insights)
-  - [Enabling authentication](#enabling-authentication)
+  - [Enabling login and search filtering](#enabling-login-and-search-filtering)
+  - [Enabling client-side chat history](#enabling-client-side-chat-history)
+  - [Enabling persistent chat history with Azure Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db)
   - [App Continuous Integration](#app-continuous-integration)
-  - [GitHub](#github)
-  - [Azure DevOps](#azure-devops)
-  - [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
   - [Productionizing](#productionizing)
   - [Cost estimation](#cost-estimation)
   - [Note](#note)
@@ -72,7 +72,7 @@ All prerequisites are already installed in the container. You can skip to the [S
   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) or other docker agents
 - [Helm](https://helm.sh/docs/intro/install/)
-- _[K9s](https://k9scli.io/topics/install/) For K8s management - Optional_
+- [K9s](https://k9scli.io/topics/install/) For K8s management - Optional
 
  > [!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
 
@@ -105,6 +105,10 @@ Once you have the project available locally, run the following commands if you d
 It will look like the following:
 
 !['Output from running azd up'](aks-deploy-success.png)
+
+4. When you enable login and ACL, the https url will be printed in the console output, and you can use that to access the application. For more information on enabling login and ACL, see [here](./login_and_acl.md).
+
+!['Output from running azd up with login and ACL enabled'](aks-deploy-success-login.png)
 
 > NOTE: It may take a minute for the application to be fully deployed.
 
@@ -187,22 +191,6 @@ azd env set AZURE_SEARCH_SERVICE_LOCATION "eastus2" # Region of the ACS service
 
 azd up
 ```
-### Running locally
-
-1. Run
-
-    ```shell
-    az login
-    ```
-
-2. Change dir to `deploy/aks`
-
-    ```shell
-    cd deploy/aks
-    ```
-
-3. Run the `./start-compose.ps1` (Windows) or `./start-compose.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
-4. Wait for the docker compose to start all the containers (web, api, indexer) and refresh your browser to [http://localhost](http://localhost)
 
 ### UI Navigation
 
@@ -232,30 +220,34 @@ Under "Trace & Events" panel you can review custom Java informational logs to be
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
-### Enabling authentication
+### Enabling login and search filtering
+
+See [here](./login_and_acl.md) for detailed guidance.
+
+### Enabling client-side chat history
+
+This feature allows users to view the chat history of their conversation, stored in the browser using [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API). That means the chat history will be available only on the device where the chat was initiated. To enable browser-stored chat history, run:
 
 ```shell
-azd env set AZURE_USE_EASY_AUTH true
+azd env set USE_CHAT_HISTORY_BROWSER true
+```
+This is useful especially for unauthenticated users. For authenticated ones see below.
+
+### Enabling persistent chat history with Azure Cosmos DB
+
+This feature allows authenticated users to view the chat history of their conversations, stored in the server-side storage using [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/).This option requires that authentication be enabled. The chat history will be persistent and accessible from any device where the user logs in with the same account. To enable server-stored chat history, run:
+
+```shell
+azd env set USE_CHAT_HISTORY_COSMOS true
 ```
 
-By default, the deployed apps on AKS will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data. If you enable easy authentication the deployment will use a script based on [EasyAuthForK8s](https://github.com/Azure/EasyAuthForK8s) and using [Cert Manager](https://cert-manager.io/) to manage easy authentication for you using Microsoft Entra.
+When both the browser-stored and Cosmos DB options are enabled, Cosmos DB will take precedence over browser-stored chat history.
 
-To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access. Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users
 
 ### App Continuous Integration
 
 :sunny: :cloud: :construction_worker_man: WIP
 
-### Custom Data Ingestion and Indexing
-
-The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
-
-If you want to chat with your custom documents you can:
-
-1. Add your pdf documents in the [data folder](../../data).
-2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aks`
-3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
 
 ### Productionizing
 
@@ -307,7 +299,7 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 To reduce costs, you can switch to free SKUs Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or changing the code to use the Itext document based parser, or by removing the postprovision hook in `azure.yaml` that runs the `indexer java cli`.
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
+either by deleting the resource group in the Portal or running `azd down --purge`.
 
 ### Note
 

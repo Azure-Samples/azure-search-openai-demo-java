@@ -5,11 +5,11 @@ metadata:
   namespace: java-rag-ns
   annotations: 
     nginx.ingress.kubernetes.io/proxy-body-size : "20m"
-    kubernetes.azure.com/tls-cert-keyvault-uri: https://kv-dwnlxp47m7pwq.vault.azure.net/certificates/aks-ingress-tls
+    kubernetes.azure.com/tls-cert-keyvault-uri: https://kv-7nfq3jzs3kbrs.vault.azure.net/certificates/aks-ingress-tls
 spec:
   ingressClassName: webapprouting.kubernetes.azure.com
   rules:
-    - host: java-rag-aks-test3.eastus2.cloudapp.azure.com
+    - host: java-rag-aks-test4.eastus2.cloudapp.azure.com
       http:
         paths:
           - path: /api
@@ -28,5 +28,5 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - java-rag-aks-test3.eastus2.cloudapp.azure.com
+        - java-rag-aks-test4.eastus2.cloudapp.azure.com
       secretName: keyvault-ingress-api
