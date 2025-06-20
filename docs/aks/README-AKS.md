@@ -51,11 +51,6 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 ## Getting Started
 
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
-
-> [!CAUTION]
-> Be sure to use AZD version > 1.7.0 
-
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
 You can run this repo virtually by using GitHub Codespaces or VS Code Dev Containers. Click on one of the buttons below to open this repo in one of those options.
@@ -69,8 +64,9 @@ All prerequisites are already installed in the container. You can skip to the [S
 
 - [Java 17](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
 - [Maven 3.8.x](https://maven.apache.org/download.cgi)
-- [Azure Developer CLI 1.7.0](https://aka.ms/azure-dev/install)
+- [Azure Developer CLI](https://aka.ms/azure-dev/install)
 - [Node.js](https://nodejs.org/en/download/)
+- [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/) - Only required to automatically configure login and document access level with EntraID
 - [Git](https://git-scm.com/downloads)
 - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
@@ -78,7 +74,7 @@ All prerequisites are already installed in the container. You can skip to the [S
 - [Helm](https://helm.sh/docs/intro/install/)
 - _[K9s](https://k9scli.io/topics/install/) For K8s management - Optional_
 
-> NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
+ > [!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
 
 ### Starting from scratch
 
@@ -102,7 +98,7 @@ Once you have the project available locally, run the following commands if you d
    ```
 
    - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-   - For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
+   - For the target location check up-to-date list of regions and models availables [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
 3. After the application has been successfully deployed you will see a backend app load balancer IP printed to the console. Click that URL to interact with the application in your browser.
 

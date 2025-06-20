@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
-  namespace: azure-open-ai
+  namespace: java-rag-ns
 spec:
   type: ClusterIP
   ports:

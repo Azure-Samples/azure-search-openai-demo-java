@@ -2,13 +2,6 @@
 
 ![Microservice RAG Architecture](aca-hla.png)
 
-* The API app is implemented as springboot 2.7.x app using the Microsoft JDK. It provides the chat apis which are used by the chat web app. It's responsible for implementing the RAG pattern orchestrating the interaction between the LLM model (Open AI - ChatGPT) and the retriever (Azure AI Search).
-* The Chat Web App is built in React and deployed as a static web app on nginx. Furthermore Nginx act as reverse proxy for api calls to the API app. This also solves the CORS issue.
-* The indexer APP is implemented as springboot 2.7.x app using the Microsoft JDK. It is responsible for indexing the data into Azure AI Search and it's triggered by new BlobUploaded messages from serviceBus. The indexer is also responsible for chunking the documents into smaller pieces, embed them and store them in the index. Azure Document Intelligence is used to extract text from PDF documents (including tables and images)
-* Azure AI Search is used as RAG retrieval system. Different search options are available: you have traditional full text (with semantic search) search, or vector based search and finally you can opt for hybrid search which brings together the best of the previous ones.
-* EventGrid System topic is used to implement a real time mechanism to trigger the indexer app when a new document is uploaded to the blob storage. It's responsible to read BlobUploaded notification from azure storage container and push a message to the service bus queue containing the blob url.
-* CosmosDB is used to store chat conversations.
-
 ## TL;DR
 
 Open the project:
@@ -57,8 +50,6 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 ## Getting Started
 
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
-
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
 You can run this repo virtually by using GitHub Codespaces or VS Code Dev Containers.  Click on one of the buttons below to open this repo in one of those options.
@@ -81,7 +72,7 @@ All prerequisites are already installed in the container.  You can skip to the [
 
 
 
->[!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
+ > [!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
 
 ### Starting from scratch
 

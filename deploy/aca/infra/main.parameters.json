@@ -113,6 +113,10 @@
     "useChatHistoryCosmos": {
       "value": "${USE_CHAT_HISTORY_COSMOS=false}"
     },
+    "enableGlobalDocumentAccess": {
+      "value": "${AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS=true}"
+    },
+  
     "cosmosDbSkuName": {
       "value": "${AZURE_COSMOSDB_SKU=serverless}"
     },

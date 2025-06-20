@@ -101,7 +101,7 @@ param principalId string = ''
 param principalType string = 'User'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.27.7'
+param kubernetesVersion string = '1.31.8'
 
 @description('The Tenant ID associated to the Azure Active Directory')
 param aadTenantId string = tenant().tenantId
@@ -222,6 +222,10 @@ module clusterKeyVaultAccess '../security/keyvault-access.bicep' = {
   name: 'cluster-keyvault-access'
   params: {
     keyVaultName: keyVaultName
+    permissions: {
+      secrets: [ 'get', 'list', 'set' ]
+      certificates: [ 'get', 'list', 'import' ]
+    }
     principalId: managedCluster.outputs.clusterIdentity.objectId
   }
 }

@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-api
-  namespace: azure-open-ai
+  namespace: java-rag-ns
 # annotations: 
 #   nginx.ingress.kubernetes.io/use-regex: "true"
 #   nginx.ingress.kubernetes.io/rewrite-target: /$2

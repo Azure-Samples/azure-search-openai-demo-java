@@ -2,14 +2,14 @@
 
 name: azure-search-openai-demo-java-aks
 metadata:
-  template: azure-search-openai-demo-java-aks@1.4.0-alpha
+  template: azure-search-openai-demo-java-aks@1.5.0-alpha
 services:
   api:
     project: ../../app/backend
     language: java
     host: aks
     k8s:
-      namespace: azure-open-ai
+      namespace: java-rag-ns
   indexer:
     project: ../../app/indexer
     language: java
@@ -17,13 +17,13 @@ services:
     docker:
       path: ./microservice/Dockerfile
     k8s:
-      namespace: azure-open-ai
+      namespace: java-rag-ns
   frontend:
     project: ../../app/frontend
     language: js
     host: aks
     k8s:
-      namespace: azure-open-ai
+      namespace: java-rag-ns
     docker:
       path: ./Dockerfile-aks
 
@@ -31,6 +31,28 @@ infra:
   path: ./infra
   provider: bicep
 hooks:
+  preprovision:
+      windows:
+        shell: pwsh
+        run: ./scripts/auth_init.ps1
+        interactive: true
+        continueOnError: false
+      posix:
+        shell: sh
+        run: ./scripts/auth_init.sh
+        interactive: true
+        continueOnError: false
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/prepdocs.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: ./scripts/prepdocs.sh
+      interactive: true
+      continueOnError: false
   predeploy:
     windows:
       shell: pwsh
@@ -45,33 +67,12 @@ hooks:
   postdeploy:
     windows:
       shell: pwsh
-      run: ./scripts/prepdocs.ps1
+      run: ./scripts/set_ingress_tls.ps1;./scripts/auth_update.ps1
       interactive: true
       continueOnError: false
     posix:
       shell: sh
-      run: ./scripts/prepdocs.sh
+      run: ./scripts/set_ingress_tls.sh;./scripts/auth_update.sh
       interactive: true
       continueOnError: false
-  postup:
-    windows:
-      shell: pwsh
-      run: ./scripts/easyauth.ps1
-      interactive: true
-      continueOnError: false
-    posix:
-      shell: sh
-      run: ./scripts/easyauth.sh
-      interactive: true
-      continueOnError: false
-  postdown:
-    windows:
-      shell: pwsh
-      run: ./scripts/easyauth-down.ps1
-      interactive: true
-      continueOnError: false
-    posix:
-      shell: sh
-      run: ./scripts/easyauth-down.sh
-      interactive: true
-      continueOnError: false
+  
