@@ -13,18 +13,13 @@ param tenantId string = tenant().tenantId
 param authTenantId string = ''
 
 var tenantIdForAuth = !empty(authTenantId) ? authTenantId : tenantId
-var authenticationIssuerUri = '${environment().authentication.loginEndpoint}${tenantIdForAuth}/v2.0'
+
 
 // Used for the optional login and document level access control system
 param useAuthentication bool = true
-param enableUnauthenticatedAccess bool = false
-
 param serverAppId string = ''
-@secure()
-param serverAppSecret string = ''
 param clientAppId string = ''
-@secure()
-param clientAppSecret string = ''
+
 
 @allowed(['None', 'AzureServices'])
 @description('If allowedIp is set, whether azure services are allowed to bypass the storage and AI services firewall.')
@@ -69,6 +64,9 @@ param enableGlobalDocumentAccess bool = true
 @description('Use Service Bus for indexing documents requests')
 param useServiceBusIndexing bool = false
 
+param useEval bool = false
+param useSafetyEval bool = false
+
 @allowed(['free', 'provisioned', 'serverless'])
 param cosmosDbSkuName string // Set in main.parameters.json
 param cosmodDbResourceGroupName string = ''
@@ -104,11 +102,34 @@ param documentIntelligenceResourceGroupLocation string = location
 
 param documentIntelligenceSkuName string = 'S0'
 
-param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 80
-param chatGptDeploymentSkuName string= 'Standard'
-param chatGptModelName string = 'gpt-4o-mini'
-param chatGptModelVersion string = '2024-07-18'
+param azureOpenAiDisableKeys bool = true
+param chatGptModelName string = ''
+param chatGptDeploymentName string = ''
+param chatGptDeploymentVersion string = ''
+param chatGptDeploymentSkuName string = ''
+param chatGptDeploymentCapacity int = 0
+
+var chatGpt = {
+  modelName: !empty(chatGptModelName) ? chatGptModelName : 'gpt-4o-mini'
+  deploymentName: !empty(chatGptDeploymentName) ? chatGptDeploymentName : 'gpt-4o-mini'
+  deploymentVersion: !empty(chatGptDeploymentVersion) ? chatGptDeploymentVersion : '2024-07-18'
+  deploymentSkuName: !empty(chatGptDeploymentSkuName) ? chatGptDeploymentSkuName : 'GlobalStandard' // Not backward-compatible
+  deploymentCapacity: chatGptDeploymentCapacity != 0 ? chatGptDeploymentCapacity : 30
+}
+
+param evalModelName string = ''
+param evalDeploymentName string = ''
+param evalModelVersion string = ''
+param evalDeploymentSkuName string = ''
+param evalDeploymentCapacity int = 0
+
+var eval = {
+  modelName: !empty(evalModelName) ? evalModelName : 'gpt-4o'
+  deploymentName: !empty(evalDeploymentName) ? evalDeploymentName : 'gpt-4o'
+  deploymentVersion: !empty(evalModelVersion) ? evalModelVersion : '2024-08-06'
+  deploymentSkuName: !empty(evalDeploymentSkuName) ? evalDeploymentSkuName : 'GlobalStandard' // Not backward-compatible
+  deploymentCapacity: evalDeploymentCapacity != 0 ? evalDeploymentCapacity : 30
+}
 
 param embeddingModelName string = ''
 param embeddingDeploymentName string = ''
@@ -419,43 +440,72 @@ module web './app/web.bicep' = {
   }
 }
 
+var defaultOpenAiDeployments = [
+  {
+    name: chatGpt.deploymentName
+    model: {
+      format: 'OpenAI'
+      name: chatGpt.modelName
+      version: chatGpt.deploymentVersion
+    }
+    sku: {
+      name: chatGpt.deploymentSkuName
+      capacity: chatGpt.deploymentCapacity
+    }
+  }
+  {
+    name: embedding.deploymentName
+    model: {
+      format: 'OpenAI'
+      name: embedding.modelName
+      version: embedding.deploymentVersion
+    }
+    sku: {
+      name: embedding.deploymentSkuName
+      capacity: embedding.deploymentCapacity
+    }
+  }
+]
 
-module openAi '../../shared/ai/cognitiveservices.bicep' =  {
+var openAiDeployments = concat(
+  defaultOpenAiDeployments,
+  useEval
+    ? [
+      {
+        name: eval.deploymentName
+        model: {
+          format: 'OpenAI'
+          name: eval.modelName
+          version: eval.deploymentVersion
+        }
+        sku: {
+          name: eval.deploymentSkuName
+          capacity: eval.deploymentCapacity
+        }
+      }
+    ] : []
+)
+
+
+module openAi 'br/public:avm/res/cognitive-services/account:0.7.2' =  {
   name: 'openai'
   scope: openAiResourceGroup
   params: {
     name: !empty(openAiServiceName) ? openAiServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}'
     location: !empty(customOpenAiResourceGroupLocation) ? customOpenAiResourceGroupLocation : openAiResourceGroupLocation
     tags: tags
-    sku: {
-      name: openAiSkuName
+    kind: 'OpenAI'
+    customSubDomainName: !empty(openAiServiceName)
+      ? openAiServiceName
+      : '${abbrs.cognitiveServicesAccounts}${resourceToken}'
+    publicNetworkAccess: publicNetworkAccess
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: bypass
     }
-    deployments: [
-      {
-        name: chatGptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: chatGptModelName
-          version: chatGptModelVersion
-        }
-        sku: {
-          name: chatGptDeploymentSkuName
-          capacity: chatGptDeploymentCapacity
-        }
-      }
-      {
-        name: embedding.deploymentName
-        model: {
-          format: 'OpenAI'
-          name: embedding.modelName
-          version: embedding.deploymentVersion
-        }
-        sku: {
-          name: embedding.deploymentSkuName
-          capacity: embedding.deploymentCapacity
-        }
-      }
-    ]
+    sku: openAiSkuName
+    deployments: openAiDeployments
+    disableLocalAuth: azureOpenAiDisableKeys
   }
 }
 
@@ -501,7 +551,7 @@ module storage '../../shared/storage/storage-account.bicep' = {
     tags: tags
     allowBlobPublicAccess: false
     publicNetworkAccess: 'Enabled'
-    isHnsEnabled: true
+    isHnsEnabled: false
     sku: {
       name: storageSkuName
     }
@@ -609,6 +659,21 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = if (use
     ]
   }
 }
+
+module ai '../../shared/ai/ai-environment.bicep' = if (useSafetyEval) {
+  name: 'ai'
+  scope: resourceGroup
+  params: {
+    // Limited region support: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/evaluate-sdk#region-support
+    location: 'eastus2'
+    tags: tags
+    hubName: 'aihub-${resourceToken}'
+    projectName: 'aiproj-${resourceToken}'
+    storageAccountId: storage.outputs.id
+    applicationInsightsId: !useApplicationInsights ? '' : monitoring.outputs.applicationInsightsId
+  }
+}
+
 
 
 // USER ROLES
@@ -835,6 +900,12 @@ output AZURE_OPENAI_EMB_DEPLOYMENT string = embedding.deploymentName
 output AZURE_OPENAI_EMB_DEPLOYMENT_VERSION string = embedding.deploymentVersion
 output AZURE_OPENAI_EMB_DEPLOYMENT_SKU string = embedding.deploymentSkuName
 
+// Specific to Azure OpenAI with eval
+output AZURE_OPENAI_EVAL_DEPLOYMENT string = useEval ? eval.deploymentName : ''
+output AZURE_OPENAI_EVAL_DEPLOYMENT_VERSION string = useEval ? eval.deploymentVersion : ''
+output AZURE_OPENAI_EVAL_DEPLOYMENT_SKU string = useEval ? eval.deploymentSkuName : ''
+output AZURE_OPENAI_EVAL_MODEL string = useEval ? eval.modelName : ''
+
 // Used only with non-Azure OpenAI deployments
 output OPENAI_API_KEY string = openAiApiKey
 output OPENAI_ORGANIZATION string = openAiApiOrganization
@@ -865,6 +936,7 @@ output USE_CHAT_HISTORY_BROWSER  bool = useChatHistoryBrowser
 output USE_CHAT_HISTORY_COSMOS bool = useChatHistoryCosmos
 output USE_SERVICEBUS_INDEXING bool = useServiceBusIndexing
 
+output AZURE_AI_PROJECT string = useSafetyEval ? ai.outputs.projectName : ''
 output WEB_URI string = web.outputs.SERVICE_WEB_URI
 output INDEXER_URI string = indexer.outputs.SERVICE_INDEXER_URI
 // output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name

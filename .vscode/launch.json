@@ -8,6 +8,36 @@
       "hostName": "127.0.0.1",
       "port": 5005,
       "preLaunchTask": "func: host start"
+    },
+    {
+      "name": "Debug evaluate.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/evals/evaluate.py",
+      "python": "${workspaceFolder}/.evalenv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--env-file-path", "./deploy/aca"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Debug safety_evaluation.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/evals/safety_evaluation.py",
+      "python": "${workspaceFolder}/.evalenv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--env-file-path", "./deploy/aca",
+        "--target_url", "http://172.24.128.1:8080/api/chat",
+        "--max_simulations", "1"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "stopOnEntry": false
     }
   ]
 }

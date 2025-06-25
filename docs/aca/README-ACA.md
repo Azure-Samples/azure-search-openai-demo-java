@@ -35,10 +35,12 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Redeploying](#redeploying)
   * [UI Navigation](#ui-navigation)
 * [Guidance](#guidance)
+  * [Develop and debug apps locally](#develop-and-debug-apps-locally)
   * [Enabling Application Insights](#enabling-application-insights)
   * [Enabling login and search filtering](#enabling-login-and-search-filtering)
   * [Enabling client-side chat history](#enabling-client-side-chat-history)
   * [Enabling persistent chat history with Azure Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db)
+  * [Evaluating RAG](#evaluating-rag)
   * [App Continuous Integration](#app-continuous-integration)
   * [Productionizing](#productionizing)
   * [Cost estimation](#cost-estimation)
@@ -212,6 +214,10 @@ Once in the web app:
 
 ## Guidance
 
+### Develop and debug apps locally
+
+See [Local Development with IntelliJ](./local-development-intellij.md) for detailed guidance on how to run the backend and frontend applications locally.
+
 ### Enabling Application Insights
 
 Applications Insights is enabled by default. It allows to investigate each request tracing along with the logging of errors.
@@ -251,6 +257,11 @@ azd env set USE_CHAT_HISTORY_COSMOS true
 ```
 
 When both the browser-stored and Cosmos DB options are enabled, Cosmos DB will take precedence over browser-stored chat history.
+
+### Evaluating RAG
+See [Evaluation](./evaluation.md) for detailed guidance on how to evaluate the RAG application using the provided python scripts.
+
+For safety evaluation, see [Safety Evaluation](./safety_evaluation.md).
 
 ### App Continuous Integration
 :sunny: :cloud: :construction_worker_man: **WIP**

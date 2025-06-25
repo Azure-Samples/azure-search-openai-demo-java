@@ -83,6 +83,21 @@
     "chatGptDeploymentSkuName": {
       "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME=Standard}"
     },
+    "evalModelName":{
+      "value": "${AZURE_OPENAI_EVAL_MODEL}"
+    },
+    "evalModelVersion":{
+      "value": "${AZURE_OPENAI_EVAL_MODEL_VERSION}"
+    },
+    "evalDeploymentName": {
+      "value": "${AZURE_OPENAI_EVAL_DEPLOYMENT}"
+    },
+    "evalDeploymentSkuName":{
+      "value": "${AZURE_OPENAI_EVAL_DEPLOYMENT_SKU}"
+    },
+    "evalDeploymentCapacity":{
+      "value": "${AZURE_OPENAI_EVAL_DEPLOYMENT_CAPACITY}"
+    },
     "embeddingModelName": {
       "value": "${AZURE_OPENAI_EMB_MODEL}"
     },
@@ -146,6 +161,12 @@
     },
     "useServiceBusIndexing": {
       "value": "${USE_SERVICEBUS_INDEXING=true}"
+    },
+    "useEval": {
+      "value": "${USE_EVAL=false}"
+    },
+    "useSafetyEval": {
+      "value": "${USE_SAFETY_EVAL=false}"
     },
     "apiAppExists": {
       "value": false
