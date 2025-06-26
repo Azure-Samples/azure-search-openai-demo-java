@@ -60,7 +60,7 @@ pip install -r evals/requirements.txt
 Generate ground truth data by running the following command:
 
 ```bash
-python evals/generate_ground_truth.py --numquestions=200 --numsearchdocs=1000
+python evals/generate_ground_truth.py --numquestions=200 --numsearchdocs=1000 --env-file-path ./deploy/aca
 ```
 
 The options are:
@@ -73,6 +73,7 @@ The options are:
 🕰️ This may take a long time, possibly several hours, depending on the size of the search index.
 
 Review the generated data in `evals/ground_truth.jsonl` after running that script, removing any question/answer pairs that don't seem like realistic user input.
+
 
 ## Run bulk evaluation
 
@@ -94,9 +95,25 @@ The options are:
 For more details about how to run locally the chat api see [Local Development with IntelliJ](local-development-intellij.md#running-the-spring-boot-chat-api-locally).
 🕰️ This may take a long time, possibly several hours, depending on the number of ground truth questions, and the TPM capacity of the evaluation model, and the number of GPT metrics requested.
 
+> [!IMPORTANT]
+> Ground truth data is generated using a knowledge graph created out of the same search index used by the rag flow. It's based on [RAGAS evaluation framework](https://docs.ragas.io/en/stable/).If you want to learn more about data generation approach you can check [Tesset Generation for RAG](https://docs.ragas.io/en/stable/concepts/test_data_generation/rag/)
+
 ## Review the evaluation results
 
 The evaluation script will output a summary of the evaluation results, inside the `evals/results` directory.
+
+The evaluation uses the following default metrics (as configured in `evaluate_config.json`), with results available in the `summary.json` file:
+
+* **gpt_groundedness**: Measures how well the answer is grounded in the retrieved context. Returns a pass rate and mean rating (1-5 scale).
+* **gpt_relevance**: Evaluates the relevance of the answer to the user's question. Returns a pass rate and mean rating (1-5 scale).
+* **answer_length**: Tracks the length of generated answers in characters (mean, max, min values).
+* **latency**: Measures response time in seconds for each question (mean, max, min values).
+* **citations_matched**: Counts how many answers include properly matched citations from the source documents.
+* **any_citation**: Tracks whether answers include any citations at all.
+
+> [!IMPORTANT]
+> **gpt_groundedness** and **gpt_relevance** are built-in metrics provided by [Azure AI evaluation   sdk](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/evaluate-sdk).
+**answer length**, **latency**, **citations matched** and **any_citation** are custom metrics defined in [evaluate.py](../../evals/evaluate.py) or from [ai-rag-chat-evaluator project](https://github.com/Azure-Samples/ai-rag-chat-evaluator/blob/main/src/evaltools/eval/evaluate_metrics/code_metrics.py)
 
 You can see a summary of results across all evaluation runs by running the following command:
 

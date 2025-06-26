@@ -96,7 +96,22 @@ def generate_ground_truth_ragas(num_questions=200, num_search_documents=None, kg
         nodes = []
         for doc in search_docs:
             content = doc["content"]
-            citation = doc["sourcepage"]
+            
+            # Extract citation from metadata attributes
+            if "metadata" in doc and "attributes" in doc["metadata"]:
+                attributes = doc["metadata"]["attributes"]
+                # Convert list of attributes to dictionary for easier lookup
+                attr_dict = {attr["key"]: attr["value"] for attr in attributes}
+                
+                file_name = attr_dict.get("file_name")
+                index = attr_dict.get("page_number")
+                
+                if file_name:
+                    if index is not None:
+                        citation = f"{file_name}#page={index}"
+                    else:
+                        citation = file_name
+            
             node = Node(
                 type=NodeType.DOCUMENT,
                 properties={
@@ -147,14 +162,21 @@ if __name__ == "__main__":
         level=logging.WARNING, format="%(message)s", datefmt="[%X]", handlers=[RichHandler(rich_tracebacks=True)]
     )
     logger.setLevel(logging.INFO)
-    load_azd_env()
+   
 
     parser = argparse.ArgumentParser(description="Generate ground truth data using AI Search index and RAGAS.")
     parser.add_argument("--numsearchdocs", type=int, help="Specify the number of search results to fetch")
     parser.add_argument("--numquestions", type=int, help="Specify the number of questions to generate.", default=200)
     parser.add_argument("--kgfile", type=str, help="Specify the path to an existing knowledge graph file")
+    parser.add_argument("--env-file-path", type=str, help="Specify the path to the environment file.")
 
     args = parser.parse_args()
+
+     # Load environment variables from the specified file path or default
+    if args.env_file_path:
+        load_azd_env(args.env_file_path)
+    else:
+        load_azd_env()
 
     generate_ground_truth_ragas(
         num_search_documents=args.numsearchdocs, num_questions=args.numquestions, kg_file=args.kgfile

@@ -38,6 +38,22 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "stopOnEntry": false
+    },
+     {
+      "name": "Debug generate_ground_truth.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/evals/generate_ground_truth.py",
+      "python": "${workspaceFolder}/.evalenv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--env-file-path", "./deploy/aca",
+        "--numquestions", "1",
+        "--numsearchdocs", "5"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "stopOnEntry": false
     }
   ]
 }
