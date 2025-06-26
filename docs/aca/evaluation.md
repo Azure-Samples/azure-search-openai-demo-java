@@ -132,4 +132,5 @@ Compare answers across two runs by running the following command:
 ```bash
 python -m evaltools diff evals/results/baseline/ evals/results/SECONDRUNHERE
 ```
+![Evaluation Results Example](./evaluation-results.png)
 
