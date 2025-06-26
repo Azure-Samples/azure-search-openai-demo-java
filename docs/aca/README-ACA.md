@@ -68,7 +68,7 @@ All prerequisites are already installed in the container.  You can skip to the [
 * [Azure Developer CLI](https://aka.ms/azure-dev/install)
 * [Node.js](https://nodejs.org/en/download/)
 * [Git](https://git-scm.com/downloads)
-* [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/) - Only required to automatically configure login and document access level with EntraID
+* [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/) - Required for RAG evaluation and to automatically configure login and document filtering with EntraID
 * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   * **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
