@@ -1,117 +1,60 @@
 using './main.bicep'
 
-param environmentName = '\${AZURE_ENV_NAME}'
-
-param resourceGroupName = '\${AZURE_RESOURCE_GROUP}'
-
-param location = '\${AZURE_LOCATION}'
-
-param principalId = '\${AZURE_PRINCIPAL_ID}'
-
-param principalType = '\${AZURE_PRINCIPAL_TYPE=User}'
-
-param openAiServiceName = '\${AZURE_OPENAI_SERVICE}'
-
-param openAiResourceGroupName = '\${AZURE_OPENAI_RESOURCE_GROUP}'
-
-param customOpenAiResourceGroupLocation = '\${AZURE_OPENAI_SERVICE_LOCATION}'
-
+param environmentName = readEnvironmentVariable('AZURE_ENV_NAME')
+param resourceGroupName = readEnvironmentVariable('AZURE_RESOURCE_GROUP')
+param location = readEnvironmentVariable('AZURE_LOCATION')
+param principalId = readEnvironmentVariable('AZURE_PRINCIPAL_ID')
+param principalType = readEnvironmentVariable('AZURE_PRINCIPAL_TYPE', 'User')
+param openAiServiceName = readEnvironmentVariable('AZURE_OPENAI_SERVICE')
+param openAiResourceGroupName = readEnvironmentVariable('AZURE_OPENAI_RESOURCE_GROUP')
+param openAiResourceGroupLocation = readEnvironmentVariable('AZURE_OPENAI_RESOURCE_GROUP_LOCATION')
+param customOpenAiResourceGroupLocation = readEnvironmentVariable('AZURE_OPENAI_SERVICE_LOCATION')
 param openAiSkuName = 'S0'
-
-param documentIntelligenceServiceName = '\${AZURE_DOCUMENT_INTELLIGENCE_SERVICE}'
-
-param documentIntelligenceResourceGroupName = '\${AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP}'
-
+param documentIntelligenceServiceName = readEnvironmentVariable('AZURE_DOCUMENT_INTELLIGENCE_SERVICE')
+param documentIntelligenceResourceGroupName = readEnvironmentVariable('AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP')
 param documentIntelligenceSkuName = 'S0'
-
-param searchIndexName = '\${AZURE_SEARCH_INDEX=gptkbindex}'
-
-param searchServiceName = '\${AZURE_SEARCH_SERVICE}'
-
-param searchServiceResourceGroupName = '\${AZURE_SEARCH_SERVICE_RESOURCE_GROUP}'
-
-param searchServiceLocation = '\${AZURE_SEARCH_SERVICE_LOCATION}'
-
-param searchServiceSkuName = '\${AZURE_SEARCH_SERVICE_SKU=standard}'
-
-param searchQueryLanguage = '\${AZURE_SEARCH_QUERY_LANGUAGE=en-us}'
-
-param searchQuerySpeller = '\${AZURE_SEARCH_QUERY_SPELLER=lexicon}'
-
-param storageAccountName = '\${AZURE_STORAGE_ACCOUNT}'
-
-param storageResourceGroupName = '\${AZURE_STORAGE_RESOURCE_GROUP}'
-
-param storageSkuName = '\${AZURE_STORAGE_SKU=Standard_LRS}'
-
-param chatGptModelName = '\${AZURE_OPENAI_CHATGPT_MODEL=gpt-4o-mini}'
-
-param chatGptModelVersion = '\${AZURE_OPENAI_CHATGPT_VERSION=2024-07-18}'
-
-param chatGptDeploymentName = '\${AZURE_OPENAI_CHATGPT_DEPLOYMENT=gpt-4o-mini}'
-
-param chatGptDeploymentCapacity = '\${AZURE_OPENAI_CHATGPT_DEPLOYMENT_CAPACITY=80}'
-
-param chatGptDeploymentSkuName = '\${AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME=Standard}'
-
-param evalModelName = '\${AZURE_OPENAI_EVAL_MODEL}'
-
-param evalModelVersion = '\${AZURE_OPENAI_EVAL_MODEL_VERSION}'
-
-param evalDeploymentName = '\${AZURE_OPENAI_EVAL_DEPLOYMENT}'
-
-param evalDeploymentSkuName = '\${AZURE_OPENAI_EVAL_DEPLOYMENT_SKU}'
-
-param evalDeploymentCapacity = '\${AZURE_OPENAI_EVAL_DEPLOYMENT_CAPACITY}'
-
-param embeddingModelName = '\${AZURE_OPENAI_EMB_MODEL}'
-
-param embeddingModelVersion = '\${AZURE_OPENAI_EMB_MODEL_VERSION}'
-
-param embeddingDeploymentName = '\${AZURE_OPENAI_EMB_DEPLOYMENT}'
-
-param embeddingDeploymentVersion = '\${AZURE_OPENAI_EMB_DEPLOYMENT_VERSION}'
-
-param embeddingDeploymentSkuName = '\${AZURE_OPENAI_EMB_DEPLOYMENT_SKU}'
-
-param embeddingDeploymentCapacity = '\${AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY}'
-
-param embeddingDimensions = '\${AZURE_OPENAI_EMB_DIMENSIONS}'
-
-param useApplicationInsights = '\${AZURE_USE_APPLICATION_INSIGHTS=true}'
-
-param useChatHistoryBrowser = '\${USE_CHAT_HISTORY_BROWSER=false}'
-
-param useChatHistoryCosmos = '\${USE_CHAT_HISTORY_COSMOS=false}'
-
-param enableGlobalDocumentAccess = '\${AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS=true}'
-
-param cosmosDbSkuName = '\${AZURE_COSMOSDB_SKU=serverless}'
-
-param cosmodDbResourceGroupName = '\${AZURE_COSMOSDB_RESOURCE_GROUP}'
-
-param cosmosDbLocation = '\${AZURE_COSMOSDB_LOCATION}'
-
-param cosmosDbAccountName = '\${AZURE_COSMOSDB_ACCOUNT}'
-
-param cosmosDbThroughput = '\${AZURE_COSMOSDB_THROUGHPUT}'
-
-param useAuthentication = '\${AZURE_USE_AUTHENTICATION=false}'
-
-param authTenantId = '\${AZURE_AUTH_TENANT_ID}'
-
-param serverAppId = '\${AZURE_SERVER_APP_ID}'
-
-param clientAppId = '\${AZURE_CLIENT_APP_ID}'
-
-param useServiceBusIndexing = '\${USE_SERVICEBUS_INDEXING=true}'
-
-param useEval = '\${USE_EVAL=false}'
-
-param useSafetyEval = '\${USE_SAFETY_EVAL=false}'
-
+param searchIndexName = readEnvironmentVariable('AZURE_SEARCH_INDEX', 'gptkbindex')
+param searchServiceName = readEnvironmentVariable('AZURE_SEARCH_SERVICE')
+param searchServiceResourceGroupName = readEnvironmentVariable('AZURE_SEARCH_SERVICE_RESOURCE_GROUP')
+param searchServiceLocation = readEnvironmentVariable('AZURE_SEARCH_SERVICE_LOCATION')
+param searchServiceSkuName = readEnvironmentVariable('AZURE_SEARCH_SERVICE_SKU', 'standard')
+param searchQueryLanguage = readEnvironmentVariable('AZURE_SEARCH_QUERY_LANGUAGE', 'en-us')
+param searchQuerySpeller = readEnvironmentVariable('AZURE_SEARCH_QUERY_SPELLER', 'lexicon')
+param storageAccountName = readEnvironmentVariable('AZURE_STORAGE_ACCOUNT')
+param storageResourceGroupName = readEnvironmentVariable('AZURE_STORAGE_RESOURCE_GROUP')
+param storageSkuName = readEnvironmentVariable('AZURE_STORAGE_SKU', 'Standard_LRS')
+param chatGptModelName = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_MODEL', 'gpt-4o-mini')
+param chatGptModelVersion = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_VERSION', '2024-07-18')
+param chatGptDeploymentName = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPLOYMENT', 'gpt-4o-mini')
+param chatGptDeploymentCapacity = int(readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPLOYMENT_CAPACITY', '80'))
+param chatGptDeploymentSkuName = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME', 'Standard')
+param evalModelName = readEnvironmentVariable('AZURE_OPENAI_EVAL_MODEL')
+param evalModelVersion = readEnvironmentVariable('AZURE_OPENAI_EVAL_MODEL_VERSION')
+param evalDeploymentName = readEnvironmentVariable('AZURE_OPENAI_EVAL_DEPLOYMENT')
+param evalDeploymentSkuName = readEnvironmentVariable('AZURE_OPENAI_EVAL_DEPLOYMENT_SKU')
+param evalDeploymentCapacity = int(readEnvironmentVariable('AZURE_OPENAI_EVAL_DEPLOYMENT_CAPACITY'))
+param embeddingModelName = readEnvironmentVariable('AZURE_OPENAI_EMB_MODEL')
+param embeddingDeploymentName = readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT')
+param embeddingDeploymentVersion = readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT_VERSION')
+param embeddingDeploymentSkuName = readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT_SKU')
+param embeddingDeploymentCapacity = int(readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY'))
+param embeddingDimensions = int(readEnvironmentVariable('AZURE_OPENAI_EMB_DIMENSIONS'))
+param useApplicationInsights = bool(readEnvironmentVariable('AZURE_USE_APPLICATION_INSIGHTS', 'true'))
+param useChatHistoryBrowser = bool(readEnvironmentVariable('USE_CHAT_HISTORY_BROWSER', 'false'))
+param useChatHistoryCosmos = bool(readEnvironmentVariable('USE_CHAT_HISTORY_COSMOS', 'false'))
+param enableGlobalDocumentAccess = bool(readEnvironmentVariable('AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS', 'true'))
+param cosmosDbSkuName = readEnvironmentVariable('AZURE_COSMOSDB_SKU', 'serverless')
+param cosmodDbResourceGroupName = readEnvironmentVariable('AZURE_COSMOSDB_RESOURCE_GROUP')
+param cosmosDbLocation = readEnvironmentVariable('AZURE_COSMOSDB_LOCATION')
+param cosmosDbAccountName = readEnvironmentVariable('AZURE_COSMOSDB_ACCOUNT')
+param cosmosDbThroughput = int(readEnvironmentVariable('AZURE_COSMOSDB_THROUGHPUT'))
+param useAuthentication = bool(readEnvironmentVariable('AZURE_USE_AUTHENTICATION', 'false'))
+param authTenantId = readEnvironmentVariable('AZURE_AUTH_TENANT_ID')
+param serverAppId = readEnvironmentVariable('AZURE_SERVER_APP_ID')
+param clientAppId = readEnvironmentVariable('AZURE_CLIENT_APP_ID')
+param useServiceBusIndexing = bool(readEnvironmentVariable('USE_SERVICEBUS_INDEXING', 'true'))
+param useEval = bool(readEnvironmentVariable('USE_EVAL', 'false'))
+param useSafetyEval = bool(readEnvironmentVariable('USE_SAFETY_EVAL', 'false'))
 param apiAppExists = false
-
 param webAppExists = false
-
 param indexerAppExists = false
