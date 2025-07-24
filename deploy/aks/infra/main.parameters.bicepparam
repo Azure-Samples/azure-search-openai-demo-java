@@ -30,7 +30,6 @@ param chatGptDeploymentName = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPL
 param chatGptDeploymentCapacity = int(readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPLOYMENT_CAPACITY', '80'))
 param chatGptDeploymentSkuName = readEnvironmentVariable('AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME', 'Standard')
 param embeddingModelName = readEnvironmentVariable('AZURE_OPENAI_EMB_MODEL', 'text-embedding-3-large')
-param embeddingModelVersion = readEnvironmentVariable('AZURE_OPENAI_EMB_MODEL_VERSION', '1')
 param embeddingDeploymentName = readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT', 'text-embedding-3-large')
 param embeddingDeploymentSkuName = readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT_SKU', 'GlobalStandard')
 param embeddingDeploymentCapacity = int(readEnvironmentVariable('AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY', '80'))
