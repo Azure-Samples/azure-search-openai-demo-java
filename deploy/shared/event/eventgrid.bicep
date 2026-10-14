@@ -43,11 +43,13 @@ resource serviceBusEventGridSubscription 'Microsoft.EventGrid/systemTopics/event
     }
     filter: {
       
-      //subjectBeginsWith: '/blobServices/default/containers/content'
+      subjectBeginsWith: '/blobServices/default/containers/content/blobs/staging/'
       includedEventTypes: [
         'Microsoft.Storage.BlobCreated'
       ]
       enableAdvancedFilteringOnArrays: true
+    
+
     }
     labels: []
     eventDeliverySchema: 'EventGridSchema'

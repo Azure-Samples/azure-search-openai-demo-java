@@ -9,6 +9,31 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+param tenantId string = tenant().tenantId
+param authTenantId string = ''
+
+var tenantIdForAuth = !empty(authTenantId) ? authTenantId : tenantId
+var authenticationIssuerUri = '${environment().authentication.loginEndpoint}${tenantIdForAuth}/v2.0'
+
+// Used for the optional login and document level access control system
+param useAuthentication bool = true
+param enableUnauthenticatedAccess bool = false
+
+// Set by pre-provision scripts
+param serverAppId string = ''
+@secure()
+param serverAppSecret string = ''
+param clientAppId string = ''
+@secure()
+param clientAppSecret string = ''
+
+@allowed(['None', 'AzureServices'])
+@description('If allowedIp is set, whether azure services are allowed to bypass the storage and AI services firewall.')
+param bypass string = 'AzureServices'
+
+@description('Public network access value for all deployed resources')
+@allowed(['Enabled', 'Disabled'])
+param publicNetworkAccess string = 'Enabled'
 
 
 param resourceGroupName string = ''
@@ -17,7 +42,7 @@ param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 
 
-param kubernetesVersion string = '1.29.7'
+param kubernetesVersion string = '1.33'
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
@@ -34,6 +59,29 @@ param storageResourceGroupName string = ''
 param storageResourceGroupLocation string = location
 param storageContainerName string = 'content'
 param storageSkuName string // Set in main.parameters.json
+
+@description('Use chat history feature in browser')
+param useChatHistoryBrowser bool = false
+@description('Use chat history feature in CosmosDB')
+param useChatHistoryCosmos bool = false
+
+@description('Logged user can retrieve documents from default folder.')
+param enableGlobalDocumentAccess bool = true
+
+@description('Use Service Bus for indexing documents requests')
+param useServiceBusIndexing bool = false
+
+@allowed(['free', 'provisioned', 'serverless'])
+param cosmosDbSkuName string // Set in main.parameters.json
+param cosmodDbResourceGroupName string = ''
+param cosmosDbLocation string = ''
+param cosmosDbAccountName string = ''
+param cosmosDbThroughput int = 400
+param chatHistoryDatabaseName string = 'chat-database'
+param chatHistoryContainerName string = 'chat-history-v2'
+param chatHistoryVersion string = 'cosmosdb-v2'
+
+
 
 @allowed(['azure', 'openai'])
 param openAiHost string // Set in main.parameters.json
@@ -55,11 +103,11 @@ param openAiSkuName string = 'S0'
 param openAiApiKey string = ''
 param openAiApiOrganization string = ''
 
-param formRecognizerServiceName string = ''
-param formRecognizerResourceGroupName string = ''
-param formRecognizerResourceGroupLocation string = location
+param documentIntelligenceServiceName string = ''
+param documentIntelligenceResourceGroupName string = ''
+param documentIntelligenceResourceGroupLocation string = location
 
-param formRecognizerSkuName string = 'S0'
+param documentIntelligenceSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
 param chatGptDeploymentCapacity int = 80
@@ -67,10 +115,21 @@ param chatGptModelName string = 'gpt-4o-mini'
 param chatGptModelVersion string = '2024-07-18'
 param chatGptDeploymentSkuName string= 'Standard'
 
-param embeddingDeploymentName string // Set in main.parameters.json
-param embeddingDeploymentCapacity int = 120
-param embeddingModelName string = 'text-embedding-3-small'
-param embeddingModelVersion string = '1'
+param embeddingModelName string = ''
+param embeddingDeploymentName string = ''
+param embeddingDeploymentVersion string = ''
+param embeddingDeploymentSkuName string = ''
+param embeddingDeploymentCapacity int = 0
+param embeddingDimensions int = 0
+
+var embedding = {
+  modelName: !empty(embeddingModelName) ? embeddingModelName : 'text-embedding-3-large'
+  deploymentName: !empty(embeddingDeploymentName) ? embeddingDeploymentName : 'text-embedding-3-large'
+  deploymentVersion: !empty(embeddingDeploymentVersion) ? embeddingDeploymentVersion : (embeddingModelName == 'text-embedding-ada-002' ? '2' : '1')
+  deploymentSkuName: !empty(embeddingDeploymentSkuName) ? embeddingDeploymentSkuName : (embeddingModelName == 'text-embedding-ada-002' ? 'Standard' : 'GlobalStandard')
+  deploymentCapacity: embeddingDeploymentCapacity != 0 ? embeddingDeploymentCapacity : 120
+  dimensions: embeddingDimensions != 0 ? embeddingDimensions : 3072
+}
 
 param servicebusNamespace string = ''
 param serviceBusSkuName string = 'Standard'
@@ -109,16 +168,19 @@ resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' exi
   name: !empty(openAiResourceGroupName) ? openAiResourceGroupName : resourceGroup.name
 }
 
-resource formRecognizerResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(formRecognizerResourceGroupName)) {
-  name: !empty(formRecognizerResourceGroupName) ? formRecognizerResourceGroupName : resourceGroup.name
+resource documentIntelligenceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(documentIntelligenceResourceGroupName)) {
+  name: !empty(documentIntelligenceResourceGroupName) ? documentIntelligenceResourceGroupName : resourceGroup.name
 }
-
 resource searchServiceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(searchServiceResourceGroupName)) {
   name: !empty(searchServiceResourceGroupName) ? searchServiceResourceGroupName : resourceGroup.name
 }
 
 resource storageResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(storageResourceGroupName)) {
   name: !empty(storageResourceGroupName) ? storageResourceGroupName : resourceGroup.name
+}
+
+resource cosmosDbResourceGroup 'Microsoft.Resources/resourceGroups@2024-11-01' existing = if (!empty(cosmodDbResourceGroupName)) {
+  name: !empty(cosmodDbResourceGroupName) ? cosmodDbResourceGroupName : resourceGroup.name
 }
 
 // Store secrets in a keyvault
@@ -161,7 +223,7 @@ module aks '../../shared/host/aks.bicep' = {
   }
 }
 
-module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
+module openAi '../../shared/ai/cognitiveservices.bicep' =  {
   name: 'openai'
   scope: openAiResourceGroup
   params: {
@@ -185,31 +247,31 @@ module openAi '../../shared/ai/cognitiveservices.bicep' = if (openAiHost == 'azu
         }
       }
       {
-        name: embeddingDeploymentName
+        name: embedding.deploymentName
         model: {
           format: 'OpenAI'
-          name: embeddingModelName
-          version: embeddingModelVersion
+          name: embedding.modelName
+          version: embedding.deploymentVersion
         }
         sku: {
-          name: 'Standard'
-          capacity: embeddingDeploymentCapacity
+          name: embedding.deploymentSkuName
+          capacity: embedding.deploymentCapacity
         }
       }
     ]
   }
 }
 
-module formRecognizer '../../shared/ai/cognitiveservices.bicep' = {
-  name: 'formrecognizer'
-  scope: formRecognizerResourceGroup
+module documentIntelligence '../../shared/ai/cognitiveservices.bicep' = {
+  name: 'documentIntelligence'
+  scope: documentIntelligenceResourceGroup
   params: {
-    name: !empty(formRecognizerServiceName) ? formRecognizerServiceName : '${abbrs.cognitiveServicesFormRecognizer}${resourceToken}'
+    name: !empty(documentIntelligenceServiceName) ? documentIntelligenceServiceName : '${abbrs.cognitiveServicesDocumentIntelligence}${resourceToken}'
     kind: 'FormRecognizer'
-    location: formRecognizerResourceGroupLocation
+    location: documentIntelligenceResourceGroupLocation
     tags: tags
     sku: {
-      name: formRecognizerSkuName
+      name: documentIntelligenceSkuName
     }
   }
 }
@@ -283,6 +345,70 @@ module eventGridSubscription '../../shared/event/eventgrid.bicep' = {
   }
 }
 
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = if (useAuthentication && useChatHistoryCosmos) {
+  name: 'cosmosdb'
+  scope: cosmosDbResourceGroup
+  params: {
+    name: !empty(cosmosDbAccountName) ? cosmosDbAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
+    location: !empty(cosmosDbLocation) ? cosmosDbLocation : location
+    locations: [
+      {
+        locationName: !empty(cosmosDbLocation) ? cosmosDbLocation : location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    enableFreeTier: cosmosDbSkuName == 'free'
+    capabilitiesToAdd: cosmosDbSkuName == 'serverless' ? ['EnableServerless'] : []
+    networkRestrictions: {
+      ipRules: []
+      networkAclBypass: bypass
+      publicNetworkAccess: publicNetworkAccess
+      virtualNetworkRules: []
+    }
+    sqlDatabases: [
+      {
+        name: chatHistoryDatabaseName
+        throughput: (cosmosDbSkuName == 'serverless') ? null : cosmosDbThroughput
+        containers: [
+          {
+            name: chatHistoryContainerName
+            kind: 'MultiHash'
+            paths: [
+              '/entra_oid'
+              '/session_id'
+            ]
+            indexingPolicy: {
+              indexingMode: 'consistent'
+              automatic: true
+              includedPaths: [
+                {
+                  path: '/entra_oid/?'
+                }
+                {
+                  path: '/session_id/?'
+                }
+                {
+                  path: '/timestamp/?'
+                }
+                {
+                  path: '/type/?'
+                }
+              ]
+              excludedPaths: [
+                {
+                  path: '/*'
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
 module openAiRoleAKS '../../shared/security/role.bicep' = if (openAiHost == 'azure') {
   scope: resourceGroup
   name: 'openai-role-aks'
@@ -301,14 +427,6 @@ module formRecognizerRoleAKS '../../shared/security/role.bicep' = {
   }
 }
 
-module storageRoleAKS '../../shared/security/role.bicep' = {
-  scope: resourceGroup
-  name: 'storage-role-aks'
-  params: {
-    principalId: aks.outputs.clusterIdentity.objectId
-    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
-  }
-}
 
 module storageContribRoleAKS '../../shared/security/role.bicep' = {
   scope: resourceGroup
@@ -346,7 +464,7 @@ module searchSvcContribRoleAKS '../../shared/security/role.bicep' = {
   }
 }
 
-module servicesBusDataOwnerRoleAKS '../../shared/security/role.bicep' = {
+module servicesBusDataOwnerRoleAKS '../../shared/security/role.bicep' = if (useServiceBusIndexing){
   scope: resourceGroup
   name: 'service-bus-data-owner-role-aks'
   params: {
@@ -374,8 +492,24 @@ module storageContribRoleUser '../../shared/security/role.bicep' = {
   }
 }
 
+// RBAC for Cosmos DB
+// https://learn.microsoft.com/azure/cosmos-db/nosql/security/how-to-grant-data-plane-role-based-access
+module cosmosDbRoleBackend '../../shared/security/documentdb-sql-role.bicep' = if (useAuthentication && useChatHistoryCosmos) {
+  scope: cosmosDbResourceGroup
+  name: 'cosmosdb-role-backend'
+  params: {
+    databaseAccountName: (useAuthentication && useChatHistoryCosmos) ? cosmosDb.outputs.name : ''
+    principalId: aks.outputs.clusterIdentity.objectId
+    // Cosmos DB Built-in Data Contributor role
+    roleDefinitionId: (useAuthentication && useChatHistoryCosmos)
+      ? '/${subscription().id}/resourceGroups/${cosmosDb.outputs.resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDb.outputs.name}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+      : ''
+  }
+}
+
+
 output AZURE_LOCATION string = location
-output AZURE_TENANT_ID string = tenant().tenantId
+output AZURE_AUTH_TENANT_ID string = authTenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
 
@@ -385,6 +519,7 @@ output AZURE_CONTAINER_REGISTRY_NAME string = aks.outputs.containerRegistryName
 // Shared by all OpenAI deployments
 output OPENAI_HOST string = openAiHost
 output AZURE_OPENAI_EMB_MODEL_NAME string = embeddingModelName
+output AZURE_OPENAI_EMB_DIMENSIONS int = embedding.dimensions
 output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
 // Specific to Azure OpenAI
 output AZURE_OPENAI_SERVICE string = (openAiHost == 'azure') ? openAi.outputs.name : ''
@@ -395,8 +530,8 @@ output AZURE_OPENAI_EMB_DEPLOYMENT string = (openAiHost == 'azure') ? embeddingD
 output OPENAI_API_KEY string = (openAiHost == 'openai') ? openAiApiKey : ''
 output OPENAI_ORGANIZATION string = (openAiHost == 'openai') ? openAiApiOrganization : ''
 
-output AZURE_FORMRECOGNIZER_SERVICE string = formRecognizer.outputs.name
-output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = formRecognizerResourceGroup.name
+output AZURE_DOCUMENT_INTELLIGENCE_SERVICE string = documentIntelligence.outputs.name
+output AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP string = documentIntelligenceResourceGroup.name
 
 output AZURE_SEARCH_INDEX string = searchIndexName
 output AZURE_SEARCH_SERVICE string = searchService.outputs.name
@@ -406,8 +541,27 @@ output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
-output AZURE_SERVICEBUS_NAMESPACE string = servicebusQueue.outputs.name
-output AZURE_SERVICEBUS_SKU_NAME string = servicebusQueue.outputs.skuName
+output AZURE_SERVICEBUS_NAMESPACE string = (useServiceBusIndexing) ? servicebusQueue.outputs.name : ''
+output AZURE_SERVICEBUS_SKU_NAME string = (useServiceBusIndexing) ? servicebusQueue.outputs.skuName : ''
+output AZURE_SERVICEBUS_QUEUE_NAME string = (useServiceBusIndexing) ? servicebusQueue.outputs.queueName : ''
+
+output AZURE_COSMOSDB_ACCOUNT string = (useAuthentication && useChatHistoryCosmos) ? cosmosDb.outputs.name : ''
+output AZURE_CHAT_HISTORY_DATABASE string = chatHistoryDatabaseName
+output AZURE_CHAT_HISTORY_CONTAINER string = chatHistoryContainerName
+output AZURE_CHAT_HISTORY_VERSION string = chatHistoryVersion
+
+output AZURE_USE_AUTHENTICATION bool = useAuthentication
+output AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS bool = enableGlobalDocumentAccess
+output USE_CHAT_HISTORY_BROWSER  bool = useChatHistoryBrowser
+output USE_CHAT_HISTORY_COSMOS bool = useChatHistoryCosmos
+output USE_SERVICEBUS_INDEXING bool = useServiceBusIndexing
+
+output AZURE_CLIENT_APP_ID string = (useAuthentication) ? clientAppId: ''
+output AZURE_SERVER_APP_ID string = (useAuthentication) ? serverAppId : ''
+output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
+
+//http://%s.%s.svc.cluster.local:%d
+output INDEXING_API_SERVER_URL string = 'http://indexer-service.java-rag-ns.svc.cluster.local'
 
 // AKS related deployment vars
 output AZURE_AKS_CLUSTER_NAME string = aks.outputs.clusterName

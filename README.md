@@ -20,27 +20,32 @@ products:
 - azure-monitor
 - azure-pipelines
 urlFragment: azure-search-openai-demo-java
-name: ChatGPT + Enterprise data (Java) on App Service, Azure Container Apps, and Azure Kubernetes Service
-description: A Java sample app that chats with your data using OpenAI and AI Search.
+name: RAG chat app with Azure OpenAI and Azure AI Search with Java and Langchain4J
+description: A Java sample app that chats with your data using Azure AI services.
 ---
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
 
-# ChatGPT + Enterprise data with Azure OpenAI and Azure AI Search - Java Version
+# RAG chat app with Azure AI services and Langchain4J
 
 This repo is the Java version of the well known [ChatGPT + Enterprise data code sample](https://github.com/Azure-Samples/azure-search-openai-demo) originally written in python.
 
-It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model `gpt-35-turbo`, and Azure Azure AI Search for data indexing and retrieval.
+It demonstrates best practices for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access the ChatGPT model `gpt-4o-mini`, and Azure 0AI Search for data indexing and retrieval and Azure Document Intelligence for document structured text parsing.
 
 This repository includes sample data so it's ready to try end to end. In this sample application we use a fictitious company called Contoso Electronics, and the experience allows its employees to ask questions about the benefits, internal policies, as well as job descriptions and roles.
 
 ## Features
 
-What this demo application does:
-* Chat and Q&A interfaces
-* Explores various options to help users evaluate the trustworthiness of responses with citations, tracking of source content, etc.
-* Shows possible approaches for data preparation, prompt construction, and orchestration of interaction between model (ChatGPT) and retriever (Azure AI Search)
-* Shows possible AI orchestration implementation using the plain Java Open AI sdk or the Java Semantic Kernel sdk
-* Settings directly in the UX to tweak the behavior and experiment with options
+* Chat interface with search result citations and follow-up questions.
+* Documents uploads and management.
+* Response streaming.
+* Response metadata with source content and grounded prompt tracking, search keywords, token usages.
+* Citation panel with page level detail (pdf, html, markdown).
+* Several documents formats supported: pdf, html, markdown, Office (docx,xslx,pptx).
+* Explores various retrievial options to help users evaluate search results: search score, search top results, text/vector/hybrid retrievial strategy, semantic caption and ranking (Azure AI search specific features).
+* Chat history with Azure CosmosDB or browser local database (for unauthenticated users).
+* Login and documents access control with EntraID.
+* Paged document text extraction with table data support with Azure Document Intelligence.
+
 
 ![Chat screen](docs/chatscreen.png)
 
@@ -49,43 +54,47 @@ What this demo application does:
 
 ![Microservice RAG Architecture](docs/aks/aks-hla.png)
 
-This sample supports different architectural styles. It can be deployed as standalone app on top of Azure App Service or as a microservice event driven architecture with web frontend, AI orchestration and document ingestion apps hosted by Azure Container Apps or Azure Kubernetes Service.
+This sample supports different architectural styles. It can be deployed as a microservice event driven architecture with web frontend, AI orchestration and document ingestion apps hosted by Azure Container Apps or Azure Kubernetes Service.
+It uses [Langchain4J](https://github.com/langchain4j/langchain4j) AI orchestration java framework. 
 
-- For **Azure App Service** deployment, see [here](docs/app-service/README-App-Service.md).
-- For **Azure Container Apps** deployment, see [here](docs/aca/README-ACA.md).
-- For **Azure Kubernetes Service** deployment, see [here](docs/aks/README-AKS.md).
+> [!NOTE]  
+> Previous java Semantic Kernel version has been moved in a dedicated [branch](https://github.com/Azure-Samples/azure-search-openai-demo-java/tree/semantic-kernel)
 
-### RAG implementation options
-This repo is focused to showcase different options to implement **"chat with your private documents"** scenario using RAG patterns with Java, Azure OpenAI and Semantic Kernel.
-Below you can find the list of available implementations.
+The solution components and Azure services are:
 
-| Conversational Style | RAG Approach                                                                                                                                                                                                                                                    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Java Open AI SDK                                                                               | Java Semantic Kernel  | 
-|:---------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------|:----------------------|
-| One Shot Ask         | [PlainJavaAskApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/PlainJavaAskApproach.java)                                                            | Use Azure AI Search and Java OpenAI APIs. It first retrieves top documents from search and use them to build a prompt. Then, it uses OpenAI to generate an answer for the user question.Several search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the question.                                                                                                                                                                                                                                                                                                                                                                 | :white_check_mark:                                                                             | :x:                   |
-| Chat                 | [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java)                                                         | Use Azure AI Search and Java OpenAI APIs. It first calls OpenAI to generate a search keyword for the chat history and then answer to the last chat question. Several search retrieval options are available: Text, Vector, Hybrid. When Hybrid and Vector are selected an additional call to OpenAI is required to generate embeddings vector for the chat extracted keywords.                                                                                                                                                                                                                                                                                                                                                                             | :white_check_mark:                                                                             | :x:                   |
-| One Shot Ask         | [JavaSemanticKernelWithMemoryApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelWithMemoryApproach.java)             | Use Java Semantic Kernel framework with built-in MemoryStore for embeddings similarity search. A semantic function [RAG.AnswerQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) is defined to build the prompt using Memory Store vector search results.A customized version of SK built-in [CognitiveSearchMemoryStore](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/memory/CustomAzureCognitiveSearchMemoryStore.java.ignore) is used to map index fields populated by the documents ingestion process.      | :x:                                                                                            | This approach is currently disabled within the UI, memory feature will be available in the next java Semantic Kernel GA release   |
-| One Shot Ask         | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/JavaSemanticKernelChainsApproach.java)                     | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/AzureAISearchPlugin.java) native function and [RAG.AnswerQuestion](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) semantic function are called sequentially. Several search retrieval options are available: Text, Vector, Hybrid.                      | :x:                                                                                            | :white_check_mark:    |
-| Chat                 | [JavaSemanticKernelWithMemoryApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelWithMemoryChatApproach.java.ignore) | Use Java Semantic Kernel framework with built-in MemoryStore for embeddings similarity search. A semantic function [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerQuestion/config.json) is defined to build the prompt using Memory Store vector search results. A customized version of SK built-in [CognitiveSearchMemoryStore](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/ask/approaches/semantickernel/memory/CustomAzureCognitiveSearchMemoryStore.java.ignore) is used to map index fields populated by the documents ingestion process. | :x:                                                                                            | :x: This approach is currently disabled within the UI, memory feature will be available in the next java Semantic Kernel GA release    |
-| Chat                 | [JavaSemanticKernelChainsApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/semantickernel/JavaSemanticKernelChainsChatApproach.java)                | Use Java Semantic Kernel framework with semantic and native functions chaining. It uses an imperative style for AI orchestration through semantic kernel functions chaining. [InformationFinder.SearchFromConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/retrieval/semantickernel/AzureAISearchPlugin.java) native function and [RAG.AnswerConversation](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/resources/semantickernel/Plugins/RAG/AnswerConversation/config.json) semantic function are called sequentially. Several search retrieval options are available: Text, Vector, Hybrid.          | :x:                                                                                            | :white_check_mark:    |
+* The API app is implemented as springboot 2.7.x app using the Microsoft JDK.It implements the **Chat flow** in RAG pattern and provides both a synch and asynch streaming chat REST endpoint for the webapp.It's responsible for orchestrating the interaction between the LLM models (Azure Open AI) and the content retriever (Azure AI Search).
+* The chat web app is built in React and deployed as a static web app on nginx. In ACA deployment option, Nginx act as reverse proxy for api calls to the API app. This also solves the CORS issue. In AKS deployment option, a managed Nginx ingress controller is used as entry point for both thw web app and api.
+* The indexer APP is implemented as springboot 2.7.x app using the Microsoft JDK.It implement the **Ingestion/Indexing flow** in RAG pattern and it's responsible for indexing the data into Azure AI Search.It's asynchnously triggered by new BlobUploaded messages from serviceBus or synchrnously called by API to handle User document upload request from the web app. The indexer is also responsible for chunking the documents into smaller pieces, embed them and store them in the index. Azure Document Intelligence can be configured to extract text from PDF documents (including tables and images) or you can leverage [document parsers available in Langchain4j](https://docs.langchain4j.dev/tutorials/rag#document-parser). See [here for ingestion flow configuration example](./app/indexer/microservice/src/main/resources/application.yml).
+* Azure AI Search is used as RAG retrieval system. Different search options are available: you have traditional full text (with semantic search) search, or vector based search and finally you can opt for hybrid search which brings together the best of the previous ones.
+* EventGrid system topic is used to implement a real time mechanism to trigger the indexer app when a new document is uploaded to the Azure blob called **staging**.It's responsible to read BlobUploaded notification from azure storage container and push a message to the service bus queue containing the blob url. All the documents loaded through service bus messages will be moved to **default** blob folder and will be available to all users.
+* CosmosDB is used to store chat conversations.
+
+For specific deployment options see:
+- [Azure Container Apps](docs/aca/README-ACA.md)
+- [Azure Kubernetes Service](docs/aks/README-AKS.md)
+
+
 
 ## Getting Started
 
 All the available architectures and implementations come with few options to start developing and running the application locally using dev containers or in the cloud using github codespaces. For more detailed instructions, please refer to the specific architecture implementation documentation:
- - [App Service Getting Started](docs/app-service/README-App-Service.md#getting-started)
  - [Azure Container Apps Getting Started](docs/aca/README-ACA.md#getting-started)
  - [Azure Kubernetes Service Getting Started](docs/aks/README-AKS.md#getting-started)
 
 
 ## Guidance
 For platform specific guidance, please refer to the following documentation:
- - [App Service Guidance](docs/app-service/README-App-Service.md#guidance)
- - [Azure Container Apps Getting Started](docs/aca/README-ACA.md#guidance)
- - [Azure Kubernetes Service Getting Started](docs/aks/README-AKS.md#guidance)
+ - [Azure Container Apps Guidance](docs/aca/README-ACA.md#guidance)
+ - [Azure Kubernetes Service Guidance](docs/aks/README-AKS.md#guidance)
 
-- [App Service Guidance]
-This sample is designed to get you started quickly and let you experiment with Java intelligent Apps RAG architectures on Azure. For production deployment, you can use the [Azure Application Landing Zones (LZA)](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/ready) to deploy the solution maintaining best practices for security, monitoring, networking and operational excellence.
 
-Check the [chat-with-your-data-lza-app-accelerator](https://github.com/dantelmomsft/chat-with-your-data-java-lza-app-accelerator) to see how you can deploy this solution on App Service LZA or Azure Container Apps LZA.
+This sample is designed to get you started quickly and let you experiment with Java RAG architectures on Azure. For production deployment, you can use the [Azure Application Landing Zones (LZA)](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/ready) to automatically deploy the solution in production leveraging best practices for security, monitoring, networking and operational excellence.
+
+Check the [chat-with-your-data-lza-app-accelerator](https://github.com/dantelmomsft/chat-with-your-data-java-lza-app-accelerator) to see how you can deploy this solution on Azure Container Apps LZA.
+
+> [!NOTE]  
+> Support for deploying on landing zone is available for previous semantic kernel version at this [repo](https://github.com/Azure-Samples/azure-search-openai-demo-java/tree/semantic-kernel).
+> A new version based on [Azure Verified Modules for Azure Container Apps](https://github.com/Azure/bicep-registry-modules/tree/main/avm/ptn/aca-lza/hosting-environment) is WIP :sunny: :cloud: :construction_worker_man.
 
 ![Azure Container Apps LZA deployment](docs/aca/aca-internal-java-ai.png)
 

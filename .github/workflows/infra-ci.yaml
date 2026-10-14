@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Filter Changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
             filters: |
@@ -38,24 +38,24 @@ jobs:
                 - 'deploy/aca/**'
       - name: Build App Service Bicep for linting
         if: steps.changes.outputs.app-service == 'true'
-        uses: azure/CLI@v1
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/app-service/infra/main.bicep --stdout
       
       - name: Build AKS Bicep for linting
         if: steps.changes.outputs.aks == 'true'
-        uses: azure/CLI@v1
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aks/infra/main.bicep --stdout
       
       - name: Build ACA Bicep for linting
         if: steps.changes.outputs.aca == 'true'
-        uses: azure/CLI@v1
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aca/infra/main.bicep --stdout
           
       - name: Run PSRule analysis on App Service deployment
-        uses: microsoft/ps-rule@v2.9.0
+        uses: microsoft/ps-rule@46451b8f5258c41beb5ae69ed7190ccbba84112c # v2.9.0
         with:
           modules: PSRule.Rules.Azure
           baseline: Azure.Pillar.Security
@@ -70,7 +70,7 @@ jobs:
           PSRULE_CONFIGURATION_AZURE_BICEP_FILE_EXPANSION_TIMEOUT: '30'
 
       - name: Upload results to security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         if: github.repository == 'Azure-Samples/azure-search-openai-demo-java'
         with:
           sarif_file: reports/ps-rule-results.sarif

@@ -6,8 +6,6 @@ import com.azure.ai.openai.models.ChatRequestMessage;
 import com.azure.ai.openai.models.ChatRequestSystemMessage;
 import com.azure.ai.openai.models.ChatRequestUserMessage;
 import com.azure.ai.openai.models.ChatRole;
-import com.microsoft.semantickernel.services.chatcompletion.ChatHistory;
-import com.microsoft.semantickernel.services.chatcompletion.message.ChatMessageTextContent;
 
 import java.util.List;
 
@@ -23,25 +21,7 @@ public class ChatGPTConversation {
         this.messages = messages;
     }
 
-    public ChatHistory toSKChatHistory() {
-        List<ChatMessageTextContent> chatHistory = messages.stream()
-                .map(message -> {
-                    ChatRole role = ChatRole.fromString(message.role().toString());
 
-                    if (role.equals(ChatRole.USER)) {
-                        return ChatMessageTextContent.userMessage(message.content());
-                    } else if (role.equals(ChatRole.ASSISTANT)) {
-                        return ChatMessageTextContent.assistantMessage(message.content());
-                    } else if (role.equals(ChatRole.SYSTEM)) {
-                        return ChatMessageTextContent.systemMessage(message.content());
-                    }
-
-                    throw new IllegalArgumentException("Unknown chat type");
-                })
-                .toList();
-
-        return new ChatHistory(chatHistory);
-    }
 
     public List<ChatRequestMessage> toOpenAIChatMessages() {
         return this.messages.stream()

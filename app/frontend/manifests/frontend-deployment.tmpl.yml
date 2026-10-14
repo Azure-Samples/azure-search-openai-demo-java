@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: frontend-deployment
-    namespace: azure-open-ai
+    namespace: java-rag-ns
     labels:
         app: frontend
 spec:

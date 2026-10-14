@@ -11,6 +11,9 @@
     "location": {
       "value": "${AZURE_LOCATION}"
     },
+    "kubernetesVersion": {
+      "value": "${AZURE_KUBERNETES_VERSION=1.33}"
+    },
     "principalId": {
       "value": "${AZURE_PRINCIPAL_ID}"
     },
@@ -29,13 +32,13 @@
     "openAiSkuName": {
       "value": "S0"
     },
-    "formRecognizerServiceName": {
-      "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
+    "documentIntelligenceServiceName": {
+      "value": "${AZURE_DOCUMENT_INTELLIGENCE_SERVICE}"
     },
-    "formRecognizerResourceGroupName": {
-      "value": "${AZURE_FORMRECOGNIZER_RESOURCE_GROUP}"
+    "documentIntelligenceResourceGroupName": {
+      "value": "${AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP}"
     },
-    "formRecognizerSkuName": {
+    "documentIntelligenceSkuName": {
       "value": "S0"
     },
     "searchIndexName": {
@@ -84,17 +87,24 @@
       "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT_SKU_NAME=Standard}"
     },
     "embeddingModelName": {
-      "value": "${AZURE_OPENAI_EMB_MODEL=text-embedding-3-small}"
+      "value": "${AZURE_OPENAI_EMB_MODEL=text-embedding-3-large}"
     },
     "embeddingModelVersion": {
       "value": "${AZURE_OPENAI_EMB_MODEL_VERSION=1}"
     },
     "embeddingDeploymentName": {
-      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT=text-embedding-3-small}"
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT=text-embedding-3-large}"
+    },
+    "embeddingDeploymentSkuName":{
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_SKU=GlobalStandard}"
     },
     "embeddingDeploymentCapacity": {
-      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY=120}"
+      "value": "${AZURE_OPENAI_EMB_DEPLOYMENT_CAPACITY=80}"
     },
+      "embeddingDimensions": {
+      "value": "${AZURE_OPENAI_EMB_DIMENSIONS=3072}"
+    },
+    
     "openAiHost":{
       "value": "${OPENAI_HOST=azure}"
     },
@@ -107,20 +117,44 @@
     "useApplicationInsights": {
       "value": "${AZURE_USE_APPLICATION_INSIGHTS=true}"
     },
-    "useAuthentication": {
+     "useChatHistoryBrowser": {
+      "value": "${USE_CHAT_HISTORY_BROWSER=false}"
+    },
+    "useChatHistoryCosmos": {
+      "value": "${USE_CHAT_HISTORY_COSMOS=false}"
+    },
+    "enableGlobalDocumentAccess": {
+      "value": "${AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS=true}"
+    },
+    "cosmosDbSkuName": {
+      "value": "${AZURE_COSMOSDB_SKU=serverless}"
+    },
+    "cosmodDbResourceGroupName": {
+      "value": "${AZURE_COSMOSDB_RESOURCE_GROUP}"
+    },
+    "cosmosDbLocation": {
+      "value": "${AZURE_COSMOSDB_LOCATION}"
+    },
+    "cosmosDbAccountName": {
+      "value": "${AZURE_COSMOSDB_ACCOUNT}"
+    },
+    "cosmosDbThroughput": {
+      "value": "${AZURE_COSMOSDB_THROUGHPUT}"
+    },
+      "useAuthentication": {
       "value": "${AZURE_USE_AUTHENTICATION=false}"
+    },
+     "authTenantId": {
+      "value": "${AZURE_AUTH_TENANT_ID}"
     },
     "serverAppId": {
       "value": "${AZURE_SERVER_APP_ID}"
     },
-    "serverAppSecret": {
-      "value": "${AZURE_SERVER_APP_SECRET}"
-    },
     "clientAppId": {
       "value": "${AZURE_CLIENT_APP_ID}"
     },
-    "allowedOrigin": {
-      "value": "${ALLOWED_ORIGIN}"
+    "useServiceBusIndexing": {
+      "value": "${USE_SERVICEBUS_INDEXING=true}"
     }
   }
 }

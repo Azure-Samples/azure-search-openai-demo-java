@@ -7,6 +7,8 @@ import com.azure.core.http.policy.HttpLogOptions;
 import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchClientBuilder;
+import com.azure.search.documents.indexes.SearchIndexAsyncClient;
+import com.azure.search.documents.indexes.SearchIndexClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +17,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AzureAISearchConfiguration {
 
-    @Value("${cognitive.search.service}")
+    @Value("${azureai.search.service}")
     String searchServiceName;
 
-    @Value("${cognitive.search.index}")
+    @Value("${azureai.search.index}")
     String indexName;
 
     final TokenCredential tokenCredential;
@@ -80,6 +82,17 @@ public class AzureAISearchConfiguration {
                 .endpoint(endpoint)
                 .credential(tokenCredential)
                 .indexName(indexName)
+                .buildAsyncClient();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "cognitive.tracing.enabled", havingValue = "true")
+    public SearchIndexAsyncClient asyncSearchIndexDefaultClient() {
+        String endpoint = "https://%s.search.windows.net".formatted(searchServiceName);
+
+        return new SearchIndexClientBuilder()
+                .endpoint(endpoint)
+                .credential(tokenCredential)
                 .buildAsyncClient();
     }
 }

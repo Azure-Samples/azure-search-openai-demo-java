@@ -4,6 +4,9 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
+    resolve: {
+        preserveSymlinks: true
+    },
     build: {
         outDir: "./build",
         emptyOutDir: true,
@@ -23,24 +26,26 @@ export default defineConfig({
         },
         target: "esnext"
     },
+
+ 
     server: {
         proxy: {
-            "/api/ask": {
-                target: 'http://localhost:8080',
+            "/api/": {
+                target: "http://localhost:8080",
                 changeOrigin: true
             },
-            "/api/chat": {
-                target: 'http://localhost:8080',
+            
+            "/auth_setup": {
+                target: "http://localhost:8080/api",
                 changeOrigin: true
             },
-            "/api/content": {
-                target: 'http://localhost:8080',
+            "/.auth/me": {
+                target: "http://localhost:8080/api",
                 changeOrigin: true
-            },
-            "/api/auth_setup": {
-                 target: 'http://localhost:8080',
-                 changeOrigin: true
-                        }
+            }
         }
     }
+
+
+    
 });

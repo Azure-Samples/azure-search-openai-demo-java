@@ -16,10 +16,10 @@ jobs:
     outputs:
       env-name: ${{steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Java version
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -70,7 +70,7 @@ jobs:
           mv ./target/$originaljarname ./target/app.jar
 
       - name: Upload artifacts for backend deployment jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: spring-boot-app
           path: |
@@ -86,15 +86,15 @@ jobs:
 
     steps:
       - name: Download backend artifact from build job
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: spring-boot-app
           path: ./backend
-      - uses: azure/login@v1
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
          creds: ${{ secrets.AZURE_CREDENTIALS }}    
       - name: 'Deploy backend to Azure Web App'
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         id: deploy-app
         with:
           app-name: ${{ vars.AZUREAPPSERVICE_APP_NAME }}

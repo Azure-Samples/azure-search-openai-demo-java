@@ -23,25 +23,25 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 <!-- TOC -->
 - [Getting Started](#getting-started)
-  * [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
+  - [Run in GitHub Codespaces or VS Code Dev Containers](#run-in-github-codespaces-or-vs-code-dev-containers)
   - [Prerequisites](#prerequisites)
   - [Starting from scratch](#starting-from-scratch)
   - [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     - [Existing resource group](#existing-resource-group)
     - [Existing OpenAI resource](#existing-openai-resource)
-    - [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
+    - [Existing Azure AI Search resource](#existing-azure-ai-search-resource)
     - [Other existing Azure resources](#other-existing-azure-resources)
     - [Provision remaining resources](#provision-remaining-resources)
-  - [Deploying again](#redeploying)
-  - [Running locally](#running-locally)
+  - [Redeploying](#redeploying)
+  - [Examples of an azd deployment changing the default chatgpt deployment model](#examples-of-an-azd-deployment-changing-the-default-chatgpt-deployment-model)
+  - [Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources](#examples-of-an-azd-deployment-reusing-an-existing-azure-openai-and-azure-ai-search-resources)
   - [UI Navigation](#ui-navigation)
 - [Guidance](#guidance)
   - [Enabling Application Insights](#enabling-application-insights)
-  - [Enabling authentication](#enabling-authentication)
+  - [Enabling login and search filtering](#enabling-login-and-search-filtering)
+  - [Enabling client-side chat history](#enabling-client-side-chat-history)
+  - [Enabling persistent chat history with Azure Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db)
   - [App Continuous Integration](#app-continuous-integration)
-  - [GitHub](#github)
-  - [Azure DevOps](#azure-devops)
-  - [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
   - [Productionizing](#productionizing)
   - [Cost estimation](#cost-estimation)
   - [Note](#note)
@@ -50,11 +50,6 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   <!-- TOC -->
 
 ## Getting Started
-
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
-
-> [!CAUTION]
-> Be sure to use AZD version > 1.7.0 
 
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
@@ -69,16 +64,17 @@ All prerequisites are already installed in the container. You can skip to the [S
 
 - [Java 17](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
 - [Maven 3.8.x](https://maven.apache.org/download.cgi)
-- [Azure Developer CLI 1.7.0](https://aka.ms/azure-dev/install)
+- [Azure Developer CLI](https://aka.ms/azure-dev/install)
 - [Node.js](https://nodejs.org/en/download/)
+- [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/) - Only required to automatically configure login and document access level with EntraID
 - [Git](https://git-scm.com/downloads)
 - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) or other docker agents
 - [Helm](https://helm.sh/docs/intro/install/)
-- _[K9s](https://k9scli.io/topics/install/) For K8s management - Optional_
+- [K9s](https://k9scli.io/topics/install/) For K8s management - Optional
 
-> NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
+ > [!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
 
 ### Starting from scratch
 
@@ -102,13 +98,17 @@ Once you have the project available locally, run the following commands if you d
    ```
 
    - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-   - For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
+   - For the target location check up-to-date list of regions and models availables [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
 3. After the application has been successfully deployed you will see a backend app load balancer IP printed to the console. Click that URL to interact with the application in your browser.
 
 It will look like the following:
 
 !['Output from running azd up'](aks-deploy-success.png)
+
+4. When you enable login and ACL, the https url will be printed in the console output, and you can use that to access the application. For more information on enabling login and ACL, see [here](./login_and_acl.md).
+
+!['Output from running azd up with login and ACL enabled'](aks-deploy-success-login.png)
 
 > NOTE: It may take a minute for the application to be fully deployed.
 
@@ -168,7 +168,7 @@ azd env set AZURE_OPENAI_CHATGPT_MODEL "gpt-4" # Change the chatgpt model to gpt
 azd up
 ```
 
-> NOTE: This sample has been tested with gpt-35-turbo/0613 model version.Using other models or different versions might result in unexpected behavior.
+> NOTE: This sample has been tested with gpt-4o-mini.Using other models or different versions might result in unexpected behavior.
 
 ### Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources
 
@@ -191,22 +191,6 @@ azd env set AZURE_SEARCH_SERVICE_LOCATION "eastus2" # Region of the ACS service
 
 azd up
 ```
-### Running locally
-
-1. Run
-
-    ```shell
-    az login
-    ```
-
-2. Change dir to `deploy/aks`
-
-    ```shell
-    cd deploy/aks
-    ```
-
-3. Run the `./start-compose.ps1` (Windows) or `./start-compose.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
-4. Wait for the docker compose to start all the containers (web, api, indexer) and refresh your browser to [http://localhost](http://localhost)
 
 ### UI Navigation
 
@@ -236,30 +220,34 @@ Under "Trace & Events" panel you can review custom Java informational logs to be
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
-### Enabling authentication
+### Enabling login and search filtering
+
+See [here](./login_and_acl.md) for detailed guidance.
+
+### Enabling client-side chat history
+
+This feature allows users to view the chat history of their conversation, stored in the browser using [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API). That means the chat history will be available only on the device where the chat was initiated. To enable browser-stored chat history, run:
 
 ```shell
-azd env set AZURE_USE_EASY_AUTH true
+azd env set USE_CHAT_HISTORY_BROWSER true
+```
+This is useful especially for unauthenticated users. For authenticated ones see below.
+
+### Enabling persistent chat history with Azure Cosmos DB
+
+This feature allows authenticated users to view the chat history of their conversations, stored in the server-side storage using [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/).This option requires that authentication be enabled. The chat history will be persistent and accessible from any device where the user logs in with the same account. To enable server-stored chat history, run:
+
+```shell
+azd env set USE_CHAT_HISTORY_COSMOS true
 ```
 
-By default, the deployed apps on AKS will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data. If you enable easy authentication the deployment will use a script based on [EasyAuthForK8s](https://github.com/Azure/EasyAuthForK8s) and using [Cert Manager](https://cert-manager.io/) to manage easy authentication for you using Microsoft Entra.
+When both the browser-stored and Cosmos DB options are enabled, Cosmos DB will take precedence over browser-stored chat history.
 
-To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access. Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users
 
 ### App Continuous Integration
 
 :sunny: :cloud: :construction_worker_man: WIP
 
-### Custom Data Ingestion and Indexing
-
-The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
-
-If you want to chat with your custom documents you can:
-
-1. Add your pdf documents in the [data folder](../../data).
-2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aks`
-3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
 
 ### Productionizing
 
@@ -311,7 +299,7 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 To reduce costs, you can switch to free SKUs Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or changing the code to use the Itext document based parser, or by removing the postprovision hook in `azure.yaml` that runs the `indexer java cli`.
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
+either by deleting the resource group in the Portal or running `azd down --purge`.
 
 ### Note
 
@@ -399,11 +387,3 @@ Here are the most common failure scenarios and solutions:
 7. After running `./app/start.ps1` or `./app/start.sh` you get `"Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project myproject: Fatal error compiling: invalid target release: 17"`. It means you are not using JDK 17 but a previous version. Be sure to set the `JAVA_HOME` env variable to your Java 17 installation directory and update your `PATH` env variable to have the Java 17 bin folder as the first occurrence amongst the listed directories. More info [here](https://learn.microsoft.com/en-us/java/openjdk/install)
 8. After running `./app/start.sh` on Ubuntu 16.04 or later, the first time you try to create a virtual environment with Python 3.6, Python 3.7, Python 3.8 or Python 3.9, you'll get the following error `"The virtual environment was not created successfully because ensurepip is not available"`. Just follow the hint provided in the error message and run `apt-get install python3-venv` to install the missing packages. More info [here](https://www.softwarepragmatism.com/cannot-create-a-python-virtual-environment-on-ubuntu-ensurepip-is-not-available)
 9. While running `azd up` in VS Code Dev Containers you got this error `".. Maven: failed finding mvnw in repository path: exec: /azure-search-openai-demo-java/app/backend/mvnw: permission denied "`. Run `chmod +x ./azure-search-openai-demo-javaapp/backend/mvnw` to fix it and rerun `azd up`.
-10. Github App CI pipeline might fail in some scenarios where the provisioned App Service instance doesn't have "Basic Auth Publishing Credentials" enabled in your subscription. To fix it, you can go to your App Service instance in Azure Portal, click on "Settings/Configuration(Panel)->General Settins (Tab)" and flag to ON the "Basic Auth Publishing Credentials" checkbox group. Or you can run the following azd cli commands:
-
-    ```
-    az resource update --resource-group <resource-group> --name ftp --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/<site-name> --set properties.allow=true
-    az resource update --resource-group <resource-group> --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/<site-name> --set properties.allow=true
-    ```
-
-    For more details see this [issue](https://github.com/Azure-Samples/azure-search-openai-demo-java/issues/7).

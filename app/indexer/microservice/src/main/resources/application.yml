@@ -1,0 +1,55 @@
+rag:
+  ingestion:
+    -
+      filename:
+        - ".*"
+      filetype:
+        - ".*"
+      loader:
+        type: azure-blob
+        params:
+            storage-account-name: ${AZURE_STORAGE_ACCOUNT}
+            container-name: ${AZURE_STORAGE_CONTAINER:content}
+            identity-ref: token-credential
+      parser:
+        -
+          type: apache-tika
+          extension:
+            - docx
+            - ppt
+            - pptx
+            - txt
+            - md
+            - html
+            - xlsx
+        -
+          type: azure-document-intelligence
+          extension:
+            - pdf
+          params:
+              service-name: ${AZURE_DOCUMENT_INTELLIGENCE_SERVICE}
+              identity-ref: token-credential
+              model-id: prebuilt-layout
+      document-transformer:
+        type: HtmlToTextDocumentTransformer
+      splitter:
+        type: langchain4j-recursive-splitter
+        chunk-size: 3000
+        overlap: 200
+
+      text-transformer:
+        type: AddTitleAndSummaryTransformer
+      embedding-model:
+        type: langchain4j-azure-open-ai-model
+        dimensions: ${AZURE_OPENAI_EMB_DIMENSIONS:3072}
+        params:
+            service-name: ${AZURE_OPENAI_SERVICE}
+            embedding-model-deployment: ${AZURE_OPENAI_EMB_DEPLOYMENT}
+            identity-ref: token-credential
+      embedding-store:
+        type: langchain4j-azure-ai-search-store
+        params:
+            service-name: ${AZURE_SEARCH_SERVICE}
+            index-name: ${AZURE_SEARCH_INDEX:gptkbindex}
+            create-or-update: false
+            identity-ref: token-credential

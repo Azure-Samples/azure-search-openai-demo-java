@@ -18,7 +18,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     accessPolicies: !empty(principalId) ? [
       {
         objectId: principalId
-        permissions: { secrets: [ 'get', 'list' ] }
+        permissions: { 
+          secrets: [ 'get', 'list', 'set' ] 
+          certificates: [ 'get', 'list', 'import' ] }
         tenantId: subscription().tenantId
       }
     ] : []

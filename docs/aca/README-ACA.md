@@ -2,12 +2,6 @@
 
 ![Microservice RAG Architecture](aca-hla.png)
 
-* The API app is implemented as springboot 2.7.x app using the Microsoft JDK. It provides the ask and chat apis which are used by the chat web app. It's responsible for implementing the RAG pattern orchestrating the interaction between the LLM model (Open AI - ChatGPT) and the retriever (Azure AI Search).
-* The Chat Web App is built in React and deployed as a static web app on nginx. Furthermore Nginx act as reverse proxy for api calls to the API app. This also solves the CORS issue.
-* The indexer APP is implemented as springboot 2.7.x app using the Microsoft JDK. It is responsible for indexing the data into Azure Cognitive Search and it's triggered by new BlobUploaded messages from serviceBus. The indexer is also responsible for chunking the documents into smaller pieces, embed them and store them in the index. Azure Document Intelligence is used to extract text from PDF documents (including tables and images)
-* Azure AI Search is used as RAG retrieval system. Different search options are available: you have traditional full text (with semantic search) search, or vector based search and finally you can opt for hybrid search which brings together the best of the previous ones.
-* EventGrid System topic is used to implement a real time mechanism to trigger the indexer app when a new document is uploaded to the blob storage. It's responsible to read BlobUploaded notification from azure storage container and push a message to the service bus queue containing the blob url.
-
 ## TL;DR
 
 Open the project:
@@ -35,19 +29,19 @@ For detailed instructions, see [Getting Started](#getting-started) below.
   * [Deploying with existing Azure resources](#deploying-with-existing-azure-resources)
     * [Existing resource group](#existing-resource-group)
     * [Existing OpenAI resource](#existing-openai-resource)
-    * [Existing Azure Azure AI Search resource](#existing-azure-ai-search-resource)
+    * [Existing Azure AI Search resource](#existing-azure-ai-search-resource)
     * [Other existing Azure resources](#other-existing-azure-resources)
     * [Provision remaining resources](#provision-remaining-resources)
-  * [Deploying again](#redeploying)
-  * [Running locally](#running-locally)
+  * [Redeploying](#redeploying)
   * [UI Navigation](#ui-navigation)
 * [Guidance](#guidance)
+  * [Develop and debug apps locally](#develop-and-debug-apps-locally)
   * [Enabling Application Insights](#enabling-application-insights)
-  * [Enabling authentication](#enabling-authentication)
+  * [Enabling login and search filtering](#enabling-login-and-search-filtering)
+  * [Enabling client-side chat history](#enabling-client-side-chat-history)
+  * [Enabling persistent chat history with Azure Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db)
+  * [Evaluating RAG](#evaluating-rag)
   * [App Continuous Integration](#app-continuous-integration)
-    * [GitHub](#github)
-    * [Azure DevOps](#azure-devops)
-  * [Custom Data Ingestion and Indexing](#custom-data-ingestion-and-indexing)
   * [Productionizing](#productionizing)
   * [Cost estimation](#cost-estimation)
   * [Note](#note)
@@ -57,8 +51,6 @@ For detailed instructions, see [Getting Started](#getting-started) below.
 
 
 ## Getting Started
-
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI Service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/) to get some free Azure credits to get you started.
 
 ### Run in GitHub Codespaces or VS Code Dev Containers
 
@@ -76,11 +68,13 @@ All prerequisites are already installed in the container.  You can skip to the [
 * [Azure Developer CLI](https://aka.ms/azure-dev/install)
 * [Node.js](https://nodejs.org/en/download/)
 * [Git](https://git-scm.com/downloads)
+* [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/) - Required for RAG evaluation and to automatically configure login and document filtering with EntraID
 * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   * **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
 
->[!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
+
+ > [!WARNING] Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
 
 ### Starting from scratch
 
@@ -103,7 +97,7 @@ Once you have the project available locally, run the following commands if you d
     ```
     
     * This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-    * For the target location, the regions that currently support the models used in this sample are **East US**, **France Central**, **South Central US**, **UK South**, and **West Europe**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
+    * For the target location check up-to-date list of regions and models availables [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
 
 3. After the application has been successfully deployed you will see a web app URL printed to the console.  Click that URL to interact with the application in your browser.  
 
@@ -111,7 +105,7 @@ It will look like the following:
 
 !['Output from running azd up'](aca-endpoint.png)
 
-> NOTE: It may take few minutes for the indexer app to consume the pdf ingestion request messages from service bus. You can monitor the ingestion process by checking the log stream of the indexer app in the Azure Portal.
+> NOTE: It may take few minutes for the indexer app to consume the ingestion request messages from service bus. You can monitor the ingestion process by checking the log stream of the indexer app in the Azure Portal
 
 ### Deploying with existing Azure resources
 
@@ -140,7 +134,7 @@ If you already have existing Azure resources, you can re-use those by setting `a
 
 #### Other existing Azure resources
 
-You can also use existing Form Recognizer and Storage Accounts. See `./infra/main.parameters.json` for list of environment variables to pass to `azd env set` to configure those existing resources.
+You can also use existing Document Intelligence and Storage Accounts. See `./infra/main.parameters.json` for list of environment variables to pass to `azd env set` to configure those existing resources.
 
 #### Provision remaining resources
 
@@ -159,10 +153,10 @@ azd deploy
 If you've changed the infrastructure files (`infra` folder or `azure.yaml`), then you'll need to re-provision the Azure resources. You can do that by running:
 
 ```shell
-azd up
+azd provision
 ```
  > [!WARNING]
- > When you run `azd up` multiple times to redeploy infrastructure, make sure to set the following parameters in `infra/main.parameters.json` to `true` to avoid container apps images from being overridden with default "mcr.microsoft.com/azuredocs/containerapps-helloworld" image:
+ > When you run `azd up` or `azd provision` multiple times to redeploy infrastructure, make sure to set the following parameters in `infra/main.parameters.json` to `true` to avoid container apps images from being overridden with default "mcr.microsoft.com/azuredocs/containerapps-helloworld" image:
 
 ```json
 "apiAppExists": {
@@ -182,7 +176,7 @@ azd auth login
 azd env set AZURE_OPENAI_CHATGPT_MODEL "gpt-4" # Change the chatgpt model to gpt-4
 azd up
 ```
-> NOTE: This sample has been tested with gpt-35-turbo/0613 model version.Using other models or different versions might result in unexpected behavior.
+> NOTE: This sample has been tested with gpt-4o-mini.Using other models or different versions might result in unexpected behavior.
 ### Examples of an azd deployment reusing an existing Azure OpenAI and Azure AI Search resources
 
 ```shell
@@ -205,23 +199,6 @@ azd env set AZURE_SEARCH_SERVICE_LOCATION "eastus2" # Region of the ACS service
 azd up
 ```
 
-### Running locally
-
-1. Run
-
-    ```shell
-    az login
-    ```
-
-2. Change dir to `deploy/aca`
-
-    ```shell
-    cd deploy/aca
-    ```
-
-3. Run the `./start-compose.ps1` (Windows) or `./start-compose.sh` (Linux/Mac) scripts or run the "VS Code Task: Start App" to start the project locally.
-4. Wait for the docker compose to start all the containers (web, api, indexer) and refresh your browser to [http://localhost](http://localhost)
-
 ### UI Navigation
 
 * In Azure: navigate to the Web App deployed by azd. The URL is printed out when azd completes (as "Endpoint"), or you can find it in the Azure portal.
@@ -232,9 +209,14 @@ Once in the web app:
 * Try different topics in chat or Q&A context. For chat, try follow-up questions, clarifications, ask to simplify or elaborate on answer, etc.
 * Explore citations and sources
 * Click on "settings" to try different options, tweak prompts, etc.
+* Use "Manage File Uploads" to load your documents and start QA session on related topics
 
 
 ## Guidance
+
+### Develop and debug apps locally
+
+See [Local Development with IntelliJ](./local-development-intellij.md) for detailed guidance on how to run the backend and frontend applications locally.
 
 ### Enabling Application Insights
 
@@ -253,24 +235,36 @@ Under "Trace & Events" panel you can review custom Java informational logs to be
 
 To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Java stack traces on the right-hand side.
 
-### Enabling authentication
+### Enabling login and search filtering
 
-By default, the web app on ACA will have no authentication or access restrictions enabled, meaning anyone with routable network access to the web app can chat with your indexed data.You can require authentication to your Microsoft Entra by following the [Add app authentication](https://learn.microsoft.com/en-us/azure/container-apps/authentication) tutorial and set it up against the deployed web app.
+See [here](./login_and_acl.md) for detailed guidance.
 
+### Enabling client-side chat history
 
-To then limit access to a specific set of users or groups, you can follow the steps from [Restrict your Microsoft Entra app to a set of users](https://learn.microsoft.com/entra/identity-platform/howto-restrict-your-app-to-a-set-of-users) by changing "Assignment Required?" option under the Enterprise Application, and then assigning users/groups access.  Users not granted explicit access will receive the error message -AADSTS50105: Your administrator has configured the application <app_name> to block users 
+This feature allows users to view the chat history of their conversation, stored in the browser using [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API). That means the chat history will be available only on the device where the chat was initiated. To enable browser-stored chat history, run:
+
+```shell
+azd env set USE_CHAT_HISTORY_BROWSER true
+```
+This is useful especially for unauthenticated users. For authenticated ones see below.
+
+### Enabling persistent chat history with Azure Cosmos DB
+
+This feature allows authenticated users to view the chat history of their conversations, stored in the server-side storage using [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/).This option requires that authentication be enabled. The chat history will be persistent and accessible from any device where the user logs in with the same account. To enable server-stored chat history, run:
+
+```shell
+azd env set USE_CHAT_HISTORY_COSMOS true
+```
+
+When both the browser-stored and Cosmos DB options are enabled, Cosmos DB will take precedence over browser-stored chat history.
+
+### Evaluating RAG
+See [Evaluation](./evaluation.md) for detailed guidance on how to evaluate the RAG application using the provided python scripts.
+
+For safety evaluation, see [Safety Evaluation](./safety_evaluation.md).
 
 ### App Continuous Integration
-:sunny: :cloud: :construction_worker_man: WIP
-
-### Custom Data Ingestion and Indexing
-The repository includes sample pdf documents in the data folder. They are ingested in blob container and then indexed in Azure AI Search during infra provisioning by Azure Developer CLI post provision hooks.
-
-If you want to chat with your custom documents you can:
-1. Add your pdf documents in the [data folder](../../data).
-2. Open a terminal and cd to repo root folder for app service deployment. Example `cd path/to/your/custom/dir/azure-search-openai-demo-java/deploy/aca` 
-3. Run `./scripts/prepdocs.ps1` if you are on windows or `./scripts/prepdocs.sh` on linux
-4. Wait few minutes after the script complete so that the ingestion process, running on the indexer app, will ingest all the documents. This is not a 'delta' process, it's not updating **only** the new files you've added. Instead, on each run, all documents in data folder will be ingested. Feel free to add new files you want to ingest and delete/move the old documents from the data folder. Once you've run the script and it completes successfully, Azure AI Search index has been updated and stored (until you want to manually delete it from your azure Azure AI Search instance)
+:sunny: :cloud: :construction_worker_man: **WIP**
 
 ### Productionizing
 
@@ -322,11 +316,12 @@ However, you can try the [Azure pricing calculator](https://azure.com/e/8ffbe5b1
 - Azure Monitor: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 - Azure Event Grid: Basic tier. Pricing per operation. [Pricing](https://azure.microsoft.com/pricing/details/event-grid/)
 - Azure Service Bus: Standard tier. Pricing per hour and operations. [Pricing](https://azure.microsoft.com/pricing/details/service-bus/)
+- Azure Cosmos DB: Only provisioned if you enabled [chat history with Cosmos DB](#enabling-persistent-chat-history-with-azure-cosmos-db). Serverless tier. Pricing per request unit and storage. [Pricing](https://azure.microsoft.com/pricing/details/cosmos-db/)
 
-The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each month are free for ACA. To reduce costs, you can switch to free SKUs Form Recognizer by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Form Recognizer resource only analyzes the first 2 pages of each document. You can also reduce costs associated with the Form Recognizer by reducing the number of documents in the `data` folder, or changing the code to use the Itext document based parser, or by removing the postprovision hook in `azure.yaml` that runs the `indexer java cli`.
+The first 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million requests each month are free for ACA. To reduce costs, you can switch to free SKUs Document Intelligence by changing the parameters file under the `infra` folder. There are some limits to consider; for example, the free Document Intelligence resource only analyzes the first 2 pages of each document. 
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
+either by deleting the resource group in the Portal or running `azd down --purge`.
 
 ### Note
 
@@ -346,28 +341,6 @@ Chunking allows us to limit the amount of information we send to OpenAI due to t
 To upload more PDFs, put them in the data/ folder and run `./scripts/prepdocs.sh` or `./scripts/prepdocs.ps1`. To avoid reuploading existing docs, move them out of the data folder. You could also implement checks to see whats been uploaded before; our code doesn't yet have such checks.
 </details>
 
-<details><a id="switch-gpt4"></a>
-<summary>How do you use GPT-4 with this sample?</summary>
-
-In `infra/main.bicep`, change `chatGptModelName` to 'gpt-4' instead of 'gpt-35-turbo'. You may also need to adjust the capacity above that line depending on how much TPM your account is allowed.
-</details>
-
-<details><a id="chat-ask-diff"></a>
-<summary>What is the difference between the Chat and Ask tabs?</summary>
-
-The chat tab uses the approach programmed in [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java).
-
-- It uses the ChatGPT API to turn the user question into a good search query.
-- It queries Azure AI Search for search results for that query (optionally using the vector embeddings for that query).
-- It then combines the search results and original user question, and asks ChatGPT API to answer the question based on the sources. It includes the last 4K of message history as well (or however many tokens are allowed by the deployed model).
-
-The ask tab uses the approach programmed in [PlainJavaChatApproach](https://github.com/Azure-Samples/azure-search-openai-demo-java/blob/main/app/backend/src/main/java/com/microsoft/openai/samples/rag/chat/approaches/PlainJavaChatApproach.java).
-
-- It queries Azure AI Search for search results for the user question (optionally using the vector embeddings for that question).
-- It then combines the search results and user question, and asks ChatGPT API to answer the question based on the sources.
-
-There are also three other /ask approaches which are implemented using **Java Semantic Kernel** sdk. Development it's still experimental and it will be consolidated as soon as semantic kernel beta version will be released. Below a brief description of the SK integration status:
-</details>
 
 <details><a id="azd-up-explanation"></a>
 <summary>What does the `azd up` command do?</summary>
@@ -383,11 +356,6 @@ Finally, it looks at `azure.yaml` to determine the Azure host (appservice, in th
 Related commands are `azd provision` for just provisioning (if infra files change) and `azd deploy` for just deploying updated app code.
 </details>
 
-<details><a id="appservice-logs"></a>
-<summary>How can we view logs from the App Service app?</summary>
-
-You can view production logs in the Portal using either the Log stream or by downloading the default_docker.log file from Advanced tools.
-</details>
 
 ### Troubleshooting
 

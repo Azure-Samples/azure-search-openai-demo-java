@@ -43,14 +43,20 @@
         </exclusions>
 </dependency>
 
-    <dependency>
+    <!--dependency>
     <groupId>com.azure</groupId>
     <artifactId>azure-ai-openai</artifactId>
     <version>${azure-openai.version}</version>
-</dependency>
+</dependency-->
 <dependency>
     <groupId>com.azure</groupId>
     <artifactId>azure-ai-formrecognizer</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-ai-documentintelligence</artifactId>
+    <!-- 1.0.1 version from azure-sdk-bom have breaking changes. Need to fix that-->
+    <!-- <version>1.0.0-beta.2</version> -->
 </dependency>
 
 <dependency>
@@ -69,6 +75,31 @@
   <version>${apache.common.text}</version>
 </dependency>
 
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-core</artifactId>
+    <version>${langchain4j.version}</version>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j</artifactId>
+    <version>${langchain4j.version}</version>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-document-parser-apache-tika</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-azure-open-ai</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-azure-ai-search</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
 </dependencies>
 
 </project>
