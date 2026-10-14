@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Filter Changes
-        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
             filters: |
@@ -32,19 +32,19 @@ jobs:
                 - 'deploy/aca/**'
       - name: Build App Service Bicep for linting
         if: steps.changes.outputs.app-service == 'true'
-        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/app-service/infra/main.bicep --stdout
       
       - name: Build AKS Bicep for linting
         if: steps.changes.outputs.aks == 'true'
-        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aks/infra/main.bicep --stdout
       
       - name: Build ACA Bicep for linting
         if: steps.changes.outputs.aca == 'true'
-        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
+        uses: azure/CLI@9eb25b8360668fb0ecbafa808d40e2197b2f5f52 # v3.0.0
         with:
           inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f deploy/aca/infra/main.bicep --stdout
      
@@ -64,7 +64,7 @@ jobs:
           PSRULE_CONFIGURATION_AZURE_BICEP_FILE_EXPANSION_TIMEOUT: '30'
 
       - name: Upload results to security tab
-        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3.37.9
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         if: github.repository == 'Azure-Samples/azure-search-openai-demo-java'
         with:
           sarif_file: reports/ps-rule-results.sarif
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build React Frontend
         run: |
@@ -90,10 +90,10 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Java version
-        uses: actions/setup-java@215b7e5f829ab9cac114c149667e57dc1b70b4bc # v2.5.2
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: 'microsoft'
           java-version: '17'
