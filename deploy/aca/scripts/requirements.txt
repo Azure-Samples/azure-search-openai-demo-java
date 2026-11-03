@@ -67,7 +67,7 @@ blinker==1.8.2
     # via
     #   flask
     #   quart
-certifi==2024.7.4
+certifi==2026.10.18
     # via
     #   httpcore
     #   httpx
