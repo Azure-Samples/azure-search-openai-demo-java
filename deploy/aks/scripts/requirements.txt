@@ -200,7 +200,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-oauthlib==3.2.2
+oauthlib==4.0.0
     # via requests-oauthlib
 openai==1.63.0
     # via -r requirements.in
