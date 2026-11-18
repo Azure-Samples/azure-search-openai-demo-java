@@ -316,7 +316,7 @@ packaging==24.1
     # via
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-flask
-pillow==10.4.0
+pillow==13.0.0
     # via -r requirements.in
 portalocker==2.10.1
     # via msal-extensions
